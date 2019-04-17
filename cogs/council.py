@@ -8,18 +8,16 @@ class CouncilCog:
         self.bot = bot
 
     @commands.command(name="presence", hidden=True)
+    @commands.is_owner()
     async def presence(self, ctx, *, msg: str = "x"):
         """Command to modify bot presence"""
-        if isCouncil(ctx.author.roles):
-            if msg.lower() == "default":
-                activity = discord.Game("Clash of Clans")
-            else:
-                activity = discord.Activity(type=discord.ActivityType.watching, name=msg)
-            await self.bot.change_presence(status=discord.Status.online, activity=activity)
-            print(f"{datetime.now()} - {ctx.author} changed the bot presence to {msg}")
+        if msg.lower() == "default":
+            activity = discord.Game("Clash of Clans")
         else:
-            await ctx.send("Yeah, I'm going to guess you're not on council and you don't have any business trying "
-                           "to use this command!")
+            activity = discord.Activity(type=discord.ActivityType.watching, name=msg)
+        await self.bot.change_presence(status=discord.Status.online, activity=activity)
+        print(f"{datetime.now()} - {ctx.author} changed the bot presence to {msg}")
+
 
     @commands.command(name="userInfo", aliases=["ui"], hidden=True)
     @commands.guild_only()
