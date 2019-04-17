@@ -59,6 +59,7 @@ class OwnerCog:
         try:
             origin.pull()
             print("Code successfully pulled from GitHub")
+            await ctx.send("Code successfully pulled from GitHub")
         except Exception as e:
             print(f"ERROR: {type(e).__name__} - {e}")
             await ctx.send(f"**`ERROR:`** {type(e).__name__} - {e}")
