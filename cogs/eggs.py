@@ -1,4 +1,6 @@
-import discord, requests, json, pymssql
+import discord
+import requests
+import pymssql
 from discord.ext import commands
 from datetime import datetime
 from config import settings, emojis

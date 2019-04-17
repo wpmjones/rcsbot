@@ -1,7 +1,7 @@
 import discord, requests
 from datetime import datetime
 from discord.ext import commands
-from config import settings, colorPick
+from config import settings, color_pick
 
 class newHelp:
   """New help file for rcs-bot"""
@@ -27,7 +27,7 @@ class newHelp:
       return
 
     # respond to help request
-    embed = discord.Embed(title = "rcs-bot Help File", description = desc, color = colorPick(15,250,15))
+    embed = discord.Embed(title = "rcs-bot Help File", description = desc, color = color_pick(15,250,15))
     embed.add_field(name = 'Commands:', value = '-----------')
     if command in ['all','attacks','attack','attackwins','att']:
       helpText = "Responds with the current attack wins for all members of the clan specified."

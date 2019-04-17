@@ -1,6 +1,6 @@
 import requests, pymssql, re, discord, asyncio
 from discord.ext import commands
-from config import settings, colorPick
+from config import settings, color_pick
 from datetime import datetime
 
 class CouncilCog:
@@ -45,7 +45,7 @@ class CouncilCog:
       for role in user.roles:
         if role.name != "@everyone":
           userRoles.append(role.name)
-      embed = discord.Embed(title = user.display_name, color = colorPick(255,165,0))
+      embed = discord.Embed(title = user.display_name, color = color_pick(255,165,0))
       embed.set_thumbnail(url = user.avatar_url)
       embed.add_field(name = "Joined RCS Server on", value = f"{joinDate}\n({joinDelta} days ago)", inline = True)
       embed.add_field(name = "Message Count", value = "unknown", inline = True)
@@ -337,7 +337,7 @@ class CouncilCog:
     """Command to to find a search string in Discord user names"""
     if isAuthorized(ctx.author.roles):
       if arg == 'help':
-        embed = discord.Embed(title = "rcs-bot Help File", description = 'Help for the find/search command', color = colorPick(15,250,15))
+        embed = discord.Embed(title = "rcs-bot Help File", description = 'Help for the find/search command', color = color_pick(15,250,15))
         embed.add_field(name = 'Commands:', value = '-----------')
         helpText = 'Used to find Discord names with the specified string.'
         embed.add_field(name = '++find <search string>', value = helpText)
