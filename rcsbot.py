@@ -1,6 +1,7 @@
 import sys
 import traceback
 import os
+import git
 from discord.ext import commands
 from config import settings
 import logging
