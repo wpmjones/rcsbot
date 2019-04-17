@@ -375,7 +375,7 @@ class CouncilCog:
             content = f"**{arg} Users**\nDiscord users with {arg} in their name.\n\n**Discord names:**\n"
             content += '\n'.join(members)
             botLog(ctx.command,arg,ctx.author,ctx.guild)
-            self.send_text(ctx.channel, content)
+            await self.send_text(ctx.channel, content)
         else:
             print(f"{datetime.now()} - ERROR: {ctx.author} from {ctx.guild} tried to use the ++find command but does not have the leader or council role.")
             await ctx.send(f"You have found the secret command!  Unfortunately, you are not an RCS Leader/Council member.  Climb the ladder, then try again!")
