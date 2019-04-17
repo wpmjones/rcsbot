@@ -1,14 +1,13 @@
 import coc
 import discord
 import asyncio
-from discord.ext import commands
 from config import settings
 
 
-class warStatus:
+class WarStatus:
     def __init__(self, bot):
         self.bot = bot
-        self.bot.loop.create_task(war_report(self))
+        self.bot.loop.create_task(await self.war_report(self))
 
     async def war_report(self):
         count = 1
@@ -24,5 +23,5 @@ class warStatus:
 
 
 def setup(bot):
-    bot.add_cog(warStatus(bot))
+    bot.add_cog(WarStatus(bot))
 

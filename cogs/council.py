@@ -273,12 +273,12 @@ class CouncilCog:
         if isRcsGuild(ctx.guild) and isCouncil(ctx.author.roles):
             clanTag, clanName = resolveClanTag(arg)
             if clanTag == "x":
-                botLog(ctx.command,arg,ctx.author,ctx.guild,1)
+                botLog(ctx.command, arg, ctx.author, ctx.guild, 1)
                 await ctx.send("You have not provided a valid clan name or clan tag.")
                 return
             clanTag, clanName = resolveClanTag(arg)
             if clanTag == "x":
-                botLog(ctx.command,arg,ctx.author,ctx.guild,1)
+                botLog(ctx.command, arg, ctx.author, ctx.guild, 1)
                 await ctx.send("You have not provided a valid clan name or clan tag.")
                 return
             conn = pymssql.connect(settings['database']['server'], settings['database']['username'], settings['database']['password'], settings['database']['database'], autocommit=True)
@@ -286,10 +286,10 @@ class CouncilCog:
             cursor.execute(f"SELECT clanName, clanTag FROM rcs_data WHERE feeder = '{clanName}'")
             fetched = cursor.fetchone()
             if fetched is not None:
-                botLog(ctx.command,f"Removing feeder for {clanName}",ctx.author,ctx.channel)
+                botLog(ctx.command, f"Removing feeder for {clanName}", ctx.author, ctx.channel)
                 cursor.execute(f"DELETE FROM rcs_data WHERE clanTag = '{fetched['clanTag']}'")
                 await ctx.send(f"{fetched['clanName']} (feeder for {clanName}) has been removed.")
-            botLog(ctx.command,f"Removing {clanName}",ctx.author,ctx.channel)
+            botLog(ctx.command, f"Removing {clanName}", ctx.author, ctx.channel)
             cursor.execute(f"SELECT leaderReddit, discordTag FROM rcs_data WHERE clanTag = '{clanTag}'")
             fetched = cursor.fetchone()
             cursor.execute(f"DELETE FROM rcs_data WHERE clanTag = '{clanTag}'")
@@ -299,11 +299,11 @@ class CouncilCog:
             isUser, user = isDiscordUser(guild, int(fetched['discordTag']))
             if isUser == True:
                 roleObj = guild.get_role(int(settings['rcsRoles']['leaders']))
-                await user.remove_roles(roleObj, reason = f"Leaders role removed by ++removeClan command of rcs-bot.")
+                await user.remove_roles(roleObj, reason=f"Leaders role removed by ++removeClan command of rcs-bot.")
                 roleObj = guild.get_role(int(settings['rcsRoles']['rcsLeaders']))
-                await user.remove_roles(roleObj, reason = f"RCS Leaders role removed by ++removeClan command of rcs-bot.")
+                await user.remove_roles(roleObj, reason=f"RCS Leaders role removed by ++removeClan command of rcs-bot.")
                 roleObj = guild.get_role(int(settings['rcsRoles']['recruiters']))
-                await user.remove_roles(roleObj, reason = f"Clan Recruiters role removed by ++removeClan command of rcs-bot.")
+                await user.remove_roles(roleObj, reason=f"Clan Recruiters role removed by ++removeClan command of rcs-bot.")
             await ctx.send(f"{clanName} has been removed from the database.  The change will appear on the wiki in the next 3 hours.")
             await ctx.send("<@251150854571163648> Please recycle the bot so we aren't embarassed with old data!")
             await ctx.send(f"Please don't forget to remove {fetched['leaderReddit'][22:]} as a mod from META and update the META clan directory.  I've removed the Leaders, RCS Leaders, and Clan Recruiters role from <@{fetched['discordTag']}>. If they have any other roles, you will need to remove them manually.")
@@ -319,7 +319,7 @@ class CouncilCog:
         if isRcsGuild(ctx.guild) and isAuthorized(ctx.author.roles):
             clanTag, clanName = resolveClanTag(arg)
             if clanTag == "x":
-                botLog(ctx.command,arg,ctx.author,ctx.guild,1)
+                botLog(ctx.command, arg, ctx.author, ctx.guild, 1)
                 await ctx.send("You have not provided a valid clan name or clan tag.")
                 return
             conn = pymssql.connect(settings['database']['server'], settings['database']['username'], settings['database']['password'], settings['database']['database'])
@@ -328,7 +328,7 @@ class CouncilCog:
             fetched = cursor.fetchone()
             conn.close()
             if fetched is not None:
-                botLog(ctx.command,clanName,ctx.author,ctx.guild)
+                botLog(ctx.command, clanName, ctx.author, ctx.guild)
                 await ctx.send(f"The leader of {clanName} is <@{fetched['discordTag']}>")
         else:
             print(f"{datetime.now()} - ERROR: {ctx.author} from {ctx.guild} tried to use the ++leader command but shouldn't be doing that.")
@@ -337,14 +337,16 @@ class CouncilCog:
     @commands.command(name="find", aliases=["search"], hidden=True)
     async def find(self, ctx, *, arg: str = "help"):
         """Command to to find a search string in Discord user names"""
+        # TODO Figure out the None response on some names
+        # TODO add regex or option to only search for string in clan name
         if isAuthorized(ctx.author.roles):
             if arg == "help":
-                embed = discord.Embed(title = "rcs-bot Help File", description = "Help for the find/search command", color = color_pick(15,250,15))
-                embed.add_field(name = "Commands:", value = "-----------")
+                embed = discord.Embed(title="rcs-bot Help File", description="Help for the find/search command", color=color_pick(15,250,15))
+                embed.add_field(name="Commands:", value="-----------")
                 helpText = "Used to find Discord names with the specified string."
-                embed.add_field(name = "++find <search string>", value = helpText)
-                embed.set_footer(icon_url = "https://openclipart.org/image/300px/svg_to_png/122449/1298569779.png", text = "rcs-bot proudly maintained by TubaKid.")
-                botLog("help","find",ctx.author,ctx.guild)
+                embed.add_field(name="++find <search string>", value = helpText)
+                embed.set_footer(icon_url="https://openclipart.org/image/300px/svg_to_png/122449/1298569779.png", text="rcs-bot proudly maintained by TubaKid.")
+                botLog("help", "find", ctx.author, ctx.guild)
                 await ctx.send(embed=embed)
                 return
             # if not help, code picks up here
@@ -352,11 +354,13 @@ class CouncilCog:
             memberRole = "296416358415990785"
             discordServer = str(settings['discord']['rcsGuildId'])
 
-            headers = {"Accept":"application/json","Authorization":"Bot " + settings['discord']['rcsbotToken']}
-            url = f"https://discordapp.com/api/guilds/{discordServer}/members?limit=1000"      # List first RCS Discord members
+            headers = {"Accept": "application/json", "Authorization": "Bot " + settings['discord']['rcsbotToken']}
+            # List first 1000 RCS Discord members
+            url = f"https://discordapp.com/api/guilds/{discordServer}/members?limit=1000"
             r = requests.get(url, headers=headers)
             data1 = r.json()
-            url += "&after=" + data1[999]['user']['id']                                        # List second RCS Discord members
+            # List second 1000 RCS Discord members
+            url += "&after=" + data1[999]['user']['id']
             r = requests.get(url, headers=headers)
             data2 = r.json()
             data = data1 + data2
@@ -371,12 +375,12 @@ class CouncilCog:
                         reportName += " (Members role)"
                     members.append(reportName)
             if len(members) == 0:
-                botLog(ctx.command,arg,ctx.author,ctx.channel)
+                botLog(ctx.command, arg, ctx.author, ctx.channel)
                 await ctx.send("No users with that text in their name.")
                 return
             content = f"**{arg} Users**\nDiscord users with {arg} in their name.\n\n**Discord names:**\n"
             content += "\n".join(members)
-            botLog(ctx.command,arg,ctx.author,ctx.guild)
+            botLog(ctx.command, arg, ctx.author, ctx.guild)
             await self.send_text(ctx.channel, content)
         else:
             print(f"{datetime.now()} - ERROR: {ctx.author} from {ctx.guild} tried to use the ++find command but does not have the leader or council role.")
@@ -430,19 +434,22 @@ def resolveClanTag(input):
             clanName = getClanName(input)
             clanTag = input
             if clanName == "x":
-                return "x","x"
+                return "x", "x"
     return clanTag, clanName
+
 
 def isRcsGuild(guild):
     if str(guild) == "Reddit Clan System":
         return True
     return False
 
+
 def isAuthorized(userRoles):
     for role in userRoles:
-        if role.name in ["Leaders","Council","RCS Leaders"]:
+        if role.name in ["Leaders", "Council", "RCS Leaders"]:
             return True
     return False
+
 
 def isCouncil(userRoles):
     for role in userRoles:
@@ -450,21 +457,24 @@ def isCouncil(userRoles):
             return True
     return False
 
+
 def isChatMod(userRoles):
     for role in userRoles:
         if role.name == "Global Chat Mods" or "Chat Mods":
             return True
     return False
 
+
 def isDiscordUser(guild, discordId):
     try:
         user = guild.get_member(discordId)
-        if user == None:
+        if user is None:
             return False, None
         else:
             return True, user
     except:
         return False, None
+
 
 def botLog(command, request, author, guild, errFlag=0):
     msg = str(datetime.now())[:16] + " - "
@@ -474,11 +484,13 @@ def botLog(command, request, author, guild, errFlag=0):
         msg += f"ERROR: User provided an incorrect argument for {command}. Argument provided: {request}. Requested by {author} for {guild}."
     print(msg)
 
+
 mainConn = pymssql.connect(settings['database']['server'], settings['database']['username'], settings['database']['password'], settings['database']['database'])
 mainCursor = mainConn.cursor(as_dict=True)
 mainCursor.execute("SELECT clanName, clanTag FROM rcs_data ORDER BY clanName")
 clans = mainCursor.fetchall()
 mainConn.close()
+
 
 def setup(bot):
     bot.add_cog(CouncilCog(bot))
