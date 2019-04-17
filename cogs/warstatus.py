@@ -7,7 +7,7 @@ from config import settings
 class WarStatus:
     def __init__(self, bot):
         self.bot = bot
-        self.bot.loop.create_task(await self.war_report(self))
+        self.bot.loop.create_task(await self.war_report())
 
     async def war_report(self):
         count = 1
