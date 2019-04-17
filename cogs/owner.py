@@ -64,5 +64,6 @@ class OwnerCog:
             print(f"ERROR: {type(e).__name__} - {e}")
             await ctx.send(f"**`ERROR:`** {type(e).__name__} - {e}")
 
+
 def setup(bot):
     bot.add_cog(OwnerCog(bot))

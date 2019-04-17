@@ -19,25 +19,25 @@ You can use the clan tag (with or without the hashtag) or you can use the clan n
 
 There are easter eggs. Feel free to try and find them!"""
 
+
 bot = commands.Bot(command_prefix="++", description=description, case_insensitive=True)
 bot.remove_command("help")
 bot.repo = git.Repo(os.getcwd())
 
-
 @bot.event
 async def on_ready():
-  print("-------")
-  print(f"Logged in as {bot.user}")
-  print("-------")
+    print("-------")
+    print(f"Logged in as {bot.user}")
+    print("-------")
 
 initialExtensions = ["cogs.general","cogs.push", "cogs.games", "cogs.newhelp", "cogs.council", "cogs.owner", "cogs.eggs"]
 
 if __name__ == "__main__":
-  for extension in initialExtensions:
-    try:
-      bot.load_extension(extension)
-    except Exception as e:
-      print(f"Failed to load extension {extension}", file=sys.stderr)
-      traceback.print_exc()
+    for extension in initialExtensions:
+        try:
+            bot.load_extension(extension)
+        except Exception as e:
+            print(f"Failed to load extension {extension}", file=sys.stderr)
+            traceback.print_exc()
 
 bot.run(settings['discord']['rcsbotToken'])
