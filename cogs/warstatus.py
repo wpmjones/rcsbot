@@ -8,6 +8,7 @@ from config import settings
 class warStatus:
     def __init__(self, bot):
         self.bot = bot
+        self.bot.loop.create_task(war_report(self))
 
     async def war_report(self):
         count = 1
@@ -20,8 +21,6 @@ class warStatus:
             print(f"Counter at {str(count)}")
             await channel.send(f"Counter at {str(count)}")
             count += 1
-
-    self.bot.loop.create_task(war_report())
 
 
 def setup(bot):
