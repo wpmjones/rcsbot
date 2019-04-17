@@ -7,29 +7,30 @@ class CouncilCog:
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='presence', hidden=True)
-    async def presence(self, ctx, *, msg: str = 'x'):
+    @commands.command(name="presence", hidden=True)
+    async def presence(self, ctx, *, msg: str = "x"):
         """Command to modify bot presence"""
         if isCouncil(ctx.author.roles):
             if msg.lower() == "default":
                 activity = discord.Game("Clash of Clans")
             else:
-                activity = discord.Activity(type = discord.ActivityType.watching, name=msg)
+                activity = discord.Activity(type=discord.ActivityType.watching, name=msg)
             await self.bot.change_presence(status=discord.Status.online, activity=activity)
             print(f"{datetime.now()} - {ctx.author} changed the bot presence to {msg}")
         else:
-            await ctx.send("Yeah, I'm going to guess you're not on council and you don't have any business trying to use this command!")
+            await ctx.send("Yeah, I'm going to guess you're not on council and you don't have any business trying "
+                           "to use this command!")
 
-    @commands.command(name='userInfo', aliases=['ui'], hidden=True)
+    @commands.command(name="userInfo", aliases=["ui"], hidden=True)
     @commands.guild_only()
     async def userInfo(self, ctx, discordId):
         """Command to retreive join date for Discord user."""
         if isRcsGuild(ctx.guild) and (isCouncil(ctx.author.roles) or isChatMod(ctx.author.roles)):
             isUser, user = isDiscordUser(ctx.guild, int(discordId))
             if isUser == False:
-                if discordId.startswith('<'):
+                if discordId.startswith("<"):
                     discordId = discordId[2:-1]
-                    if discordId.startswith('!'):
+                    if discordId.startswith("!"):
                         discordId = discordId[1:]
                 else:
                     await ctx.send(":x: That's not a good user.  It should look something like <@!123456789>.")
@@ -53,54 +54,55 @@ class CouncilCog:
             embed.set_footer(text = f"User ID: {user.id}")
             await ctx.send(embed=embed)
         else:
-            await ctx.send("Yeah, I'm going to guess you're not on council and you don't have any business trying to use this command!")
+            await ctx.send("Yeah, I'm going to guess you're not on council and you don't have any business trying "
+                           "to use this command!")
 
-    @commands.command(name='addClan', aliases=['clanAdd', 'newClan'], hidden=True)
-    async def addClan(self, ctx, *, clanName: str = 'x'):
+    @commands.command(name="addClan", aliases=["clanAdd", "newClan"], hidden=True)
+    async def addClan(self, ctx, *, clanName: str = "x"):
         """Command to add a new verified clan to the RCS Database."""
         if isRcsGuild(ctx.guild) and isCouncil(ctx.author.roles):
             def checkAuthor(m):
                 return m.author == ctx.author
             def checkReaction(reaction, user):
                 return user == ctx.message.author and str(reaction.emoji) in [
-                    '<:upvote:295295304859910144>',
-                    '<:downvote:295295520187088906>',
-                    '🇬','🇸','🇨','🇫']
+                    "<:upvote:295295304859910144>",
+                    "<:downvote:295295520187088906>",
+                    "🇬","🇸","🇨","🇫"]
             def processContent(content):
-                if content.lower() in ['stop','cancel','quit']:
-                    botLog(ctx.command,'Process stopped by user',ctx.author,ctx.channel,1)
+                if content.lower() in ["stop","cancel","quit"]:
+                    botLog(ctx.command,"Process stopped by user",ctx.author,ctx.channel,1)
                     return(content, 1)
-                if content.lower() == 'none':
-                    return('', 0)
+                if content.lower() == "none":
+                    return("", 0)
                 return(content, 0)
             continueFlag = 1
             # Get clan name
-            if clanName == 'x':
+            if clanName == "x":
                 try:
                     await ctx.send("Please enter the name of the new clan.")
-                    response = await ctx.bot.wait_for('message', check=checkAuthor, timeout=10)
+                    response = await ctx.bot.wait_for("message", check=checkAuthor, timeout=10)
                     clanName, cancelFlag = processContent(response.content)
                 except asyncio.TimeoutError:
                     return await ctx.send("Seriously, I'm not going to wait that long. Start over!")
             # Confirm clan name
             try:
                 sentMsg = await ctx.send(f"I'd like to confirm that you want to create a new clan with the name **{clanName}**. Please upvote is this is correct. Downvote to cancel.")
-                await sentMsg.add_reaction('upvote:295295304859910144')
-                await sentMsg.add_reaction('downvote:295295520187088906')
-                reaction, user = await ctx.bot.wait_for('reaction_add', check=checkReaction, timeout = 10)
+                await sentMsg.add_reaction("upvote:295295304859910144")
+                await sentMsg.add_reaction("downvote:295295520187088906")
+                reaction, user = await ctx.bot.wait_for("reaction_add", check=checkReaction, timeout = 10)
             except asyncio.TimeoutError:
                 return await ctx.send("You either don't know how to use emoji or you're just slow.  Try again later.")
-            if str(reaction.emoji) == '<:downvote:295295520187088906>':
+            if str(reaction.emoji) == "<:downvote:295295520187088906>":
                 await sentMsg.clear_reactions()
-                await sentMsg.add_reaction('downvote:295295520187088906')
+                await sentMsg.add_reaction("downvote:295295520187088906")
                 return await ctx.send("Clan creation cancelled by user.")
             await sentMsg.clear_reactions()
-            await sentMsg.add_reaction('upvote:295295304859910144')
+            await sentMsg.add_reaction("upvote:295295304859910144")
             # Get clan tag
             try:
                 await ctx.send(f"What is the clan tag for {clanName}?")
-                response = await ctx.bot.wait_for('message', check=checkAuthor, timeout=15)
-                if response.content.startswith('#'):
+                response = await ctx.bot.wait_for("message", check=checkAuthor, timeout=15)
+                if response.content.startswith("#"):
                     clanTag, cancelFlag = processContent(response.content[1:])
                 else:
                     clanTag, cancelFlag = processContent(response.content)
@@ -111,7 +113,7 @@ class CouncilCog:
             # Get leader's in game name
             try:
                 await ctx.send("Who leads this mighty clan?")
-                response = await ctx.bot.wait_for('message', check=checkAuthor, timeout=15)
+                response = await ctx.bot.wait_for("message", check=checkAuthor, timeout=15)
                 leader, cancelFlag = processContent(response.content)
                 if cancelFlag == 1:
                     return await ctx.send("Creating of new clan cancelled by user.")
@@ -120,105 +122,105 @@ class CouncilCog:
             # create short name
             try:
                 await ctx.send("Please create a short name for this clan. This will be what danger-bot uses to search Discord names. Please/use/slashes/to/include/more/than/one.")
-                response = await ctx.bot.wait_for('message', check=checkAuthor, timeout=15)
+                response = await ctx.bot.wait_for("message", check=checkAuthor, timeout=15)
                 shortName, cancelFlag = processContent(response.content)
                 if cancelFlag == 1:
                     return await ctx.send("Creating of new clan cancelled by user.")
             except asyncio.TimeoutError:
                 await ctx.send("OK slow poke. Here's what I'm going to do. I'm going to create this clan with the stuff I know, but you'll have to add the rest later!\n**Missing info:**\nShort name\nSocial Media\nDescription\nClassification\nSubreddit\nLeader's Reddit Username\nLeader's Discord Tag")
-                shortName = socMedia = desc = classificaion = subReddit = leaderReddit = discordTag = ''
+                shortName = socMedia = desc = classificaion = subReddit = leaderReddit = discordTag = ""
                 continueFlag = 0
             # Get social media links
             if continueFlag == 1:
                 try:
                     await ctx.send("Please include social media links as follows:\n[Twitter](https://twitter.com/RedditZulu)\nType `none` if there aren't any links to add at this time.")
-                    response = await ctx.bot.wait_for('message', check=checkAuthor, timeout=45)
+                    response = await ctx.bot.wait_for("message", check=checkAuthor, timeout=45)
                     socMedia, cancelFlag = processContent(response.content)
                     if cancelFlag == 1:
                         return await ctx.send("Creating of new clan cancelled by user.")
                 except asyncio.TimeoutError:
                     await ctx.send(f"I'm stopping here.  {clanName} has been added to the database, but you'll need to add the rest at a later time.\n**Missing info:**\nSocial Media\nDescription\nClassification\nSubreddit\nLeader's Reddit Username\nLeader's Discord Tag")
-                    socMedia = desc = classificaion = subReddit = leaderReddit = discordTag = ''
+                    socMedia = desc = classificaion = subReddit = leaderReddit = discordTag = ""
                     continueFlag = 0
             # Get Description
             if continueFlag == 1:
                 try:
                     await ctx.send("Now I need to know a little bit about the clan.  What notes would you like stored for this clan?")
-                    response = await ctx.bot.wait_for('message', check=checkAuthor, timeout=45)
+                    response = await ctx.bot.wait_for("message", check=checkAuthor, timeout=45)
                     desc, cancelFlag = processContent(response.content)
                     if cancelFlag == 1:
                         return await ctx.send("Creating of new clan cancelled by user.")
                 except asyncio.TimeoutError:
                     await ctx.send(f"Time's up {ctx.author}. {clanName} has been added to the database, but you'll need to add the rest at a later time.\n**Missing info:**\nDescription\nClassification\nSubreddit\nLeader's Reddit Username\nLeader's Discord Tag")
-                    desc = classificaion = subReddit = leaderReddit = discordTag = ''
+                    desc = classificaion = subReddit = leaderReddit = discordTag = ""
                     continueFlag = 0
             # Get Classification
             if continueFlag == 1:
                 try:
                     sentMsg = await ctx.send(f"Please select the appropriate classification for {clanName}.\n:regional_indicator_g: - General\n:regional_indicator_s: - Social\n:regional_indicator_c: - Competitive\n:regional_indicator_f: - War Farming")
-                    await sentMsg.add_reaction('🇬')
-                    await sentMsg.add_reaction('🇸')
-                    await sentMsg.add_reaction('🇨')
-                    await sentMsg.add_reaction('🇫')
-                    reaction, user = await ctx.bot.wait_for('reaction_add', check=checkReaction, timeout = 10)
+                    await sentMsg.add_reaction("🇬")
+                    await sentMsg.add_reaction("🇸")
+                    await sentMsg.add_reaction("🇨")
+                    await sentMsg.add_reaction("🇫")
+                    reaction, user = await ctx.bot.wait_for("reaction_add", check=checkReaction, timeout = 10)
                     await sentMsg.clear_reactions()
-                    if str(reaction.emoji) == '🇬':
-                        classification = 'gen'
-                        await sentMsg.add_reaction('🇬')
-                    if str(reaction.emoji) == '🇸':
-                        classification = 'social'
-                        await sentMsg.add_reaction('🇸')
-                    if str(reaction.emoji) == '🇨':
-                        classification = 'comp'
-                        await sentMsg.add_reaction('🇨')
-                    if str(reaction.emoji) == '🇫':
-                        classification = 'warFarm'
-                        await sentMsg.add_reaction('🇫')
+                    if str(reaction.emoji) == "🇬":
+                        classification = "gen"
+                        await sentMsg.add_reaction("🇬")
+                    if str(reaction.emoji) == "🇸":
+                        classification = "social"
+                        await sentMsg.add_reaction("🇸")
+                    if str(reaction.emoji) == "🇨":
+                        classification = "comp"
+                        await sentMsg.add_reaction("🇨")
+                    if str(reaction.emoji) == "🇫":
+                        classification = "warFarm"
+                        await sentMsg.add_reaction("🇫")
                 except asyncio.TimeoutError:
                     await ctx.send("Can't keep up?  Sorry about that. I've added {clanName} to the database. You'll need to go back later and add the following.\n**Missing info:**\nClassification\nSubreddit\nLeader's Reddit username\nLeader's Discord Tag")
-                    classificaion = subReddit = leaderReddit = discordTag = ''
+                    classificaion = subReddit = leaderReddit = discordTag = ""
                     continueFlag = 0
             # Get subreddit
             if continueFlag == 1:
                 try:
                     await ctx.send("Please provide the subreddit for this clan (if they are cool enough to have one). (no need to include the /r/)\nIf they are lame and don't have a subreddit, type `none`.")
-                    response = await ctx.bot.wait_for('message', check=checkAuthor, timeout=20)
+                    response = await ctx.bot.wait_for("message", check=checkAuthor, timeout=20)
                     subReddit, cancelFlag = processContent(response.content)
                     if cancelFlag == 1:
                         return await ctx.send("Creating of new clan cancelled by user.")
-                    if subReddit != '':
-                        subReddit = 'https://www.reddit.com/r/' + subReddit
+                    if subReddit != "":
+                        subReddit = "https://www.reddit.com/r/" + subReddit
                 except asyncio.TimeoutError:
                     await ctx.send(f"Ugh! You've run out of time! I'll add {clanName} to the database, but you'll need to add missing stuff later!\n**Missing info:**\nLeader's Reddit Username\nLeader's Discord Tag")
-                    subReddit = leaderReddit = discordTag = ''
+                    subReddit = leaderReddit = discordTag = ""
                     continueFlag = 0
             # Get Reddit Username of leader
             if continueFlag == 1:
                 try:
                     await ctx.send(f"Can you please tell me what the reddit username is for {leader}? (No need to include the /u/)")
-                    response = await ctx.bot.wait_for('message', check=checkAuthor, timeout=20)
+                    response = await ctx.bot.wait_for("message", check=checkAuthor, timeout=20)
                     leaderReddit, cancelFlag = processContent(response.content)
                     if cancelFlag == 1:
                         return await ctx.send("Creating of new clan cancelled by user.")
-                    if leaderReddit != '':
+                    if leaderReddit != "":
                         leaderReddit = f"https://www.reddit.com/user/{leaderReddit}"
                 except asyncio.TimeoutError:
                     await ctx.send(f"I can see we aren't making any progress here. {clanName} is in the database now, but you'll need to do more!\n**Missing info:**\nLeader's reddit username\nLeader's Discord Tag")
-                    leaderReddit = discordTag = ''
+                    leaderReddit = discordTag = ""
                     continueFlag = 0
             # Get Leader's Discord Tag
             if continueFlag == 1:
                 try:
                     await ctx.send(f"Saving the best for last!  What's this guy/gal's Discord Tag?  You know, the long string of numbers that mean nothing to you, but mean everything to me!")
-                    response = await ctx.bot.wait_for('message', check=checkAuthor, timeout=15)
+                    response = await ctx.bot.wait_for("message", check=checkAuthor, timeout=15)
                     discordTag, cancelFlag = processContent(response.content)
                     if cancelFlag == 1:
                         return await ctx.send("Creating of new clan cancelled by user.")
                 except asyncio.TimeoutError:
                     await ctx.send(f"You were so close! I'll add {clanName} to the database now, but you'll need to add the **Discord Tag** later.")
-                    discordTag = ''
+                    discordTag = ""
             # Log and inform user
-            if discordTag != '':
+            if discordTag != "":
                 print(f"{datetime.now()} - All data collected for {ctx.command}. Adding {clanName} to database now.")
                 await ctx.send(f"All data collected!  Adding to database now.\n**Clan name:** {clanName}\n**Clan Tag:** "
                                "#{clanTag}\n**Leader:** {leader}\n**Short Name:** {shortName}\n**Social Media:** {socMedia}\n**Notes:** {desc}"
@@ -258,26 +260,26 @@ class CouncilCog:
             print(f"{datetime.now()} - ERROR: {ctx.author} from {ctx.guild} tried to use the ++{ctx.command} command but shouldn't be doing that.")
             await ctx.send("This command can only be performed by Council members on the RCS Discord server. Keep up these antics and I'll tell zig on you!")
 
-    #  @commands.command(name='testdm')
+    #  @commands.command(name="testdm")
     #  async def testdm(self, ctx, *, arg):
     #    member = ctx.guild.get_member(int(arg))
     #    print(member)
     #    await member.send("This is a test DM from rcs-bot. Please let TubaKid know if you have received it.")
 
-    @commands.command(name='removeClan', aliases=['clanRemove'], hidden=True)
+    @commands.command(name="removeClan", aliases=["clanRemove"], hidden=True)
     @commands.guild_only()
-    async def removeClan(self, ctx, *, arg: str = 'x'):
+    async def removeClan(self, ctx, *, arg: str = "x"):
         """Command to remove a verified clan from the RCS database."""
         if isRcsGuild(ctx.guild) and isCouncil(ctx.author.roles):
             clanTag, clanName = resolveClanTag(arg)
-            if clanTag == 'x':
+            if clanTag == "x":
                 botLog(ctx.command,arg,ctx.author,ctx.guild,1)
-                await ctx.send('You have not provided a valid clan name or clan tag.')
+                await ctx.send("You have not provided a valid clan name or clan tag.")
                 return
             clanTag, clanName = resolveClanTag(arg)
-            if clanTag == 'x':
+            if clanTag == "x":
                 botLog(ctx.command,arg,ctx.author,ctx.guild,1)
-                await ctx.send('You have not provided a valid clan name or clan tag.')
+                await ctx.send("You have not provided a valid clan name or clan tag.")
                 return
             conn = pymssql.connect(settings['database']['server'], settings['database']['username'], settings['database']['password'], settings['database']['database'], autocommit=True)
             cursor = conn.cursor(as_dict=True)
@@ -309,16 +311,16 @@ class CouncilCog:
             print(f"{datetime.now()} - ERROR: {ctx.author} from {ctx.guild} tried to use the ++{ctx.command} command but shouldn't be doing that.")
             await ctx.send("This command can only be performed by Council members on the RCS Discord server. Keep up these antics and I'll tell zig on you!")
 
-    @commands.command(name='leader', hidden=True)
+    @commands.command(name="leader", hidden=True)
     @commands.guild_only()
-    async def leader(self, ctx, *, arg: str = 'x'):
+    async def leader(self, ctx, *, arg: str = "x"):
         """Command to find the leader for the selected clan.
         Usage: ++leader Reddit Argon"""
         if isRcsGuild(ctx.guild) and isAuthorized(ctx.author.roles):
             clanTag, clanName = resolveClanTag(arg)
-            if clanTag == 'x':
+            if clanTag == "x":
                 botLog(ctx.command,arg,ctx.author,ctx.guild,1)
-                await ctx.send('You have not provided a valid clan name or clan tag.')
+                await ctx.send("You have not provided a valid clan name or clan tag.")
                 return
             conn = pymssql.connect(settings['database']['server'], settings['database']['username'], settings['database']['password'], settings['database']['database'])
             cursor = conn.cursor(as_dict=True)
@@ -332,29 +334,29 @@ class CouncilCog:
             print(f"{datetime.now()} - ERROR: {ctx.author} from {ctx.guild} tried to use the ++leader command but shouldn't be doing that.")
             await ctx.send(f"This command can only be performed by leaders/council on the RCS Discord server. Keep up these antics and I'll tell zig on you!")
 
-    @commands.command(name='find', aliases=['search'], hidden=True)
-    async def find(self, ctx, *, arg: str = 'help'):
+    @commands.command(name="find", aliases=["search"], hidden=True)
+    async def find(self, ctx, *, arg: str = "help"):
         """Command to to find a search string in Discord user names"""
         if isAuthorized(ctx.author.roles):
-            if arg == 'help':
-                embed = discord.Embed(title = "rcs-bot Help File", description = 'Help for the find/search command', color = color_pick(15,250,15))
-                embed.add_field(name = 'Commands:', value = '-----------')
-                helpText = 'Used to find Discord names with the specified string.'
-                embed.add_field(name = '++find <search string>', value = helpText)
-                embed.set_footer(icon_url = 'https://openclipart.org/image/300px/svg_to_png/122449/1298569779.png', text = 'rcs-bot proudly maintained by TubaKid.')
-                botLog('help','find',ctx.author,ctx.guild)
+            if arg == "help":
+                embed = discord.Embed(title = "rcs-bot Help File", description = "Help for the find/search command", color = color_pick(15,250,15))
+                embed.add_field(name = "Commands:", value = "-----------")
+                helpText = "Used to find Discord names with the specified string."
+                embed.add_field(name = "++find <search string>", value = helpText)
+                embed.set_footer(icon_url = "https://openclipart.org/image/300px/svg_to_png/122449/1298569779.png", text = "rcs-bot proudly maintained by TubaKid.")
+                botLog("help","find",ctx.author,ctx.guild)
                 await ctx.send(embed=embed)
                 return
             # if not help, code picks up here
-            guestRole = '301438407576387584'
-            memberRole = '296416358415990785'
+            guestRole = "301438407576387584"
+            memberRole = "296416358415990785"
             discordServer = str(settings['discord']['rcsGuildId'])
 
-            headers = {'Accept':'application/json','Authorization':'Bot ' + settings['discord']['rcsbotToken']}
-            url = 'https://discordapp.com/api/guilds/' + discordServer + '/members?limit=1000'      # List first RCS Discord members
+            headers = {"Accept":"application/json","Authorization":"Bot " + settings['discord']['rcsbotToken']}
+            url = f"https://discordapp.com/api/guilds/{discordServer}/members?limit=1000"      # List first RCS Discord members
             r = requests.get(url, headers=headers)
             data1 = r.json()
-            url += '&after=' + data1[999]['user']['id']                                              # List second RCS Discord members
+            url += "&after=" + data1[999]['user']['id']                                        # List second RCS Discord members
             r = requests.get(url, headers=headers)
             data2 = r.json()
             data = data1 + data2
@@ -366,14 +368,14 @@ class CouncilCog:
                 if re.search(regex, discordName, re.IGNORECASE) is not None:
                     reportName = f"@{item['user']['username']}#{item['user']['discriminator']} - <@{item['user']['id']}>" if discordFlag == 1 else f"@{item['nick']} - <@{item['user']['id']}>"
                     if memberRole in item['roles']:
-                        reportName += ' (Members role)'
+                        reportName += " (Members role)"
                     members.append(reportName)
             if len(members) == 0:
                 botLog(ctx.command,arg,ctx.author,ctx.channel)
                 await ctx.send("No users with that text in their name.")
                 return
             content = f"**{arg} Users**\nDiscord users with {arg} in their name.\n\n**Discord names:**\n"
-            content += '\n'.join(members)
+            content += "\n".join(members)
             botLog(ctx.command,arg,ctx.author,ctx.guild)
             await self.send_text(ctx.channel, content)
         else:
@@ -396,7 +398,7 @@ class CouncilCog:
 
 def getDiscordName(item):
     try:
-        if 'nick' in item and item['nick'] is not None:
+        if "nick" in item and item['nick'] is not None:
             return item['nick'].lower(), 1
         else:
             return item['user']['username'].lower(), 0
@@ -404,53 +406,53 @@ def getDiscordName(item):
         print(item)
 
 def getClanName(clanTag):
-    clanName = ''
+    clanName = ""
     for clan in clans:
         if clan['clanTag'].lower() == clanTag.lower():
             return clan['clanName']
-    return 'x'
+    return "x"
 
 def getClanTag(clanName):
-    clanTag = ''
+    clanTag = ""
     for clan in clans:
         if clan['clanName'].lower() == clanName.lower():
             return clan['clanTag']
-    return 'x'
+    return "x"
 
 def resolveClanTag(input):
-    if input.startswith('#'):
+    if input.startswith("#"):
         clanTag = input[1:]
         clanName = getClanName(clanTag)
     else:
         clanTag = getClanTag(input)
         clanName = input
-        if clanTag == 'x':
+        if clanTag == "x":
             clanName = getClanName(input)
             clanTag = input
-            if clanName == 'x':
-                return 'x','x'
+            if clanName == "x":
+                return "x","x"
     return clanTag, clanName
 
 def isRcsGuild(guild):
-    if str(guild) == 'Reddit Clan System':
+    if str(guild) == "Reddit Clan System":
         return True
     return False
 
 def isAuthorized(userRoles):
     for role in userRoles:
-        if role.name in ['Leaders','Council','RCS Leaders']:
+        if role.name in ["Leaders","Council","RCS Leaders"]:
             return True
     return False
 
 def isCouncil(userRoles):
     for role in userRoles:
-        if role.name == 'Council':
+        if role.name == "Council":
             return True
     return False
 
 def isChatMod(userRoles):
     for role in userRoles:
-        if role.name == 'Global Chat Mods' or 'Chat Mods':
+        if role.name == "Global Chat Mods" or "Chat Mods":
             return True
     return False
 
@@ -465,7 +467,7 @@ def isDiscordUser(guild, discordId):
         return False, None
 
 def botLog(command, request, author, guild, errFlag=0):
-    msg = str(datetime.now())[:16] + ' - '
+    msg = str(datetime.now())[:16] + " - "
     if errFlag == 0:
         msg += f"Printing {command} for {request}. Requested by {author} for {guild}."
     else:
@@ -474,7 +476,7 @@ def botLog(command, request, author, guild, errFlag=0):
 
 mainConn = pymssql.connect(settings['database']['server'], settings['database']['username'], settings['database']['password'], settings['database']['database'])
 mainCursor = mainConn.cursor(as_dict=True)
-mainCursor.execute('SELECT clanName, clanTag FROM rcs_data ORDER BY clanName')
+mainCursor.execute("SELECT clanName, clanTag FROM rcs_data ORDER BY clanName")
 clans = mainCursor.fetchall()
 mainConn.close()
 
