@@ -25,4 +25,3 @@ class WarStatus:
 
 def setup(bot):
     bot.add_cog(WarStatus(bot))
-

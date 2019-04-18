@@ -1,30 +1,33 @@
-import discord, pymssql
+import discord
+import pymssql
+import coc
 from discord.ext import commands
 from datetime import datetime
 from config import settings, emojis
 
 class General:
-  '''Cog for General bot commands'''
+  """Cog for General bot commands"""
   def __init__(self, bot):
     self.bot = bot
 
-  @commands.command(name='attacks', aliases=['att','attack','attackwin','attackwins'])
-  async def attacks(self, ctx, *, arg: str = 'x'):
-    '''Attack wins for the whole clan'''
-    conn = pymssql.connect(server=settings['database']['server'], user=settings['database']['username'], password=settings['database']['password'], database=settings['database']['database'])
+  @commands.command(name="attacks", aliases=["att", "attack", "attackwin", "attackwins"])
+  async def attacks(self, ctx, *, arg: str = "x"):
+    """Attack wins for the whole clan"""
+    conn = pymssql.connect(server=settings['database']['server'], user=settings['database']['username'],
+                           password=settings['database']['password'], database=settings['database']['database'])
     cursor = conn.cursor(as_dict=True)
     clanTag, clanName = resolveClanTag(arg)
-    if clanTag == 'x':
-      botLog(ctx.command,arg,ctx.author,ctx.guild,1)
-      await ctx.send('You have not provided a valid clan name or clan tag.')
+    if clanTag == "x":
+      botLog(ctx.command, arg, ctx.author, ctx.guild, 1)
+      await ctx.send("You have not provided a valid clan name or clan tag.")
       return
     memberList = []
     cursor.execute(f"SELECT playerName, attackWins, timestamp FROM rcs_members WHERE clanTag = '{clanTag}' AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = '{clanTag}' ORDER BY timestamp DESC) ORDER BY attackWins DESC")
     fetched = cursor.fetchall()
     conn.close()
     for member in fetched:
-      memberList.append({'name':member['playerName'], 'attacks':member['attackWins']})
-    content = '```' + clanName + ' (#' + clanTag.upper() + ')\n' + '{0:20}{1:>12}'.format('Name','Attack Wins')
+      memberList.append({"name": member['playerName'], "attacks": member['attackWins']})
+    content = f"```{clanName} (#{clanTag.upper()})\n{'Name':<20}{'Attack Wins':>12}"
     content += '\n--------------------------------'
     for item in memberList:
       content += '\n{0:20}{1:12}'.format(item['name'],item['attacks'])
