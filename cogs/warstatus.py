@@ -17,7 +17,7 @@ class WarStatus:
         api = coc.Client(settings['supercell']['apiKey'])
         channel = self.bot.get_channel(settings['oakChannels']['testChat'])
         while not self.bot.is_closed():
-            seconds_until_post = 300
+            seconds_until_post = 60
             print(f"Sleeping for {seconds_until_post / 60} minutes.")
             await asyncio.sleep(seconds_until_post)
 
@@ -28,7 +28,7 @@ class WarStatus:
             cursor = conn.cursor()
             cursor.execute('SELECT clanTag FROM rcs_data ORDER BY clanName')
             rows = cursor.fetchall()
-            clan_list = []
+            conn.close()
             for tag in rows:
                 clan = api.get_clan(tag[0])
                 print(clan.name)
