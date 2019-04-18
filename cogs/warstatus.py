@@ -16,7 +16,7 @@ class WarStatus:
         await self.bot.wait_until_ready()
         api = coc.Client(settings['supercell']['apiKey'])
         channel = self.bot.get_channel(settings['oakChannels']['testChat'])
-        while not self.bot.is_closed():
+        while self == self.bot.get_cog("WarStatus"):
             seconds_until_post = 60
             print(f"Sleeping for {seconds_until_post / 60} minutes.")
             await asyncio.sleep(seconds_until_post)
