@@ -1,6 +1,5 @@
 import discord
 import pymssql
-import coc
 from discord.ext import commands
 from datetime import datetime
 from config import settings, emojis
@@ -28,12 +27,12 @@ class General:
     for member in fetched:
       memberList.append({"name": member['playerName'], "attacks": member['attackWins']})
     content = f"```{clanName} (#{clanTag.upper()})\n{'Name':<20}{'Attack Wins':>12}"
-    content += '\n--------------------------------'
+    content += "\n--------------------------------"
     for item in memberList:
-      content += '\n{0:20}{1:12}'.format(item['name'],item['attacks'])
-    content += '\n--------------------------------'
+      content += f"\n{item['name']:20}{item['attacks']:12}"
+    content += "\n--------------------------------"
     content += f"\nData from: {fetched[0]['timestamp'].strftime('%-d %b %Y')}```"
-    botLog(ctx.command,arg,ctx.author,ctx.guild)
+    botLog(ctx.command, arg, ctx.author, ctx.guild)
     await ctx.send(content)
 
   @commands.command(name='defenses', aliases=['defences','def','defense','defence','defends','defend','defensewins','defencewins'])
