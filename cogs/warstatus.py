@@ -7,12 +7,13 @@ from config import settings
 class WarStatus:
     def __init__(self, bot):
         self.bot = bot
-        self.bot.loop.create_task(self.war_report())
 
     async def war_report(self):
+        """ For reporting wars to RCS war-updates channel """
+        await self.bot.wait_until_ready()
         count = 1
         channel = self.get_channel(settings['oakChannels']['testChat'])
-        while True:
+        while not self.bot.is_closed():
             seconds_until_post = 300
             print(f"Sleeping for {seconds_until_post/60} minutes.")
             await asyncio.sleep(seconds_until_post)
