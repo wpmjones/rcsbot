@@ -9,6 +9,8 @@ class WarStatus:
     def __init__(self, bot):
         self.bot = bot
 
+    # TODO figure out how to close loop before stopping cog
+
     async def war_report(self):
         """ For reporting wars to RCS war-updates channel """
         await self.bot.wait_until_ready()
