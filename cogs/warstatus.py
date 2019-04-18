@@ -12,7 +12,7 @@ class WarStatus:
         """ For reporting wars to RCS war-updates channel """
         await self.bot.wait_until_ready()
         count = 1
-        channel = self.get_channel(settings['oakChannels']['testChat'])
+        channel = self.bot.get_channel(settings['oakChannels']['testChat'])
         while not self.bot.is_closed():
             seconds_until_post = 300
             print(f"Sleeping for {seconds_until_post/60} minutes.")
