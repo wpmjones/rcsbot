@@ -1,4 +1,4 @@
-import coc
+#import coc
 import discord
 import asyncio
 import pymssql
@@ -14,7 +14,7 @@ class WarStatus:
     async def war_report(self):
         """ For reporting wars to RCS war-updates channel """
         await self.bot.wait_until_ready()
-        api = coc.Client(settings['supercell']['apiKey'])
+        #api = coc.Client(settings['supercell']['apiKey'])
         channel = self.bot.get_channel(settings['oakChannels']['testChat'])
         while self == self.bot.get_cog("WarStatus"):
             seconds_until_post = 60
@@ -30,9 +30,9 @@ class WarStatus:
             rows = cursor.fetchall()
             conn.close()
             for tag in rows:
-                clan = api.get_clan(tag[0])
-                print(clan.name)
-                await channel.send(clan.name)
+                #clan = api.get_clan(tag[0])
+                print(tag[0])
+                await channel.send(tag[0])
 
 
 def setup(bot):
