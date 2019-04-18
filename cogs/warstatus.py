@@ -24,4 +24,6 @@ class WarStatus:
 
 
 def setup(bot):
-    bot.add_cog(WarStatus(bot))
+    c = WarStatus(bot)
+    bot.add_cog(c)
+    bot.loop.create_task(c.war_report())
