@@ -28,8 +28,8 @@ class Eggs:
             await ctx.send(f"{emojis['other']['redx']} User provided **{member}** is not a member of this discord server.")
             return
         embed = discord.Embed(color=discord.Color.blue())
-        embed.add_field(name=f"{user.name}#{user.discriminator}\n{user.display_name}", value=user.avatar_url)
-        embed.set_image(url=user.avatar_url_as(size=256))
+        embed.add_field(name=f"{user.name}#{user.discriminator}", value=user.display_name)
+        embed.set_image(url=user.avatar_url_as(size=128))
         await ctx.send(embed=embed)
         bot_log(ctx.command, ctx.author)
 
