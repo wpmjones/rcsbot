@@ -36,10 +36,10 @@ class Eggs:
         bk = 33
         aq = 22
         th = 10
-        await ctx.send(f"{emojis['th'][th]} {emojis['level'][bk]} {emojis['level'][aq]} {emojis['other']['gap']} {emojis['other']['gap']}TubaToo"
+        await ctx.send(f"{emojis['th'][th]} {emojis['level'][bk]} {emojis['level'][aq]} {emojis['other']['gap']} {emojis['other']['gap']}TubaToo")
 
-                       @commands.command(name="zag", aliases=["zag-geek","zaggeek"], hidden=True)
-        async def zag(self, ctx):
+    @commands.command(name="zag", aliases=["zag-geek","zaggeek"], hidden=True)
+    async def zag(self, ctx):
         bot_log(ctx.command,ctx.author)
         await ctx.send(file=discord.File("/home/tuba/bot/cogs/zag.jpg"))
 
