@@ -15,8 +15,8 @@ class Eggs:
     @commands.command(name="avatar", hidden=True)
     async def avatar(self, ctx, member):
         # convert discord mention to user id only
-        if player.startswith("<"):
-            discord_id = "".join(player[2:-1])
+        if member.startswith("<"):
+            discord_id = "".join(member[2:-1])
             if discord_id.startswith("!"):
                 discord_id = discord_id[1:]
         else:
