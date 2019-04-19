@@ -27,7 +27,7 @@ class Eggs:
         if not is_user:
             await ctx.send(f"{emojis['other']['redx']} User provided **{member}** is not a member of this discord server.")
             return
-        embed = discord.Embed(title=user.username, description=user.display_name, color=discord.Color.blue())
+        embed = discord.Embed(title=f"{user.name}#{user.discriminator}", description=user.display_name, color=discord.Color.blue())
         embed.add_field(name=user.avatar_url)
         await ctx.send(embed=embed)
         bot_log(ctx.command, ctx.author)
