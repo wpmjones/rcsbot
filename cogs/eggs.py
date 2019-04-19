@@ -23,12 +23,14 @@ class Eggs:
             await ctx.send(emojis['other']['redx'] + " I don't believe that's a real Discord user. Please make sure you are using the '@' prefix.")
             return
         guild = ctx.bot.get_guild(settings['discord']['rcsGuildId'])
-        isUser, user = is_discord_user(guild, int(discord_id))
-        if not isUser:
+        is_user, user = is_discord_user(guild, int(discord_id))
+        if not is_user:
             await ctx.send(f"{emojis['other']['redx']} User provided **{member}** is not a member of this discord server.")
             return
-        await ctx.send(user.avatar)
-        bot_log(ctx.command,ctx.author)
+        embed = discord.Embed(title=user.username, description=user.display_name, color=discord.Color.blue())
+        embed.add_field(name=user.avatar_url)
+        await ctx.send(embed=embed)
+        bot_log(ctx.command, ctx.author)
 
     @commands.command(name="testing", hidden=True)
     async def testing(self, ctx):
