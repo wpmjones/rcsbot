@@ -29,6 +29,7 @@ class Eggs:
             return
         embed = discord.Embed(color=discord.Color.blue())
         embed.add_field(name=f"{user.name}#{user.discriminator}\n{user.display_name}", value=user.avatar_url)
+        embed.set_image = user.avatar_url_as(size=256)
         await ctx.send(embed=embed)
         bot_log(ctx.command, ctx.author)
 
