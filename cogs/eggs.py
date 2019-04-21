@@ -35,7 +35,7 @@ class Eggs:
 
     @commands.command(name="testing", hidden=True)
     async def testing(self, ctx):
-        bot_log(ctx.command,ctx.author)
+        bot_log(ctx.command, ctx.author)
         bk = 33
         aq = 22
         th = 10
@@ -44,12 +44,12 @@ class Eggs:
     @commands.command(name="zag", aliases=["zag-geek","zaggeek"], hidden=True)
     async def zag(self, ctx):
         bot_log(ctx.command,ctx.author)
-        await ctx.send(file=discord.File("/home/tuba/bot/cogs/zag.jpg"))
+        await ctx.send(file=discord.File("/home/tuba/rcsbot/cogs/zag.jpg"))
 
     @commands.command(name="tuba", hidden=True)
     async def tuba(self, ctx):
         bot_log(ctx.command,ctx.author)
-        await ctx.send(file=discord.File("/home/tuba/bot/cogs/tuba.jpg"))
+        await ctx.send(file=discord.File("/home/tuba/rcsbot/cogs/tuba.jpg"))
 
     @commands.command(name="password", hidden=True)
     async def password(self, ctx):
