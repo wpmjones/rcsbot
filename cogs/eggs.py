@@ -10,6 +10,13 @@ class Eggs:
   def __init__(self, bot):
     self.bot = bot
 
+  @commands.command(name=server)
+  async def server_list(self, ctx):
+    list_names = []
+    for guild in self.bot.guilds:
+      list_names.append(guild.name)
+      await ctx.send(list_names)
+
   @commands.command(name='colors', aliases=['colours','color','colour'], hidden=True)
   async def colors(self, ctx):
     botLog(ctx.command,ctx.author)
