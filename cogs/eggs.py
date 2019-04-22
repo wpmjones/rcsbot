@@ -11,9 +11,9 @@ class Eggs:
         self.bot = bot
 
     @commands.command(name=server)
-        async def server_list(self, ctx):
-            for guild in self.bot.guilds:
-                await ctx.send(guild.name)
+    async def server_list(self, ctx):
+        for guild in self.bot.guilds:
+            await ctx.send(guild.name)
 
     # TODO improve bot_log
 
