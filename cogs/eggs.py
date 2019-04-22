@@ -10,7 +10,7 @@ class Eggs:
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name=server)
+    @commands.command(name="server")
     async def server_list(self, ctx):
         for guild in self.bot.guilds:
             await ctx.send(guild.name)
