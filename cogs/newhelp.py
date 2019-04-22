@@ -55,26 +55,26 @@ class newHelp:
       embed.add_field(name = '++warstars <clan name or tag>', value = helpText)
     if command in ['all','top']:
       helpText = ("Responds with the top ten players across all of the RCS for the category specified."
-      "\nOptions include:"
-      "\n  :crossed_swords: attacks"
-      "\n  :shield:  defenses"
-      "\n  :trophy: trophies"
-      "\n  :moneybag: donations"
-      "\n  :star: warstars"
-      "\n  :medal: games")
+                  "\nOptions include:"
+                  "\n  :crossed_swords: attacks"
+                  "\n  :shield:  defenses"
+                  "\n  :trophy: trophies"
+                  "\n  :moneybag: donations"
+                  "\n  :star: warstars"
+                  "\n  :medal: games")
       embed.add_field(name = '++top <category>', value = helpText)
     if command in ['all','games']:
       helpText = ("Responds with the Clan Games information for the category specified."
-      "\n  - <all (or no category)> responds with all RCS clans and their current Clan Games score."
-      "\n  - <clan name or tag> responds with individual scores for the clan specified."
-      "\n  - <average> responds with the average individual score for all clans in the RCS.")
+                  "\n  - <all (or no category)> responds with all RCS clans and their current Clan Games score."
+                  "\n  - <clan name or tag> responds with individual scores for the clan specified."
+                  "\n  - <average> responds with the average individual score for all clans in the RCS.")
       embed.add_field(name = '++games <category or clan name/tag>', value = helpText)
     if command in ['all','push']:
       helpText = ("Responds with the Trophy Push information for the category specified."
-      "\n  - <all (or no category)> responds with all RCS clans and their current Trophy Push score."
-      "\n  - <TH#> responds with all players of the town hall level specified and their scores."
-      "\n  - <clan name or tag> responds with all players in the clan specified and their scores."
-      "\n  - <top> responds with the top ten players for each town hall level and their scores.")
+                  "\n  - <all (or no category)> responds with all RCS clans and their current Trophy Push score."
+                  "\n  - <TH#> responds with all players of the town hall level specified and their scores."
+                  "\n  - <clan name or tag> responds with all players in the clan specified and their scores."
+                  "\n  - <top> responds with the top ten players for each town hall level and their scores.")
       embed.add_field(name = '++push <category or clan name/tag', value = helpText)
     if command in ['all','reddit']:
       helpText = "Responds with the subreddit link for the clan specified."
