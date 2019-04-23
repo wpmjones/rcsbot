@@ -17,7 +17,8 @@ class Eggs:
         server_list = [self.bot.get_guild(506645671009583105), self.bot.get_guild(506645764512940032)]
         for guild in server_list:
             embed = discord.Embed(title=guild.name, color=discord.Color.red())
-            embed.set_image(url=guild.icon)
+            # embed.set_image(url=guild.icon)
+            print(guild.icon)
             for emoji in guild.emojis:
                 embed.add_field(name=emoji.name, value=emoji.id)
             await ctx.send(embed=embed)
