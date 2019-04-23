@@ -6,9 +6,21 @@ from datetime import datetime
 from config import settings, emojis
 
 class Eggs:
-    """Cog for easter egg commands (guess away)"""
+    """Cog for easter egg commands (guess away)
+    This is also where I try out some new commands, so it's for testing too.
+    """
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.command(name="emojis")
+    async def emoji_list(self, ctx):
+        server_list = [self.bot.get_guild(506645671009583105), self.bot.get_guild(506645764512940032)]
+        for guild in server_list:
+            embed = discord.Embed(title=guild.name, color=discord.Color.red())
+            embed.set_image(url=guild.icon)
+            for emoji in guild.emojis:
+                embed.add_field(name=emoji.name, value=emoji.id)
+            await ctx.send(embed=embed)
 
     @commands.command(name="server")
     async def server_list(self, ctx):
