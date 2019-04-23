@@ -14,11 +14,16 @@ class Eggs:
 
     @commands.command(name="emojis")
     async def emoji_list(self, ctx):
-        server_list = [self.bot.get_guild(506645671009583105), self.bot.get_guild(506645764512940032), self.bot.get_guild(251463913437134848)]
+        server_list = [self.bot.get_guild(506645671009583105),
+                       self.bot.get_guild(506645764512940032),
+                       self.bot.get_guild(531660501709750282)]
         for guild in server_list:
-            content = f"**{guild.name}**\n````"
+            content = f"**{guild.name}**\n```"
             for emoji in guild.emojis:
-                content += f"\n  {emoji.name[3:]}: <:{emoji.name}:{emoji.id}>"
+                if emoji.name.startswith("rcs")
+                    content += f"\n  {emoji.name[3:]}: <:{emoji.name}:{emoji.id}>"
+                else:
+                    content += f"\n  {emoji.name}: <:{emoji.name}:{emoji.id}>"
             content += "```"
             await ctx.send(content)
 
