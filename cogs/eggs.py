@@ -20,10 +20,7 @@ class Eggs:
         for guild in server_list:
             content = f"**{guild.name}**\n```"
             for emoji in guild.emojis:
-                if emoji.name.startswith("rcs"):
-                    content += f"\n  {emoji.name[3:]}: <:{emoji.name}:{emoji.id}>"
-                else:
-                    content += f"\n  {emoji.name}: <:{emoji.name}:{emoji.id}>"
+                content += f"\n{emoji.name}: {emoji.id}>"
             content += "```"
             await ctx.send(content)
 

@@ -1,7 +1,12 @@
-import requests, pymssql, re, discord, asyncio
+import requests
+import pymssql
+import re
+import discord
+import asyncio
 from discord.ext import commands
-from config import settings, color_pick
+from config import settings, color_pick, bot_log
 from datetime import datetime
+
 
 class CouncilCog:
     def __init__(self, bot):
@@ -18,24 +23,23 @@ class CouncilCog:
         await self.bot.change_presence(status=discord.Status.online, activity=activity)
         print(f"{datetime.now()} - {ctx.author} changed the bot presence to {msg}")
 
-
     @commands.command(name="userInfo", aliases=["ui"], hidden=True)
     @commands.guild_only()
-    async def userInfo(self, ctx, discordId):
+    async def user_info(self, ctx, discord_id):
         """Command to retreive join date for Discord user."""
         if isRcsGuild(ctx.guild) and (isCouncil(ctx.author.roles) or isChatMod(ctx.author.roles)):
-            isUser, user = isDiscordUser(ctx.guild, int(discordId))
+            isUser, user = isDiscordUser(ctx.guild, int(discord_id))
             if isUser == False:
-                if discordId.startswith("<"):
-                    discordId = discordId[2:-1]
-                    if discordId.startswith("!"):
-                        discordId = discordId[1:]
+                if discord_id.startswith("<"):
+                    discord_id = discord_id[2:-1]
+                    if discord_id.startswith("!"):
+                        discord_id = discord_id[1:]
                 else:
                     await ctx.send(":x: That's not a good user.  It should look something like <@!123456789>.")
                     return
-                isUser, user = isDiscordUser(ctx.guild, int(discordId))
+                isUser, user = isDiscordUser(ctx.guild, int(discord_id))
             if isUser == False:
-                await ctx.send(f":x: User specified **{discordId}** is not a member of this discord server.")
+                await ctx.send(f":x: User specified **{discord_id}** is not a member of this discord server.")
                 return
             today = datetime.now()
             joinDate = user.joined_at.strftime('%d %b %Y')
@@ -68,7 +72,7 @@ class CouncilCog:
                     "🇬","🇸","🇨","🇫"]
             def processContent(content):
                 if content.lower() in ["stop","cancel","quit"]:
-                    botLog(ctx.command,"Process stopped by user",ctx.author,ctx.channel,1)
+                    bot_log(ctx.command,"Process stopped by user",ctx.author,ctx.channel,1)
                     return(content, 1)
                 if content.lower() == "none":
                     return("", 0)
@@ -253,7 +257,7 @@ class CouncilCog:
                               "you, but if you'd like to add someone else from your clan to help with those items, just let one of the Global Chat Mods know (you can @ tag them)."
                               "\n\nFinally, here is a link to some helpful information. "
                               "It's a lot up front, but this will be a great resource going forward. https://docs.google.com/document/d/16gfd-BgkGk1bdRmyxIt92BA-tl1NcYk7tuR3HpFUJXg/edit?usp=sharing \n\nWelcome to the RCS!")
-            botLog(ctx.command,clanName,ctx.author,ctx.channel)
+            bot_log(ctx.command,clanName,ctx.author,ctx.channel)
         else:
             print(f"{datetime.now()} - ERROR: {ctx.author} from {ctx.guild} tried to use the ++{ctx.command} command but shouldn't be doing that.")
             await ctx.send("This command can only be performed by Council members on the RCS Discord server. Keep up these antics and I'll tell zig on you!")
@@ -271,12 +275,12 @@ class CouncilCog:
         if isRcsGuild(ctx.guild) and isCouncil(ctx.author.roles):
             clanTag, clanName = resolveClanTag(arg)
             if clanTag == "x":
-                botLog(ctx.command, arg, ctx.author, ctx.guild, 1)
+                bot_log(ctx.command, arg, ctx.author, ctx.guild, 1)
                 await ctx.send("You have not provided a valid clan name or clan tag.")
                 return
             clanTag, clanName = resolveClanTag(arg)
             if clanTag == "x":
-                botLog(ctx.command, arg, ctx.author, ctx.guild, 1)
+                bot_log(ctx.command, arg, ctx.author, ctx.guild, 1)
                 await ctx.send("You have not provided a valid clan name or clan tag.")
                 return
             conn = pymssql.connect(settings['database']['server'], settings['database']['username'], settings['database']['password'], settings['database']['database'], autocommit=True)
@@ -284,10 +288,10 @@ class CouncilCog:
             cursor.execute(f"SELECT clanName, clanTag FROM rcs_data WHERE feeder = '{clanName}'")
             fetched = cursor.fetchone()
             if fetched is not None:
-                botLog(ctx.command, f"Removing feeder for {clanName}", ctx.author, ctx.channel)
+                bot_log(ctx.command, f"Removing feeder for {clanName}", ctx.author, ctx.channel)
                 cursor.execute(f"DELETE FROM rcs_data WHERE clanTag = '{fetched['clanTag']}'")
                 await ctx.send(f"{fetched['clanName']} (feeder for {clanName}) has been removed.")
-            botLog(ctx.command, f"Removing {clanName}", ctx.author, ctx.channel)
+            bot_log(ctx.command, f"Removing {clanName}", ctx.author, ctx.channel)
             cursor.execute(f"SELECT leaderReddit, discordTag FROM rcs_data WHERE clanTag = '{clanTag}'")
             fetched = cursor.fetchone()
             cursor.execute(f"DELETE FROM rcs_data WHERE clanTag = '{clanTag}'")
@@ -317,7 +321,7 @@ class CouncilCog:
         if isRcsGuild(ctx.guild) and isAuthorized(ctx.author.roles):
             clanTag, clanName = resolveClanTag(arg)
             if clanTag == "x":
-                botLog(ctx.command, arg, ctx.author, ctx.guild, 1)
+                bot_log(ctx.command, arg, ctx.author, ctx.guild, 1)
                 await ctx.send("You have not provided a valid clan name or clan tag.")
                 return
             conn = pymssql.connect(settings['database']['server'], settings['database']['username'], settings['database']['password'], settings['database']['database'])
@@ -326,7 +330,7 @@ class CouncilCog:
             fetched = cursor.fetchone()
             conn.close()
             if fetched is not None:
-                botLog(ctx.command, clanName, ctx.author, ctx.guild)
+                bot_log(ctx.command, clanName, ctx.author, ctx.guild)
                 await ctx.send(f"The leader of {clanName} is <@{fetched['discordTag']}>")
         else:
             print(f"{datetime.now()} - ERROR: {ctx.author} from {ctx.guild} tried to use the ++leader command but shouldn't be doing that.")
@@ -344,7 +348,7 @@ class CouncilCog:
                 helpText = "Used to find Discord names with the specified string."
                 embed.add_field(name="++find <search string>", value = helpText)
                 embed.set_footer(icon_url="https://openclipart.org/image/300px/svg_to_png/122449/1298569779.png", text="rcs-bot proudly maintained by TubaKid.")
-                botLog("help", "find", ctx.author, ctx.guild)
+                bot_log("help", "find", ctx.author, ctx.guild)
                 await ctx.send(embed=embed)
                 return
             # if not help, code picks up here
@@ -373,12 +377,12 @@ class CouncilCog:
                         reportName += " (Members role)"
                     members.append(reportName)
             if len(members) == 0:
-                botLog(ctx.command, arg, ctx.author, ctx.channel)
+                bot_log(ctx.command, arg, ctx.author, ctx.channel)
                 await ctx.send("No users with that text in their name.")
                 return
             content = f"**{arg} Users**\nDiscord users with {arg} in their name.\n\n**Discord names:**\n"
             content += "\n".join(members)
-            botLog(ctx.command, arg, ctx.author, ctx.guild)
+            bot_log(ctx.command, arg, ctx.author, ctx.guild)
             await self.send_text(ctx.channel, content)
         else:
             print(f"{datetime.now()} - ERROR: {ctx.author} from {ctx.guild} tried to use the ++find command but does not have the leader or council role.")
@@ -463,24 +467,15 @@ def isChatMod(userRoles):
     return False
 
 
-def isDiscordUser(guild, discordId):
+def isDiscordUser(guild, discord_id):
     try:
-        user = guild.get_member(discordId)
+        user = guild.get_member(discord_id)
         if user is None:
             return False, None
         else:
             return True, user
     except:
         return False, None
-
-
-def botLog(command, request, author, guild, errFlag=0):
-    msg = str(datetime.now())[:16] + " - "
-    if errFlag == 0:
-        msg += f"Printing {command} for {request}. Requested by {author} for {guild}."
-    else:
-        msg += f"ERROR: User provided an incorrect argument for {command}. Argument provided: {request}. Requested by {author} for {guild}."
-    print(msg)
 
 
 mainConn = pymssql.connect(settings['database']['server'], settings['database']['username'], settings['database']['password'], settings['database']['database'])
