@@ -16,13 +16,11 @@ class Eggs:
     async def emoji_list(self, ctx):
         server_list = [self.bot.get_guild(506645671009583105), self.bot.get_guild(506645764512940032), self.bot.get_guild(251463913437134848)]
         for guild in server_list:
-            embed = discord.Embed(title=guild.name, color=discord.Color.red())
-            if guild.icon is not None:
-                embed.set_image(url=guild.icon)
-            print(f"{guild.name}: {guild.icon}")
+            content = f"**{guild.name}**\n````"
             for emoji in guild.emojis:
-                embed.add_field(name=emoji.name, value=emoji.id)
-            await ctx.send(embed=embed)
+                content += f"\n  {emoji.name[3:]}: <:{emoji.name}:{emoji.id}>"
+            content += "```"
+            await ctx.send(content)
 
     @commands.command(name="server")
     async def server_list(self, ctx):
