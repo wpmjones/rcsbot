@@ -29,7 +29,7 @@ class WarStatus:
             tags = cursor.fetchall()
             conn.close()
             async for clan_war in api.get_current_wars(tags):
-                await channel.send(f"{clan_war.clan.name}: {clan_war}.state")
+                await channel.send(f"{clan_war.clan.name}: {clan_war.state}")
 
 
 def setup(bot):
