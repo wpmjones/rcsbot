@@ -27,7 +27,7 @@ class WarStatus:
                                    settings['database']['database'])
             cursor = conn.cursor()
             cursor.execute("SELECT clanTag FROM rcs_data ORDER BY clanName")
-            tags = cursor.fetchall()
+            tags = [tag[0] for tag in cursor.fetchall()]
             print(tags)
             conn.close()
             async for clan_war in api.get_current_wars(tags):
