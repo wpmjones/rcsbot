@@ -17,6 +17,6 @@ def bot_log(command, request, author, guild, err_flag=0):
     if err_flag == 0:
         msg += f"Printing {command} for {request}. Requested by {author} for {guild}."
     else:
-        msg += f"""ERROR: User provided an incorrect argument for {command}. 
-            Argument provided: {request}. Requested by {author} for {guild}."""
+        msg += (f"ERROR: User provided an incorrect argument for {command}. "
+                f"Argument provided: {request}. Requested by {author} for {guild}.")
     print(msg)
