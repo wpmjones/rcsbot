@@ -1,5 +1,4 @@
-# import coc
-import discord
+import coc
 import asyncio
 import pymssql
 from config import settings
