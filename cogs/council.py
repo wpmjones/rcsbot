@@ -24,45 +24,42 @@ class CouncilCog:
         print(f"{datetime.now()} - {ctx.author} changed the bot presence to {msg}")
 
     @commands.command(name="userInfo", aliases=["ui"], hidden=True)
-    @commands.guild_only()
+    @commands.check(is_rcs)
+    @commands.has_any_role(settings['rcsRoles']['council'], settings['rcsRoles']['chatMods'])
     async def user_info(self, ctx, discord_id):
         """Command to retreive join date for Discord user."""
-        if is_rcs(ctx.guild) and (is_council(ctx.author.roles) or is_chat_mod(ctx.author.roles)):
-            is_user, user = is_discord_user(ctx.guild, int(discord_id))
-            if not is_user:
-                if discord_id.startswith("<"):
-                    discord_id = discord_id[2:-1]
-                    if discord_id.startswith("!"):
-                        discord_id = discord_id[1:]
-                else:
-                    await ctx.send(":x: That's not a good user.  It should look something like <@!123456789>.")
-                    return
-                is_user, user = is_discord_user(ctx.guild, int(discord_id))
-            if not is_user:
-                await ctx.send(f":x: User specified **{discord_id}** is not a member of this discord server.")
+        is_user, user = is_discord_user(ctx.guild, int(discord_id))
+        if not is_user:
+            if discord_id.startswith("<"):
+                discord_id = discord_id[2:-1]
+                if discord_id.startswith("!"):
+                    discord_id = discord_id[1:]
+            else:
+                await ctx.send(":x: That's not a good user.  It should look something like <@!123456789>.")
                 return
-            today = datetime.now()
-            join_date = user.joined_at.strftime('%d %b %Y')
-            join_delta = (today - user.joined_at).days
-            user_roles = []
-            for role in user.roles:
-                if role.name != "@everyone":
-                    user_roles.append(role.name)
-            embed = discord.Embed(title=user.display_name, color=color_pick(255, 165, 0))
-            embed.set_thumbnail(url=user.avatar_url)
-            embed.add_field(name="Joined RCS Server on", value=f"{join_date}\n({join_delta} days ago)", inline=True)
-            embed.add_field(name="Message Count", value="unknown", inline=True)
-            embed.add_field(name="Roles", value=", ".join(user_roles), inline=False)
-            embed.set_footer(text=f"User ID: {user.id}")
-            await ctx.send(embed=embed)
-        else:
-            await ctx.send("Yeah, I'm going to guess you're not on council and you don't have any business trying "
-                           "to use this command!")
+            is_user, user = is_discord_user(ctx.guild, int(discord_id))
+        if not is_user:
+            await ctx.send(f":x: User specified **{discord_id}** is not a member of this discord server.")
+            return
+        today = datetime.now()
+        join_date = user.joined_at.strftime('%d %b %Y')
+        join_delta = (today - user.joined_at).days
+        user_roles = []
+        for role in user.roles:
+            if role.name != "@everyone":
+                user_roles.append(role.name)
+        embed = discord.Embed(title=user.display_name, color=color_pick(255, 165, 0))
+        embed.set_thumbnail(url=user.avatar_url)
+        embed.add_field(name="Joined RCS Server on", value=f"{join_date}\n({join_delta} days ago)", inline=True)
+        embed.add_field(name="Message Count", value="unknown", inline=True)
+        embed.add_field(name="Roles", value=", ".join(user_roles), inline=False)
+        embed.set_footer(text=f"User ID: {user.id}")
+        await ctx.send(embed=embed)
 
     @commands.command(name="addClan", aliases=["clanAdd", "newClan"], hidden=True)
     async def add_clan(self, ctx, *, clan_name: str = "x"):
         """Command to add a new verified clan to the RCS Database."""
-        if is_rcs(ctx.guild) and is_council(ctx.author.roles):
+        if is_rcs(ctx) and is_council(ctx.author.roles):
             def check_author(m):
                 return m.author == ctx.author
             
@@ -320,7 +317,7 @@ class CouncilCog:
     @commands.guild_only()
     async def remove_clan(self, ctx, *, arg: str = "x"):
         """Command to remove a verified clan from the RCS database."""
-        if is_rcs(ctx.guild) and is_council(ctx.author.roles):
+        if is_rcs(ctx) and is_council(ctx.author.roles):
             clan_tag, clan_name = resolve_clan_tag(arg)
             if clan_tag == "x":
                 bot_log(ctx.command, arg, ctx.author, ctx.guild, 1)
@@ -379,7 +376,7 @@ class CouncilCog:
     async def leader(self, ctx, *, arg: str = "x"):
         """Command to find the leader for the selected clan.
         Usage: ++leader Reddit Argon"""
-        if is_rcs(ctx.guild) and is_authorized(ctx.author.roles):
+        if is_rcs(ctx) and is_authorized(ctx.author.roles):
             clan_tag, clan_name = resolve_clan_tag(arg)
             if clan_tag == "x":
                 bot_log(ctx.command, arg, ctx.author, ctx.guild, 1)
@@ -520,10 +517,8 @@ def resolve_clan_tag(clan_input):
     return clan_tag, clan_name
 
 
-def is_rcs(guild):
-    if guild.id == settings['discord']['rcsGuildId']:
-        return True
-    return False
+def is_rcs(ctx):
+    ctx.guild.id == settings['discord']['rcsGuildId']
 
 
 def is_authorized(user_roles):
