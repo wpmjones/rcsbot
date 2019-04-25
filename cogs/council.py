@@ -521,24 +521,23 @@ def resolve_clan_tag(clan_input):
 
 
 def is_rcs(guild):
-    # TODO compare to guild id, not name
-    if str(guild) == "Reddit Clan System":
+    if guild.id == settings['discord']['rcsGuildId']:
         return True
     return False
 
 
 def is_authorized(user_roles):
-    # TODO compare to role id, not name
     for role in user_roles:
-        if role.name in ["Leaders", "Council", "RCS Leaders"]:
+        if role.id in [settings['rcsRoles']['leaders'],
+                       settings['rcsRoles']['rcsLeaders'],
+                       settings['rcsRoles']['council']]:
             return True
     return False
 
 
 def is_council(user_roles):
-    # TODO compare to role id, not name
     for role in user_roles:
-        if role.name == "Council":
+        if role.id == settings['rcsRoles']['council']:
             return True
     return False
 
