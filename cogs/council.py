@@ -13,6 +13,7 @@ class CouncilCog:
         self.bot = bot
 
     def is_rcs(ctx):
+        print(ctx.guild.id)
         ctx.guild.id == settings['discord']['rcsGuildId']
 
     @commands.command(name="presence", hidden=True)
