@@ -109,7 +109,10 @@ class Games:
         Discord has a 2000 character limit
         """
         if len(text) < 2000:
-            await channel.send(text)
+            if block:
+                await channel.send(f"```{text}```")
+            else:
+                await channel.send(text)
         else:
             coll = ""
             for line in text.splitlines(keepends=True):
