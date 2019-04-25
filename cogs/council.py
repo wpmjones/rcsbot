@@ -34,10 +34,9 @@ class CouncilCog:
             role_list += f"{role.name}: {role.id}\n"
         await ctx.send(role_list)
 
-
     @commands.command(name="userInfo", aliases=["ui"], hidden=True)
-    # @commands.check(is_rcs)
-    @commands.has_any_role(566692408033804288, 569279865598115894)  # settings['rcsRoles']['council'], settings['rcsRoles']['chatMods'])
+    @commands.check(is_rcs)
+    @commands.has_any_role(settings['rcsRoles']['council'], settings['rcsRoles']['chatMods'])
     async def user_info(self, ctx, discord_id):
         """Command to retreive join date for Discord user."""
         is_user, user = is_discord_user(ctx.guild, int(discord_id))
