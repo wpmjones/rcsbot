@@ -26,6 +26,15 @@ class CouncilCog:
         await self.bot.change_presence(status=discord.Status.online, activity=activity)
         print(f"{datetime.now()} - {ctx.author} changed the bot presence to {msg}")
 
+    @commands.command(name="rolelist")
+    @commands.is_owner()
+    async def role_list(self, ctx):
+        role_list = ""
+        for role in ctx.guild.roles:
+            role_list += f"{role.name}: {role.id}\n"
+        await ctx.send(role_list)
+
+
     @commands.command(name="userInfo", aliases=["ui"], hidden=True)
     # @commands.check(is_rcs)
     @commands.has_any_role(566692408033804288, 569279865598115894)  # settings['rcsRoles']['council'], settings['rcsRoles']['chatMods'])
