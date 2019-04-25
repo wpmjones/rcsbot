@@ -28,8 +28,8 @@ class CouncilCog:
         print(f"{datetime.now()} - {ctx.author} changed the bot presence to {msg}")
 
     @commands.command(name="userInfo", aliases=["ui"], hidden=True)
-    # @commands.check(is_rcs)
-    @commands.has_any_role(settings['rcsRoles']['council'], settings['rcsRoles']['chatMods'])
+    @commands.check(is_rcs)
+    # @commands.has_any_role(settings['rcsRoles']['council'], settings['rcsRoles']['chatMods'])
     async def user_info(self, ctx, discord_id):
         """Command to retreive join date for Discord user."""
         is_user, user = is_discord_user(ctx.guild, int(discord_id))
