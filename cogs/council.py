@@ -12,6 +12,9 @@ class CouncilCog:
     def __init__(self, bot):
         self.bot = bot
 
+    def is_rcs(ctx):
+        ctx.guild.id == settings['discord']['rcsGuildId']
+
     @commands.command(name="presence", hidden=True)
     @commands.is_owner()
     async def presence(self, ctx, *, msg: str = "x"):
@@ -518,10 +521,6 @@ def resolve_clan_tag(clan_input):
             if clan_name == "x":
                 return "x", "x"
     return clan_tag, clan_name
-
-
-def is_rcs(ctx):
-    ctx.guild.id == settings['discord']['rcsGuildId']
 
 
 def is_authorized(user_roles):
