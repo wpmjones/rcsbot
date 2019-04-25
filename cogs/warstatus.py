@@ -10,15 +10,13 @@ class WarStatus:
     def __init__(self, bot):
         self.bot = bot
 
-    # TODO work with mathsman on loop issue
-
     async def war_report(self):
         """ For reporting wars to RCS war-updates channel """
         await self.bot.wait_until_ready()
         channel = self.bot.get_channel(settings['oakChannels']['testChat'])
         while self == self.bot.get_cog("WarStatus"):
             seconds_until_post = 60
-            print(f"Sleeping for {int(seconds_until_post / 60)} minutes.")
+            print(f"Sleeping for {seconds_until_post // 60} minutes.")
             await asyncio.sleep(seconds_until_post)
             print("I'm awake now.")
             conn = pymssql.connect(settings['database']['server'],
