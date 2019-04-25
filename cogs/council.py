@@ -14,7 +14,7 @@ class CouncilCog:
 
     def is_rcs(ctx):
         print(ctx.guild.id)
-        ctx.guild.id == settings['discord']['rcsGuildId']
+        ctx.guild.id == int(settings['discord']['rcsGuildId'])
 
     @commands.command(name="presence", hidden=True)
     @commands.is_owner()
