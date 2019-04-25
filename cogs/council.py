@@ -544,7 +544,7 @@ def is_council(user_roles):
 
 def is_chat_mod(user_roles):
     for role in user_roles:
-        if role.name == "Global Chat Mods" or "Chat Mods":
+        if role.id == settings['rcsRoles']['chatMods']:
             return True
     return False
 
