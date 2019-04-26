@@ -24,7 +24,7 @@ class Background(commands.Cog):
         if message.author == self.bot.user:
             logger.debug("RCS bot doesn't count.")
             return
-        if settings['rcsRoles']['members'] not in message.author.roles:
+        if settings['rcsRoles']['members'] not in [role.id for role in message.author.roles]:
             logger.debug("No member role.\n{} has the following roles.\n{}",
                          message.author.display_name, message.author.roles)
             return
