@@ -18,6 +18,8 @@ class Background(commands.Cog):
     async def on_message(self, message):
         if message.author == self.bot.user:
             return
+        if settings['rcsRoles']['members'] not in message.author.roles:
+            return
         conn = await asyncpg.connect(user=settings['pg']['user'],
                                      password=settings['pg']['pass'],
                                      host=settings['pg']['host'],
@@ -26,7 +28,6 @@ class Background(commands.Cog):
         points = randint(7, 14)
         if row:
             if datetime.now() > row['last_message'] + timedelta(minutes=1):
-                print(row['last_message'])
                 await conn.execute(f"UPDATE rcs_discord "
                                    f"SET message_points = {row['message_points']+points}, "
                                    f"last_message = '{datetime.now()}' "
