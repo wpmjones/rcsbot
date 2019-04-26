@@ -4,7 +4,7 @@ from discord.ext import commands
 from config import settings, emojis
 
 logger.add("general.log", rotation="100MB",
-           format="{time:YYYY-MM-DD HH:mm:ss} {level} {message}", level="DEBUG")
+           format="{time:YYYY-MM-DD HH:mm:ss} {level} {message}", level="INFO")
 info_string = "Printing {} for {}. Requested by {} for {}."
 error_string = "User provided an incorrect argument for {}. Argument provided: {}. Requested by {} for {}."
 

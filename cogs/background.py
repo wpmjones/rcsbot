@@ -45,7 +45,7 @@ class Background(commands.Cog):
                                    f"WHERE discord_id = {message.author.id}")
                 logger.info("{} receives {} for their message", message.author.display_name, points)
             else:
-                logger.debug("User posted within the last minute. No points awarded.")
+                logger.debug("{} posted within the last minute. No points awarded.", message.author.display_name)
         else:
             await conn.execute(f"INSERT INTO rcs_discord "
                                f"VALUES ({message.author.id}, {points}, 0, '{datetime.now()}')")
