@@ -22,8 +22,11 @@ class Background(commands.Cog):
     async def on_message(self, message):
         logger.debug("New message received.")
         if message.author == self.bot.user:
+            logger.debug("RCS bot doesn't count.")
             return
         if settings['rcsRoles']['members'] not in message.author.roles:
+            logger.debug("No member role.\n{} has the following roles.\n{}",
+                         message.author.display_name, message.author.roles)
             return
         logger.debug("User has member role.")
         conn = await asyncpg.connect(user=settings['pg']['user'],
