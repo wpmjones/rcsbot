@@ -20,6 +20,7 @@ class Background(commands.Cog):
     @commands.Cog.listener()
     @commands.check(is_rcs)
     async def on_message(self, message):
+        logger.debug("New message received.")
         if message.author == self.bot.user:
             return
         if settings['rcsRoles']['members'] not in message.author.roles:
