@@ -7,7 +7,9 @@ from config import settings
 import logging
 from datetime import datetime
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(filename="rcsbot.log",
+                    filemode="a",
+                    level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.info("Starting bot")
 
@@ -26,9 +28,9 @@ bot.repo = git.Repo(os.getcwd())
 
 @bot.event
 async def on_ready():
-    print("-------")
-    print(f"Logged in as {bot.user}")
-    print("-------")
+    logger.info("-------")
+    logger.info(f"Logged in as {bot.user}")
+    logger.info("-------")
 
 initialExtensions = ["cogs.general",
                      "cogs.background",
@@ -44,7 +46,7 @@ if __name__ == "__main__":
         try:
             bot.load_extension(extension)
         except Exception as e:
-            print(f"Failed to load extension {extension}", file=sys.stderr)
+            logger.info(f"Failed to load extension {extension}", file=sys.stderr)
             traceback.print_exc()
 
 bot.run(settings['discord']['rcsbotToken'])
