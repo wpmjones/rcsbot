@@ -4,9 +4,10 @@ from discord.ext import commands
 from config import settings, emojis
 
 logger.add(format="{time} {level} {message}", level="INFO")
-logger.add("general.log", rotation="100MB")
+# logger.add("general.log", rotation="100MB")
 info_string = "Printing {} for {}. Requested by {} for {}."
 error_string = "User provided an incorrect argument for {}. Argument provided: {}. Requested by {} for {}."
+
 
 class General(commands.Cog):
     """Cog for General bot commands"""
