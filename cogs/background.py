@@ -1,5 +1,6 @@
 import asyncpg
 from discord.ext import commands
+from datetime import datetime, timedelta
 from random import randint
 from config import settings, bot_log
 
@@ -24,12 +25,14 @@ class Background(commands.Cog):
         row = await conn.fetchrow(f"SELECT * FROM rcs_discord WHERE discord_id = {message.author.id}")
         points = randint(7, 14)
         if row:
-            await conn.execute(f"UPDATE rcs_discord "
-                               f"SET message_points = {row['message_points']+points} "
-                               f"WHERE discord_id = {message.author.id}")
+            if datetime.now() > row['last_message'] + timedelta(minutes=1):
+                await conn.execute(f"UPDATE rcs_discord "
+                                   f"SET message_points = {row['message_points']+points}, "
+                                   f"last_message = {datetime.now()} "
+                                   f"WHERE discord_id = {message.author.id}")
         else:
             await conn.execute(f"INSERT INTO rcs_discord "
-                               f"VALUES ({message.author.id}, {points}, 0)")
+                               f"VALUES ({message.author.id}, {points}, 0, {datetime.now()})")
 
 
 def setup(bot):
