@@ -21,11 +21,11 @@ class Background(commands.Cog):
                                      password=settings['pg']['pass'],
                                      host=settings['pg']['host'],
                                      database=settings['pg']['db'])
-        row = await conn.fetch(f"SELECT * FROM rcs_discord WHERE discord_id = {message.author.id}")
-        points = randint(0, 15)
+        row = await conn.fetchrow(f"SELECT * FROM rcs_discord WHERE discord_id = {message.author.id}")
+        points = randint(7, 14)
         if row:
             await conn.execute(f"UPDATE rcs_discord "
-                               f"SET message_xp = {row[1]+points} "
+                               f"SET message_points = {row['message_points']+points} "
                                f"WHERE discord_id = {message.author.id}")
         else:
             await conn.execute(f"INSERT INTO rcs_discord "
