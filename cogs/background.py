@@ -4,7 +4,7 @@ from random import randint
 from config import settings, bot_log
 
 
-class Background:
+class Background(commands.Cog):
     """Cog for background tasks. No real commands here."""
     def __init__(self, bot):
         self.bot = bot
