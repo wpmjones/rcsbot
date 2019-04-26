@@ -4,7 +4,7 @@ from discord.ext import commands
 from config import settings, emojis
 
 logger.add("general.log", rotation="100MB",
-           format="{time} {level} {message}", level="INFO")
+           format="{time:YYYY-MM-DD HH:mm:ss} {level} {message}", level="INFO")
 info_string = "Printing {} for {}. Requested by {} for {}."
 error_string = "User provided an incorrect argument for {}. Argument provided: {}. Requested by {} for {}."
 
@@ -40,7 +40,7 @@ class General(commands.Cog):
         for item in member_list:
             content += f"\n{item['name']:20}{item['attacks']:12}"
         await self.send_text(ctx.channel, content, 1)
-        logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
+        logger.info(info_string, ctx.command, arg, ctx.author, ctx.guild)
 
     @commands.command(name="defenses", aliases=["defences", "def", "defense", "defence", "defends",
                                                 "defend", "defensewins", "defencewins"])
