@@ -25,7 +25,7 @@ class Background(commands.Cog):
         points = randint(0, 15)
         if row:
             await conn.execute(f"UPDATE rcs_discord "
-                               f"SET message_xp = {row['message_xp']+points} "
+                               f"SET message_xp = {row[1]+points} "
                                f"WHERE discord_id = {message.author.id}")
         else:
             await conn.execute(f"INSERT INTO rcs_discord "
