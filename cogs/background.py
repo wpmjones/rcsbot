@@ -26,6 +26,7 @@ class Background(commands.Cog):
         points = randint(7, 14)
         if row:
             if datetime.now() > row['last_message'] + timedelta(minutes=1):
+                print(row['last_message'])
                 await conn.execute(f"UPDATE rcs_discord "
                                    f"SET message_points = {row['message_points']+points}, "
                                    f"last_message = {datetime.now()} "
