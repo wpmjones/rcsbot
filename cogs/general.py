@@ -1,7 +1,12 @@
 import pymssql
+from loguru import logger
 from discord.ext import commands
-from config import settings, emojis, bot_log
+from config import settings, emojis
 
+logger.add(format="{time} {level} {message}", level="INFO")
+logger.add("general.log", rotation="100MB")
+info_string = "Printing {} for {}. Requested by {} for {}."
+error_string = "User provided an incorrect argument for {}. Argument provided: {}. Requested by {} for {}."
 
 class General(commands.Cog):
     """Cog for General bot commands"""
@@ -18,7 +23,7 @@ class General(commands.Cog):
         cursor = conn.cursor(as_dict=True)
         clan_tag, clan_name = resolve_clan_tag(arg)
         if clan_tag == "x":
-            bot_log(ctx.command, arg, ctx.author, ctx.guild, 1)
+            logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
             await ctx.send("You have not provided a valid clan name or clan tag.")
             return
         member_list = []
@@ -34,7 +39,7 @@ class General(commands.Cog):
         for item in member_list:
             content += f"\n{item['name']:20}{item['attacks']:12}"
         await self.send_text(ctx.channel, content, 1)
-        bot_log(ctx.command, arg, ctx.author, ctx.guild)
+        logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
 
     @commands.command(name="defenses", aliases=["defences", "def", "defense", "defence", "defends",
                                                 "defend", "defensewins", "defencewins"])
@@ -47,7 +52,7 @@ class General(commands.Cog):
         cursor = conn.cursor(as_dict=True)
         clan_tag, clan_name = resolve_clan_tag(arg)
         if clan_tag == "x":
-            bot_log(ctx.command, arg, ctx.author, ctx.guild, 1)
+            logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
             await ctx.send("You have not provided a valid clan name or clan tag.")
             return
         member_list = []
@@ -63,7 +68,7 @@ class General(commands.Cog):
         for item in member_list:
             content += f"\n{item['name']:20}{item['defenses']:12}"
         await self.send_text(ctx.channel, content, 1)
-        bot_log(ctx.command, arg, ctx.author, ctx.guild)
+        logger.info(info_string, ctx.command, arg, ctx.author, ctx.guild)
 
     @commands.command(name="donations", aliases=["donate", "donates", "donation"])
     async def donations(self, ctx, *, arg: str = "x"):
@@ -75,7 +80,7 @@ class General(commands.Cog):
         cursor = conn.cursor(as_dict=True)
         clan_tag, clan_name = resolve_clan_tag(arg)
         if clan_tag == "x":
-            bot_log(ctx.command, arg, ctx.author, ctx.guild, 1)
+            logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
             await ctx.send("You have not provided a valid clan name or clan tag.")
             return
         member_list = []
@@ -92,7 +97,7 @@ class General(commands.Cog):
         for item in member_list:
             content += f"\n{item['name']:19}{str(item['donations']):>11}/{str(item['received'])}"
         await self.send_text(ctx.channel, content, 1)
-        bot_log(ctx.command, arg, ctx.author, ctx.guild)
+        logger.info(info_string, ctx.command, arg, ctx.author, ctx.guild)
 
     @commands.command(name="trophies", aliases=["trophy"])
     async def trophies(self, ctx, *, arg: str = "x"):
@@ -104,7 +109,7 @@ class General(commands.Cog):
         cursor = conn.cursor(as_dict=True)
         clan_tag, clan_name = resolve_clan_tag(arg)
         if clan_tag == "x":
-            bot_log(ctx.command, arg, ctx.author, ctx.guild, 1)
+            logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
             await ctx.send("You have not provided a valid clan name or clan tag.")
             return
         member_list = []
@@ -120,7 +125,7 @@ class General(commands.Cog):
         for item in member_list:
             content += f"\n{item['name']:20}{str(item['trophies']):>10}"
         await self.send_text(ctx.channel, content, 1)
-        bot_log(ctx.command, arg, ctx.author, ctx.guild)
+        logger.info(info_string, ctx.command, arg, ctx.author, ctx.guild)
 
     @commands.command(name="besttrophies", aliases=["besttrophy", "mosttrophies"])
     async def besttrophies(self, ctx, *, arg: str = "x"):
@@ -132,7 +137,7 @@ class General(commands.Cog):
         cursor = conn.cursor(as_dict=True)
         clan_tag, clan_name = resolve_clan_tag(arg)
         if clan_tag == "x":
-            bot_log(ctx.command, arg, ctx.author, ctx.guild, 1)
+            logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
             await ctx.send("You have not provided a valid clan name or clan tag.")
             return
         member_list = []
@@ -148,7 +153,7 @@ class General(commands.Cog):
         for item in member_list:
             content += f"\n{item['name']:20}{str(item['bestTrophies']):>10}"
         await self.send_text(ctx.channel, content, 1)
-        bot_log(ctx.command, arg, ctx.author, ctx.guild)
+        logger.info(info_string, ctx.command, arg, ctx.author, ctx.guild)
 
     @commands.command(name="townhalls", aliases=["townhall", "th"])
     async def townhalls(self, ctx, *, arg: str = "x"):
@@ -160,7 +165,7 @@ class General(commands.Cog):
         cursor = conn.cursor(as_dict=True)
         clan_tag, clan_name = resolve_clan_tag(arg)
         if clan_tag == "x":
-            bot_log(ctx.command, arg, ctx.author, ctx.guild, 1)
+            logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
             await ctx.send("You have not provided a valid clan name or clan tag.")
             return
         member_list = []
@@ -178,7 +183,7 @@ class General(commands.Cog):
         for item in member_list:
             content += f"\n{item['thLevel']} {gap}{item['name']}"
         await self.send_text(ctx.channel, content)
-        bot_log(ctx.command, arg, ctx.author, ctx.guild)
+        logger.info(info_string, ctx.command, arg, ctx.author, ctx.guild)
 
     @commands.command(name="builderhalls", aliases=["builderhall", "bh"])
     async def builderhalls(self, ctx, *, arg: str = "x"):
@@ -190,7 +195,7 @@ class General(commands.Cog):
         cursor = conn.cursor(as_dict=True)
         clan_tag, clan_name = resolve_clan_tag(arg)
         if clan_tag == "x":
-            bot_log(ctx.command, arg, ctx.author, ctx.guild, 1)
+            logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
             await ctx.send("You have not provided a valid clan name or clan tag.")
             return
         member_list = []
@@ -208,7 +213,7 @@ class General(commands.Cog):
         for item in member_list:
             content += f"\n{item['bhLevel']} {gap}{item['name']}"
         await self.send_text(ctx.channel, content)
-        bot_log(ctx.command, arg, ctx.author, ctx.guild)
+        logger.info(info_string, ctx.command, arg, ctx.author, ctx.guild)
 
     @commands.command(name="warstars", aliases=["stars"])
     async def warstars(self, ctx, *, arg: str = "x"):
@@ -220,7 +225,7 @@ class General(commands.Cog):
         cursor = conn.cursor(as_dict=True)
         clan_tag, clan_name = resolve_clan_tag(arg)
         if clan_tag == "x":
-            bot_log(ctx.command, arg, ctx.author, ctx.guild, 1)
+            logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
             await ctx.send("You have not provided a valid clan name or clan tag.")
             return
         member_list = []
@@ -236,7 +241,7 @@ class General(commands.Cog):
         for item in member_list:
             content += f"\n{item['name']:20}{str(item['warStars']):>10}"
         await self.send_text(ctx.channel, content, 1)
-        bot_log(ctx.command, arg, ctx.author, ctx.guild)
+        logger.info(info_string, ctx.command, arg, ctx.author, ctx.guild)
 
     @commands.command(name="top")
     async def top(self, ctx, category: str = "x"):
@@ -257,7 +262,7 @@ class General(commands.Cog):
                                settings['database']['database'])
         cursor = conn.cursor(as_dict=True)
         if category not in categories:
-            bot_log(ctx.command, category, ctx.author, ctx.guild, 1)
+            logger.error(error_string, ctx.command, category, ctx.author, ctx.guild)
             await ctx.send("You need to provide a valid category.\n(warstars, attacks, defenses, trophies, donations)")
             return
         if category != "games":
@@ -275,7 +280,7 @@ class General(commands.Cog):
             for item in member_list:
                 content += f"\n{item['name'] + ' (' + item['clan'] + ')':33}{str(item['amount']):>7}"
             await self.send_text(ctx.channel, content, 1)
-            bot_log(ctx.command, category, ctx.author, ctx.guild)
+            logger.info(info_string, ctx.command, category, ctx.author, ctx.guild)
         else:
             member_list = []
             temp_table = ("CREATE TABLE #rcs_players (playerTag varchar(15), playerName nvarchar(50)) "
@@ -297,18 +302,18 @@ class General(commands.Cog):
             for item in member_list:
                 content += f"\n{item['name']:33}{str(item['points']):>7}"
             await self.send_text(ctx.channel, content, 1)
-            bot_log(ctx.command, category, ctx.author, ctx.guild)
+            logger.info(info_string, ctx.command, category, ctx.author, ctx.guild)
             
     @commands.command(name="reddit", aliases=["subreddit"])
     async def reddit(self, ctx, *, arg: str = "x"):
         """Return link to specified clan's subreddit"""
         if arg == "x":
-            bot_log(ctx.command, "clan missing", ctx.author, ctx.guild, 1)
+            logger.error(error_string, ctx.command, "clan missing", ctx.author, ctx.guild)
             await ctx.send("You must provide a clan name or tag.")
             return
         clan_tag, clan_name = resolve_clan_tag(arg)
         if clan_tag == "x":
-            bot_log(ctx.command, arg, ctx.author, ctx.guild, 1)
+            logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
             await ctx.send("You have not provided a valid clan name or clan tag.")
             return
         conn = pymssql.connect(settings['database']['server'], 
@@ -318,7 +323,7 @@ class General(commands.Cog):
         cursor = conn.cursor(as_dict=True)
         cursor.execute(f"SELECT subReddit FROM rcs_data WHERE clanTag = '{clan_tag}'")
         fetched = cursor.fetchone()
-        bot_log(ctx.command, arg, ctx.author, ctx.guild)
+        logger.info(info_string, ctx.command, arg, ctx.author, ctx.guild)
         if fetched['subReddit'] != "":
             await ctx.send(fetched['subReddit'])
         else:

@@ -1,8 +1,12 @@
 import asyncpg
+from loguru import logger
 from discord.ext import commands
 from datetime import datetime, timedelta
 from random import randint
-from config import settings, bot_log
+from config import settings
+
+logger.add(format="{time} {level} {message}", level="INFO")
+logger.add("background.log", rotation="100MB")
 
 
 class Background(commands.Cog):
@@ -33,6 +37,7 @@ class Background(commands.Cog):
                                    f"last_message = '{datetime.now()}' "
                                    f"WHERE discord_id = {message.author.id}")
         else:
+            logger.info("Adding {} to the rcs_discord table for message tracking", message.author.display_name)
             await conn.execute(f"INSERT INTO rcs_discord "
                                f"VALUES ({message.author.id}, {points}, 0, '{datetime.now()}')")
 
