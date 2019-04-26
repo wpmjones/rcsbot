@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 from random import randint
 from config import settings
 
-logger.add(format="{time} {level} {message}", level="INFO")
-logger.add("background.log", rotation="100MB")
+logger.add("background.log", rotation="100MB",
+           format="{time} {level} {message}", level="INFO")
 
 
 class Background(commands.Cog):
