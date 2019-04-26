@@ -9,7 +9,7 @@ with open("/home/tuba/emoji.yaml", "r") as f:
 
 
 def color_pick(r, g, b):
-    return (r*65536) + (g*256) + b
+    return int.from_bytes([r, g, b], byteorder='big')
 
 
 def bot_log(command, request, author, guild, err_flag=0):
