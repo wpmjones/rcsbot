@@ -30,7 +30,13 @@ async def on_ready():
     print(f"Logged in as {bot.user}")
     print("-------")
 
-initialExtensions = ["cogs.general","cogs.push", "cogs.games", "cogs.newhelp", "cogs.council", "cogs.owner", "cogs.eggs"]
+initialExtensions = ["cogs.general",
+                     "cogs.push",
+                     "cogs.games",
+                     "cogs.newhelp",
+                     "cogs.council",
+                     "cogs.owner",
+                     "cogs.eggs"]
 
 if __name__ == "__main__":
     for extension in initialExtensions:
