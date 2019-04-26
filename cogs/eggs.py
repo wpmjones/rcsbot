@@ -5,7 +5,8 @@ from discord.ext import commands
 from datetime import datetime
 from config import settings, emojis
 
-class Eggs:
+
+class Eggs(commands.Cog):
     """Cog for easter egg commands (guess away)
     This is also where I try out some new commands, so it's for testing too.
     """

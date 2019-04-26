@@ -6,7 +6,7 @@ from config import settings
 api = coc.Client(settings['supercell']['user'], settings['supercell']['pass'])
 
 
-class WarStatus:
+class WarStatus(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 

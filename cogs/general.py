@@ -3,7 +3,7 @@ from discord.ext import commands
 from config import settings, emojis, bot_log
 
 
-class General:
+class General(commands.Cog):
     """Cog for General bot commands"""
     def __init__(self, bot):
         self.bot = bot

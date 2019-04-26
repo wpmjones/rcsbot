@@ -8,7 +8,7 @@ from config import settings, color_pick, bot_log
 from datetime import datetime
 
 
-class CouncilCog:
+class CouncilCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 

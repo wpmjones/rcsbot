@@ -4,7 +4,8 @@ from datetime import datetime
 from discord.ext import commands
 from config import settings, color_pick, bot_log
 
-class newHelp:
+
+class newHelp(commands.Cog):
     """New help file for rcs-bot"""
     def __init__(self, bot):
         self.bot = bot

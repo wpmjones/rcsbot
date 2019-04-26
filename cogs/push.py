@@ -5,7 +5,8 @@ from config import settings
 
 '''Cog for trophy push'''
 
-class Push:
+
+class Push(commands.Cog):
   '''Cog for RCS trophy push'''
   def __init__(self, bot):
     self.bot = bot

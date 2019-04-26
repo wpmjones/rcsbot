@@ -5,7 +5,7 @@ from config import settings, bot_log
 """Cog for trophy push"""
 
 
-class Games:
+class Games(commands.Cog):
     """Cog for Clan Games"""
     def __init__(self, bot):
         self.bot = bot

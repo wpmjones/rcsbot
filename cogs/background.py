@@ -15,6 +15,8 @@ class Background(commands.Cog):
     @commands.Cog.listener()
     @commands.check(is_rcs)
     async def on_message(self, message):
+        if message.author == self.bot.user:
+            return
         conn = await asyncpg.connect(user=settings['pg']['user'],
                                      password=settings['pg']['pass'],
                                      host="localhost",
