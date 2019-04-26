@@ -21,16 +21,17 @@ You can use the clan tag (with or without the hashtag) or you can use the clan n
 
 There are easter eggs. Feel free to try and find them!"""
 
-
 bot = commands.Bot(command_prefix="++", description=description, case_insensitive=True)
 bot.remove_command("help")
 bot.repo = git.Repo(os.getcwd())
+
 
 @bot.event
 async def on_ready():
     logger.info("-------")
     logger.info(f"Logged in as {bot.user}")
     logger.info("-------")
+
 
 initialExtensions = ["cogs.general",
                      "cogs.background",
