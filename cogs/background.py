@@ -19,7 +19,7 @@ class Background(commands.Cog):
             return
         conn = await asyncpg.connect(user=settings['pg']['user'],
                                      password=settings['pg']['pass'],
-                                     host="localhost",
+                                     host=settings['pg']['host'],
                                      database=settings['pg']['db'])
         row = await conn.fetch(f"SELECT * FROM rcs_discord WHERE discord_id = {message.author.id}")
         points = randint(0, 15)

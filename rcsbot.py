@@ -31,6 +31,7 @@ async def on_ready():
     print("-------")
 
 initialExtensions = ["cogs.general",
+                     "cogs.background",
                      "cogs.push",
                      "cogs.games",
                      "cogs.newhelp",
