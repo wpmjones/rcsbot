@@ -29,11 +29,11 @@ class Background(commands.Cog):
                 print(row['last_message'])
                 await conn.execute(f"UPDATE rcs_discord "
                                    f"SET message_points = {row['message_points']+points}, "
-                                   f"last_message = {datetime.now()} "
+                                   f"last_message = '{datetime.now()}' "
                                    f"WHERE discord_id = {message.author.id}")
         else:
             await conn.execute(f"INSERT INTO rcs_discord "
-                               f"VALUES ({message.author.id}, {points}, 0, {datetime.now()})")
+                               f"VALUES ({message.author.id}, {points}, 0, '{datetime.now()}')")
 
 
 def setup(bot):
