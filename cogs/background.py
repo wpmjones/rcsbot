@@ -29,7 +29,7 @@ class Background(commands.Cog):
                                f"WHERE discord_id = {message.author.id}")
         else:
             await conn.execute(f"INSERT INTO rcs_discord "
-                               f"VALUES ({message.author.id}, points, 0)")
+                               f"VALUES ({message.author.id}, {points}, 0)")
 
 
 def setup(bot):
