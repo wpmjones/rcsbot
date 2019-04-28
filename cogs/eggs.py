@@ -47,9 +47,11 @@ class Eggs(commands.Cog):
             await ctx.send(f"{emojis['other']['redx']} **{member}** is not a member of this discord server.")
             return
         embed = discord.Embed(color=discord.Color.blue())
-        embed.add_field(name=f"{user.name}#{user.discriminator}", value=user.display_name)
+        embed.add_field(name=f"{user.name}#{user.discriminator}", value=user.display_name, inline=True)
+        embed.add_field(name="Avatar URL", value=user.avatar_url, inline=True)
         embed.set_image(url=user.avatar_url_as(size=128))
-        embed.set_footer(text=f"{user.id} - {user.avatar_url}")
+        embed.set_footer(text=f"Discord ID: {user.id}",
+                         url="https://discordapp.com/assets/2c21aeda16de354ba5334551a883b481.png")
         await ctx.send(embed=embed)
         bot_log(ctx.command, member, ctx.author, ctx.guild)
 
