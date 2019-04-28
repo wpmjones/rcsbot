@@ -68,9 +68,10 @@ class CouncilCog(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(name="addClan", aliases=["clanAdd", "newClan"], hidden=True)
+    @commands.check(is_rcs)
     async def add_clan(self, ctx, *, clan_name: str = "x"):
         """Command to add a new verified clan to the RCS Database."""
-        if is_rcs(ctx) and is_council(ctx.author.roles):
+        if is_council(ctx.author.roles):
             def check_author(m):
                 return m.author == ctx.author
             
@@ -325,10 +326,10 @@ class CouncilCog(commands.Cog):
     #    await member.send("This is a test DM from rcs-bot. Please let TubaKid know if you have received it.")
 
     @commands.command(name="removeClan", aliases=["clanRemove"], hidden=True)
-    @commands.guild_only()
+    @commands.check(is_rcs)
     async def remove_clan(self, ctx, *, arg: str = "x"):
         """Command to remove a verified clan from the RCS database."""
-        if is_rcs(ctx) and is_council(ctx.author.roles):
+        if is_council(ctx.author.roles):
             clan_tag, clan_name = resolve_clan_tag(arg)
             if clan_tag == "x":
                 bot_log(ctx.command, arg, ctx.author, ctx.guild, 1)
@@ -383,11 +384,11 @@ class CouncilCog(commands.Cog):
                            "Keep up these antics and I'll tell zig on you!")
 
     @commands.command(name="leader", hidden=True)
-    @commands.guild_only()
+    @commands.check(is_rcs)
     async def leader(self, ctx, *, arg: str = "x"):
         """Command to find the leader for the selected clan.
         Usage: ++leader Reddit Argon"""
-        if is_rcs(ctx) and is_authorized(ctx.author.roles):
+        if is_authorized(ctx.author.roles):
             clan_tag, clan_name = resolve_clan_tag(arg)
             if clan_tag == "x":
                 bot_log(ctx.command, arg, ctx.author, ctx.guild, 1)
