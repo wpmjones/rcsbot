@@ -50,19 +50,10 @@ class Eggs(commands.Cog):
         embed.add_field(name=f"{user.name}#{user.discriminator}", value=user.display_name, inline=True)
         embed.add_field(name="Avatar URL", value=user.avatar_url, inline=True)
         embed.set_image(url=user.avatar_url_as(size=128))
-        embed.set_footer(text=f"Discord ID: {user.id}",
-                         url="https://discordapp.com/assets/2c21aeda16de354ba5334551a883b481.png")
+        # embed.set_footer(text=f"Discord ID: {user.id}",
+        #                  url="https://discordapp.com/assets/2c21aeda16de354ba5334551a883b481.png")
         await ctx.send(embed=embed)
         bot_log(ctx.command, member, ctx.author, ctx.guild)
-
-    @commands.command(name="testing", hidden=True)
-    async def testing(self, ctx):
-        bot_log(ctx.command, "testing", ctx.author, ctx.guild)
-        bk = 33
-        aq = 22
-        th = 10
-        await ctx.send(f"""{emojis['th'][th]} {emojis['level'][bk]} {emojis['level'][aq]} "
-                       {emojis['other']['gap']} {emojis['other']['gap']}TubaToo""")
 
     @commands.command(name="zag", aliases=["zag-geek", "zaggeek"], hidden=True)
     async def zag(self, ctx):
