@@ -1,44 +1,49 @@
 import csv
-from datetime import datetime, date
+from datetime import datetime
 
-def getSeasonStart():
-  with open('/home/tuba/season.csv') as csvfile:
-    reader = csv.DictReader(csvfile)
-    for row in reader:
-      return row['start']
 
-def getSeasonEnd():
-  with open('/home/tuba/season.csv') as csvfile:
-    reader = csv.DictReader(csvfile)
-    for row in reader:
-      return row['end']
+def get_season_start():
+    with open('/home/tuba/season.csv') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            return row['start']
 
-def getDaysLeft():
-  dateFormat = '%Y-%m-%d'
-  now = datetime.now()
-  with open('/home/tuba/season.csv') as csvfile:
-    reader = csv.DictReader(csvfile)
-    for row in reader:
-      seasonEnd = row['end']
-  delta = datetime.strptime(seasonEnd, dateFormat) - now
-  return delta.days + 1
 
-def getDaysSince():
-  dateFormat = '%Y-%m-%d'
-  now = datetime.now()
-  with open('/home/tuba/season.csv') as csvfile:
-    reader = csv.DictReader(csvfile)
-    for row in reader:
-      seasonStart = row['start']
-  delta = now - datetime.strptime(seasonStart, dateFormat)
-  return delta.days
+def get_season_end():
+    with open('/home/tuba/season.csv') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            return row['end']
 
-def getSeasonLength():
-  dateFormat = '%Y-%m-%d'
-  with open('/home/tuba/season.csv') as csvfile:
-    reader = csv.DictReader(csvfile)
-    for row in reader:
-      seasonStart = row['start']
-      seasonEnd = row['end']
-  delta = datetime.strptime(seasonEnd, dateFormat) - datetime.strptime(seasonStart, dateFormat)
-  return delta.days
+
+def get_days_left():
+    date_format = '%Y-%m-%d'
+    now = datetime.now()
+    with open('/home/tuba/season.csv') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            season_end = row['end']
+    delta = datetime.strptime(season_end, date_format) - now
+    return delta.days + 1
+
+
+def get_days_since():
+    date_format = '%Y-%m-%d'
+    now = datetime.now()
+    with open('/home/tuba/season.csv') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            season_start = row['start']
+    delta = now - datetime.strptime(season_start, date_format)
+    return delta.days
+
+
+def get_season_length():
+    date_format = '%Y-%m-%d'
+    with open('/home/tuba/season.csv') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            season_start = row['start']
+            season_end = row['end']
+    delta = datetime.strptime(season_end, date_format) - datetime.strptime(season_start, date_format)
+    return delta.days
