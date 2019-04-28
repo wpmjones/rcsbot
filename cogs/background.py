@@ -41,14 +41,18 @@ class Background(commands.Cog):
             if datetime.now() > row['last_message'] + timedelta(minutes=1):
                 await conn.execute(f"UPDATE rcs_discord "
                                    f"SET message_points = {row['message_points']+points}, "
-                                   f"last_message = '{datetime.now()}' "
+                                   f"last_message = '{datetime.now()}', "
+                                   f"message_count = {row['message_count']+1} "
                                    f"WHERE discord_id = {message.author.id}")
                 logger.info("{} receives {} for their message", message.author.display_name, points)
             else:
+                await conn.execute(f"UPDATE rcs_discord "
+                                   f"SET last_message = {datetime.now()} "
+                                   f"WHERE discord_id = {message.author.id}")
                 logger.info("{} posted within the last minute. No points awarded.", message.author.display_name)
         else:
             await conn.execute(f"INSERT INTO rcs_discord "
-                               f"VALUES ({message.author.id}, {points}, 0, '{datetime.now()}')")
+                               f"VALUES ({message.author.id}, {points}, 0, '{datetime.now()}', 1)")
             logger.info("Added {} to the rcs_discord table for message tracking", message.author.display_name)
 
 
