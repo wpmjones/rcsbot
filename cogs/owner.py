@@ -64,6 +64,27 @@ class OwnerCog(commands.Cog):
             print(f"ERROR: {type(e).__name__} - {e}")
             await ctx.send(f"**`ERROR:`** {type(e).__name__} - {e}")
 
+    @commands.command(name="emojis")
+    @commands.is_owner()
+    async def emoji_list(self, ctx):
+        server_list = [self.bot.get_guild(506645671009583105),
+                       self.bot.get_guild(506645764512940032),
+                       self.bot.get_guild(531660501709750282)]
+        for guild in server_list:
+            content = f"**{guild.name}**\n```"
+            for emoji in guild.emojis:
+                content += f"\n{emoji.name}: {emoji.id}>"
+            content += "```"
+            await ctx.send(content)
+
+    @commands.command(name="server")
+    @commands.is_owner()
+    async def server_list(self, ctx):
+        guild_count = len(self.bot.guilds)
+        # TODO create embed with guild.name and guild.owner
+        for guild in self.bot.guilds:
+            await ctx.send(guild.name)
+
 
 def setup(bot):
     bot.add_cog(OwnerCog(bot))

@@ -3,15 +3,15 @@ from datetime import datetime
 
 
 def get_season_start():
-    with open('/home/tuba/season.csv') as csvfile:
-        reader = csv.DictReader(csvfile)
+    with open('/home/tuba/season.csv') as csv_file:
+        reader = csv.DictReader(csv_file)
         for row in reader:
             return row['start']
 
 
 def get_season_end():
-    with open('/home/tuba/season.csv') as csvfile:
-        reader = csv.DictReader(csvfile)
+    with open('/home/tuba/season.csv') as csv_file:
+        reader = csv.DictReader(csv_file)
         for row in reader:
             return row['end']
 
@@ -19,8 +19,8 @@ def get_season_end():
 def get_days_left():
     date_format = '%Y-%m-%d'
     now = datetime.now()
-    with open('/home/tuba/season.csv') as csvfile:
-        reader = csv.DictReader(csvfile)
+    with open('/home/tuba/season.csv') as csv_file:
+        reader = csv.DictReader(csv_file)
         for row in reader:
             season_end = row['end']
     delta = datetime.strptime(season_end, date_format) - now
@@ -30,8 +30,8 @@ def get_days_left():
 def get_days_since():
     date_format = '%Y-%m-%d'
     now = datetime.now()
-    with open('/home/tuba/season.csv') as csvfile:
-        reader = csv.DictReader(csvfile)
+    with open('/home/tuba/season.csv') as csv_file:
+        reader = csv.DictReader(csv_file)
         for row in reader:
             season_start = row['start']
     delta = now - datetime.strptime(season_start, date_format)
@@ -40,10 +40,19 @@ def get_days_since():
 
 def get_season_length():
     date_format = '%Y-%m-%d'
-    with open('/home/tuba/season.csv') as csvfile:
-        reader = csv.DictReader(csvfile)
+    with open('/home/tuba/season.csv') as csv_file:
+        reader = csv.DictReader(csv_file)
         for row in reader:
             season_start = row['start']
             season_end = row['end']
     delta = datetime.strptime(season_end, date_format) - datetime.strptime(season_start, date_format)
     return delta.days
+
+
+def update_season(new_end_date):
+    new_start_date = get_season_end()
+    with open("/home/tuba/season.csv") as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow(["start", "end"])
+        writer.writerow([new_start_date, new_end_date])
+    return "success"

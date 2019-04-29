@@ -1,6 +1,8 @@
 import discord
 import requests
 import pymssql
+import season
+import traceback
 from discord.ext import commands
 from datetime import datetime
 from config import settings, emojis
@@ -13,22 +15,34 @@ class Eggs(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="emojis")
-    async def emoji_list(self, ctx):
-        server_list = [self.bot.get_guild(506645671009583105),
-                       self.bot.get_guild(506645764512940032),
-                       self.bot.get_guild(531660501709750282)]
-        for guild in server_list:
-            content = f"**{guild.name}**\n```"
-            for emoji in guild.emojis:
-                content += f"\n{emoji.name}: {emoji.id}>"
-            content += "```"
-            await ctx.send(content)
-
-    @commands.command(name="server")
-    async def server_list(self, ctx):
-        for guild in self.bot.guilds:
-            await ctx.send(guild.name)
+    @commands.command(name="season", hidden=True)
+    async def season(self, ctx, arg: str = ""):
+        """Command to show and modify the season information"""
+        if arg == "":
+            # Return start/stop of current season and days left
+            embed = discord.Embed(title="Season Information", color=discord.Color.green())
+            embed.add_field(name="Season Start", value=season.get_season_start())
+            embed.add_field(name="Season End", value=season.get_season_end())
+            embed.add_field(name="Days Left", value=season.get_days_left())
+            embed.set_thumbnail(url="http://www.mayodev.com/images/clock.png")
+            await ctx.send(embed=embed)
+            return
+        if not is_council(ctx.author.roles):
+            await ctx.send("I'm sorry. I'd love to help, but you're not authorized to make changes to the season.")
+            return
+        if datetime.now() < season.get_season_end():
+            await ctx.send("I would much prefer it if you waited until the season ends to change the dates.")
+            return
+        try:
+            new_end_date = datetime.strptime(arg, "%Y-%m-%d")
+            season.update_season(new_end_date)
+        except ValueError:
+            await ctx.send("The date you provided is not in the correct format. YYYY-MM-DD")
+            return
+        except Exception as ex:
+            await ctx.send(log_traceback(ex))
+            return
+        await ctx.send(f"File updated.  The new season ends in {season.get_days_left()} days.")
 
     @commands.command(name="avatar", hidden=True)
     async def avatar(self, ctx, member):
@@ -99,6 +113,13 @@ class Eggs(commands.Cog):
         await ctx.send(content)
 
 
+def is_council(user_roles):
+    for role in user_roles:
+        if role.id == settings['rcsRoles']['council']:
+            return True
+    return False
+
+
 def is_discord_user(guild, discord_id):
     try:
         user = guild.get_member(discord_id)
@@ -117,6 +138,12 @@ def bot_log(command, author, err_flag=0):
     else:
         msg += f"ERROR: User provided an incorrect argument for {command}. Requested by {author}."
     print(msg)
+
+
+def log_traceback(ex):
+    tb_lines = traceback.format_exception(ex.__class__, ex, ex.__traceback__)
+    tb_text = "".join(tb_lines)
+    return tb_text
 
 
 def setup(bot):
