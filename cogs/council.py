@@ -15,6 +15,17 @@ class CouncilCog(commands.Cog):
     def is_rcs(ctx):
         return ctx.guild.id == int(settings['discord']['rcsGuildId'])
 
+    @commands.command(name="form", aliases=["magic"], hidden=True)
+    async def magic_form(self, ctx):
+        if ctx.channel.id == settings['rcsChannels']['council']:
+            await ctx.send(
+                "https://docs.google.com/forms/d/e/1FAIpQLScnSCYr2-qA7OHxrf-z0BZFjDr8aRvvHzIM6bIMTLVtlO16GA/viewform")
+        else:
+            await ctx.send("I think I'll respond in the private council channel.")
+            channel = self.bot.get_channel(settings['rcsChannels']['council'])
+            await channel.send(
+                "https://docs.google.com/forms/d/e/1FAIpQLScnSCYr2-qA7OHxrf-z0BZFjDr8aRvvHzIM6bIMTLVtlO16GA/viewform")
+
     @commands.command(name="presence", hidden=True)
     @commands.is_owner()
     async def presence(self, ctx, *, msg: str = "x"):
