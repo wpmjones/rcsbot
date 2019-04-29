@@ -74,7 +74,7 @@ class Games(commands.Cog):
             cursor.execute(f"SELECT b.playerName, CASE WHEN (a.currentPoints - a.startingPoints) > {player_points} "
                            f"THEN {player_points} "
                            f"ELSE (a.currentPoints - a.startingPoints) END AS points "
-                           f"FROM rcs_clanGames a LEFT JOIN #rcs_players b ON a.playerTag = b.playerTag "
+                           f"FROM rcs_clanGames a INNER JOIN #rcs_players b ON a.playerTag = b.playerTag "
                            f"WHERE eventId = (SELECT MAX(eventId) FROM rcs_events WHERE eventType = 5) "
                            f"AND a.clanTag = '{clan_tag}' "
                            f"ORDER BY points DESC")
@@ -86,21 +86,23 @@ class Games(commands.Cog):
                     break
             conn.close()
             clan_total = 0
-            channel = self.bot.get_channel(settings['oakChannels']['testChat'])
             for member in fetched:
                 clan_total += member['points']
-                if member['points'] >= player_points:
-                    member_list.append({"name": member['playerName'] + " *", "game_points": member['points']})
+                # Compensate for NULL in fetched due to missing player in rcs_members
+                if not member['playerName']:
+                    player = "Missing"
                 else:
-                    member_list.append({"name": member['playerName'], "game_points": member['points']})
-            await channel.send(member_list[3])
+                    player = member['playerName']
+                if member['points'] >= player_points:
+                    member_list.append({"name": player + " *", "game_points": member['points']})
+                else:
+                    member_list.append({"name": player, "game_points": member['points']})
             content = "```" + clan_name + " (#" + clan_tag.upper() + ")"
             content += "\n{0:20}{1:>12}".format("Clan Total: ", str(clan_total))
             content += "\n{0:20}{1:>12}".format("Clan Average: ", str(clan_average))
             content += "\n{0:20}{1:>12}".format("name", "Game Points")
             content += "\n--------------------------------"
             for item in member_list:
-                await channel.send(f"{item['name']} - {item['game_points']}")
                 content += f"\n{item['name']:20}{item['game_points']:12}"
             content += "```"
             bot_log(ctx.command, arg, ctx.author, ctx.guild)
