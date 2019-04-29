@@ -17,14 +17,17 @@ class CouncilCog(commands.Cog):
 
     @commands.command(name="form", aliases=["magic"], hidden=True)
     async def magic_form(self, ctx):
-        if ctx.channel.id == settings['rcsChannels']['council']:
-            await ctx.send(
-                "https://docs.google.com/forms/d/e/1FAIpQLScnSCYr2-qA7OHxrf-z0BZFjDr8aRvvHzIM6bIMTLVtlO16GA/viewform")
+        if is_council(ctx.author.roles):
+            if ctx.channel.id == settings['rcsChannels']['council']:
+                await ctx.send("https://docs.google.com/forms/d/e/1FAIpQLScnSCYr2-"
+                               "qA7OHxrf-z0BZFjDr8aRvvHzIM6bIMTLVtlO16GA/viewform")
+            else:
+                await ctx.send("I think I'll respond in the private council channel.")
+                channel = self.bot.get_channel(settings['rcsChannels']['council'])
+                await channel.send("https://docs.google.com/forms/d/e/1FAIpQLScnSCYr2-"
+                                   "qA7OHxrf-z0BZFjDr8aRvvHzIM6bIMTLVtlO16GA/viewform")
         else:
-            await ctx.send("I think I'll respond in the private council channel.")
-            channel = self.bot.get_channel(settings['rcsChannels']['council'])
-            await channel.send(
-                "https://docs.google.com/forms/d/e/1FAIpQLScnSCYr2-qA7OHxrf-z0BZFjDr8aRvvHzIM6bIMTLVtlO16GA/viewform")
+            await ctx.send("Nice try slick, but this one ain't for you.")
 
     @commands.command(name="presence", hidden=True)
     @commands.is_owner()
