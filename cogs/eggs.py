@@ -34,10 +34,12 @@ class Eggs(commands.Cog):
             await ctx.send("I would much prefer it if you waited until the season ends to change the dates.")
             return
         try:
+            print(arg)
             new_end_date = datetime.strptime(arg, "%Y-%m-%d")
             season.update_season(new_end_date)
         except ValueError:
-            await ctx.send("The date you provided is not in the correct format. YYYY-MM-DD")
+            await ctx.send(f"The date you provided is not in the correct format. "
+                           f"{arg} should be in the YYYY-MM-DD format.")
             return
         except Exception as ex:
             await ctx.send(log_traceback(ex))
