@@ -86,20 +86,22 @@ class Games(commands.Cog):
                     break
             conn.close()
             clan_total = 0
+            channel = self.bot.get_channel(settings['oakChannels']['testChat'])
             for member in fetched:
                 clan_total += member['points']
                 if member['points'] >= player_points:
                     member_list.append({"name": member['playerName'] + " *", "game_points": member['points']})
                 else:
                     member_list.append({"name": member['playerName'], "game_points": member['points']})
+            await channel.send(member_list)
             content = "```" + clan_name + " (#" + clan_tag.upper() + ")"
             content += "\n{0:20}{1:>12}".format("Clan Total: ", str(clan_total))
             content += "\n{0:20}{1:>12}".format("Clan Average: ", str(clan_average))
             content += "\n{0:20}{1:>12}".format("name", "Game Points")
             content += "\n--------------------------------"
             for item in member_list:
-                print(f"{item['name']} and {item['game_points']}")
-                content += "\n{0:20}{1:12}".format(item['name'], item['game_points'])
+                await channel.send(f"{item['name']} - {item['game_points']}")
+                content += f"\n{item['name']:20}{item['game_points']:12}"
             content += "```"
             bot_log(ctx.command, arg, ctx.author, ctx.guild)
             await ctx.send(content)
