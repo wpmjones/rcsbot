@@ -51,7 +51,7 @@ def get_season_length():
 
 def update_season(new_end_date):
     new_start_date = get_season_end()
-    with open("/home/tuba/season.csv") as csv_file:
+    with open("/home/tuba/season.csv", "w") as csv_file:
         writer = csv.writer(csv_file)
         writer.writerow(["start", "end"])
         writer.writerow([new_start_date, new_end_date])
