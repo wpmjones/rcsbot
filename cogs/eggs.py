@@ -30,7 +30,7 @@ class Eggs(commands.Cog):
         if not is_council(ctx.author.roles):
             await ctx.send("I'm sorry. I'd love to help, but you're not authorized to make changes to the season.")
             return
-        if datetime.now() < season.get_season_end():
+        if datetime.now() < datetime.strptime(season.get_season_end(), "%Y-%m-%d"):
             await ctx.send("I would much prefer it if you waited until the season ends to change the dates.")
             return
         try:
