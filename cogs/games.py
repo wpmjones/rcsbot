@@ -74,7 +74,7 @@ class Games(commands.Cog):
             cursor.execute(f"SELECT b.playerName, CASE WHEN (a.currentPoints - a.startingPoints) > {player_points} "
                            f"THEN {player_points} "
                            f"ELSE (a.currentPoints - a.startingPoints) END AS points "
-                           f"FROM rcs_clanGames a INNER JOIN #rcs_players b ON a.playerTag = b.playerTag "
+                           f"FROM rcs_clanGames a LEFT JOIN #rcs_players b ON a.playerTag = b.playerTag "
                            f"WHERE eventId = (SELECT MAX(eventId) FROM rcs_events WHERE eventType = 5) "
                            f"AND a.clanTag = '{clan_tag}' "
                            f"ORDER BY points DESC")
