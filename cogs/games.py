@@ -98,6 +98,7 @@ class Games(commands.Cog):
             content += "\n{0:20}{1:>12}".format("name", "Game Points")
             content += "\n--------------------------------"
             for item in member_list:
+                print(f"{item['name']} and {item['game_points']}")
                 content += "\n{0:20}{1:12}".format(item['name'], item['game_points'])
             content += "```"
             bot_log(ctx.command, arg, ctx.author, ctx.guild)
