@@ -71,6 +71,7 @@ class Games(commands.Cog):
                            "ORDER BY eventId DESC")
             row = cursor.fetchone()
             player_points = row['playerPoints']
+            await channel.send(f"Player points = {player_points}")
             cursor.execute("CREATE TABLE #rcs_players (playerTag varchar(15), playerName nvarchar(50)) "
                            "INSERT INTO #rcs_players "
                            "SELECT DISTINCT playerTag, playerName FROM rcs_members")
@@ -82,7 +83,9 @@ class Games(commands.Cog):
                            "AND a.clanTag = '{clan_tag}' "
                            "ORDER BY points DESC")
             fetched = cursor.fetchall()
+            await channel.send("SELECT complete")
             cursor.callproc("rcs_spClanGamesAverage")
+            await channel.send("SP complete")
             for clan in cursor:
                 if clan_name.lower() == clan['clanName'].lower():
                     clan_average = clan['clanAverage']
