@@ -37,11 +37,10 @@ class Games(commands.Cog):
                 else:
                     clan_list.append({"name": clan['clanName'], "clan_total": clan['clanTotal']})
             conn.close()
-            content = "RCS Clan Games\n{'Clan Name':20}{'Clan Total':>12}"
+            content = f"RCS Clan Games\n{'Clan Name':20}{'Clan Total':>12}"
             content += "\n--------------------------------"
             for item in clan_list:
                 content += f"\n{item['name']:20}{item['clan_total']:12}"
-            # fix for +2000 characters
             await self.send_text(ctx.channel, content, 1)
             bot_log(ctx.command, arg, ctx.author, ctx.guild)
         elif arg in ["average", "avg", "averages"]:
@@ -124,7 +123,10 @@ class Games(commands.Cog):
                         await channel.send(coll)
                     coll = ""
                 coll += line
-            await channel.send(coll)
+            if block:
+                await channel.send(f"```{coll}```")
+            else:
+                await channel.send(coll)
 
 
 def get_clan_name(clan_tag):
