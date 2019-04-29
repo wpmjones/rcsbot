@@ -61,6 +61,9 @@ class Games(commands.Cog):
                 bot_log(ctx.command, arg, ctx.author, ctx.guild, 1)
                 await ctx.send("You have not provided a valid clan name or clan tag.")
                 return
+            # DEBUG
+            channel = self.bot.get_channel(settings['oakChannels']['testChat'])
+            await channel.send(f"{clan_tag} isn't x")
             member_list = []
             cursor.execute("SELECT TOP 1 playerPoints, startTime "
                            "FROM rcs_events "
@@ -85,6 +88,7 @@ class Games(commands.Cog):
                     clan_average = clan['clanAverage']
                     break
             conn.close()
+            await channel.send("SQL complete")
             clan_total = 0
             for member in fetched:
                 clan_total += member['points']
@@ -100,6 +104,7 @@ class Games(commands.Cog):
             for item in member_list:
                 content += "\n{0:20}{1:12}".format(item['name'], item['game_points'])
             content += "```"
+            await channel.send(content)
             bot_log(ctx.command, arg, ctx.author, ctx.guild)
             await ctx.send(content)
 
