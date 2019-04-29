@@ -61,9 +61,6 @@ class Games(commands.Cog):
                 bot_log(ctx.command, arg, ctx.author, ctx.guild, 1)
                 await ctx.send("You have not provided a valid clan name or clan tag.")
                 return
-            # DEBUG
-            channel = self.bot.get_channel(settings['oakChannels']['testChat'])
-            await channel.send(f"{clan_tag} isn't x")
             member_list = []
             cursor.execute("SELECT TOP 1 playerPoints, startTime "
                            "FROM rcs_events "
@@ -71,27 +68,23 @@ class Games(commands.Cog):
                            "ORDER BY eventId DESC")
             row = cursor.fetchone()
             player_points = row['playerPoints']
-            await channel.send(f"Player points = {player_points}")
             cursor.execute("CREATE TABLE #rcs_players (playerTag varchar(15), playerName nvarchar(50)) "
                            "INSERT INTO #rcs_players "
                            "SELECT DISTINCT playerTag, playerName FROM rcs_members")
-            cursor.execute("SELECT b.playerName, CASE WHEN (a.currentPoints - a.startingPoints) > {player_points} "
-                           "THEN {player_points} "
-                           "ELSE (a.currentPoints - a.startingPoints) END AS points "
-                           "FROM rcs_clanGames a LEFT JOIN #rcs_players b ON a.playerTag = b.playerTag "
-                           "WHERE eventId = (SELECT MAX(eventId) FROM rcs_events WHERE eventType = 5) "
-                           "AND a.clanTag = '{clan_tag}' "
-                           "ORDER BY points DESC")
+            cursor.execute(f"SELECT b.playerName, CASE WHEN (a.currentPoints - a.startingPoints) > {player_points} "
+                           f"THEN {player_points} "
+                           f"ELSE (a.currentPoints - a.startingPoints) END AS points "
+                           f"FROM rcs_clanGames a LEFT JOIN #rcs_players b ON a.playerTag = b.playerTag "
+                           f"WHERE eventId = (SELECT MAX(eventId) FROM rcs_events WHERE eventType = 5) "
+                           f"AND a.clanTag = '{clan_tag}' "
+                           f"ORDER BY points DESC")
             fetched = cursor.fetchall()
-            await channel.send("SELECT complete")
             cursor.callproc("rcs_spClanGamesAverage")
-            await channel.send("SP complete")
             for clan in cursor:
                 if clan_name.lower() == clan['clanName'].lower():
                     clan_average = clan['clanAverage']
                     break
             conn.close()
-            await channel.send("SQL complete")
             clan_total = 0
             for member in fetched:
                 clan_total += member['points']
@@ -107,7 +100,6 @@ class Games(commands.Cog):
             for item in member_list:
                 content += "\n{0:20}{1:12}".format(item['name'], item['game_points'])
             content += "```"
-            await channel.send(content)
             bot_log(ctx.command, arg, ctx.author, ctx.guild)
             await ctx.send(content)
 
