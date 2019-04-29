@@ -93,7 +93,7 @@ class Games(commands.Cog):
                     member_list.append({"name": member['playerName'] + " *", "game_points": member['points']})
                 else:
                     member_list.append({"name": member['playerName'], "game_points": member['points']})
-            await channel.send(member_list)
+            await channel.send(member_list[3])
             content = "```" + clan_name + " (#" + clan_tag.upper() + ")"
             content += "\n{0:20}{1:>12}".format("Clan Total: ", str(clan_total))
             content += "\n{0:20}{1:>12}".format("Clan Average: ", str(clan_average))
