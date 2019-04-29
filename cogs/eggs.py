@@ -34,7 +34,8 @@ class Eggs(commands.Cog):
             await ctx.send("I would much prefer it if you waited until the season ends to change the dates.")
             return
         try:
-            print(arg)
+            await ctx.send(arg)
+            await ctx.send(datetime.strptime(arg, "%Y-%m-%d"))
             new_end_date = datetime.strptime(arg, "%Y-%m-%d")
             season.update_season(new_end_date)
         except ValueError:
