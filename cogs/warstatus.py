@@ -1,6 +1,7 @@
 import coc
 import asyncio
 import pymssql
+from discord.ext import commands
 from config import settings
 
 api = coc.Client(settings['supercell']['user'], settings['supercell']['pass'])
