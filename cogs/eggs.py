@@ -1,6 +1,5 @@
 import discord
 import requests
-import pymssql
 import season
 import traceback
 from discord.ext import commands
