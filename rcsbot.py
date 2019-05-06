@@ -1,6 +1,7 @@
 import traceback
 import os
 import git
+import coc
 from discord.ext import commands
 from config import settings
 import logging
@@ -50,4 +51,5 @@ if __name__ == "__main__":
             logger.info(f"Failed to load extension {extension}")
             traceback.print_exc()
 
+bot.coc_client = coc.Client(settings['supercell']['user'], settings['supercell']['pass'])
 bot.run(settings['discord']['rcsbotToken'])
