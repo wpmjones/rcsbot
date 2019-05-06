@@ -11,7 +11,8 @@ class WarStatus(commands.Cog):
         """ For reporting wars to RCS war-updates channel """
         await self.bot.wait_until_ready()
         channel = self.bot.get_channel(settings['oakChannels']['testChat'])
-        await self.bot.db.get_clans()
+        clans = await self.bot.db.get_clans()
+        await channel.send(clans)
         while self == self.bot.get_cog("WarStatus"):
             seconds_until_post = 60
             await channel.send(f"Sleeping for {seconds_until_post // 60} minutes.")

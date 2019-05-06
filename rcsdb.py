@@ -39,4 +39,4 @@ class RcsDB:
         res = ""
         for row in rows:
             res += f"{row[0]}\n"
-        await self.bot.test_channel.send(res)
+        return res

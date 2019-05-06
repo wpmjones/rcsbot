@@ -22,7 +22,6 @@ class Background(commands.Cog):
     async def on_message(self, message):
         logger.debug("New message received.")
         if message.author == self.bot.user:
-            logger.debug("RCS bot doesn't count.")
             return
         if settings['rcsRoles']['members'] not in [role.id for role in message.author.roles]:
             logger.debug("No member role.\n{} has the following roles.\n{}",
@@ -35,7 +34,6 @@ class Background(commands.Cog):
                                      database=settings['pg']['db'])
         logger.debug("Postgresql connection established.")
         row = await conn.fetchrow(f"SELECT * FROM rcs_discord WHERE discord_id = {message.author.id}")
-        logger.debug(row)
         points = randint(7, 14)
         if row:
             if datetime.now() > row['last_message'] + timedelta(minutes=1):
