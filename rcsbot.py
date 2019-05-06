@@ -2,8 +2,10 @@ import traceback
 import os
 import git
 import coc
+import asyncio
 from discord.ext import commands
 from config import settings
+from rcsdb import RcsDB
 import logging
 
 logging.basicConfig(filename="rcsbot.log",
@@ -51,5 +53,9 @@ if __name__ == "__main__":
             logger.info(f"Failed to load extension {extension}")
             traceback.print_exc()
 
+bot.db = RcsDB(bot)
+loop = asyncio.get_event_loop()
+pool = loop.run_until_complete(bot.db.create_pool())
+bot.db.pool = pool
 bot.coc_client = coc.Client(settings['supercell']['user'], settings['supercell']['pass'])
 bot.run(settings['discord']['rcsbotToken'])

@@ -1,4 +1,5 @@
 import asyncio
+import asyncpg
 from discord.ext import commands
 from config import settings
 
