@@ -85,6 +85,14 @@ class OwnerCog(commands.Cog):
         for guild in self.bot.guilds:
             await ctx.send(guild.name)
 
+    @commands.command(name="close_db", aliases=["cdb", "cbd"], hidden=True)
+    @commands.is_owner()
+    async def close_db(self, ctx):
+        """Command to close db connection before shutting down bot"""
+        if self.bot.db.pool is not None:
+            await self.bot.db.pool.close()
+            await ctx.send("Database connection closed.")
+
 
 def setup(bot):
     bot.add_cog(OwnerCog(bot))

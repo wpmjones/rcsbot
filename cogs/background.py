@@ -14,11 +14,13 @@ class Background(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    def is_rcs(ctx):
-        return ctx.guild.id == int(settings['discord']['rcsGuildId'])
+    def is_rcs(self):
+        def predicate(ctx):
+            return ctx.guild.id == settings['discord']['rcsGuildId']
+        return commands.check(predicate)
 
     @commands.Cog.listener()
-    @commands.check(is_rcs)
+    @is_rcs()
     async def on_message(self, message):
         logger.debug("New message received.")
         if message.author == self.bot.user:
