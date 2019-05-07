@@ -99,10 +99,27 @@ class OwnerCog(commands.Cog):
     async def log(self, ctx, num_lines: int = 10):
         with open("rcsbot.log", "r") as f:
             list_start = -1 * num_lines
-            desc = f"Last {str(num_lines)} lines of oakbot.log"
-            embed = discord.Embed(title="RCS Bot Log", color=0x8d0798)
-            embed.add_field(name=desc, value="\n".join([line for line in f.read().splitlines()[list_start:]]))
-        await ctx.send(embed=embed)
+            await self.send_text(ctx.channel, "\n".join([line for line in f.read().splitlines()[list_start:]]))
+
+    async def send_text(self, channel, text, block=None):
+        """ Sends text ot channel, splitting if necessary """
+        if len(text) < 2000:
+            if block:
+                await channel.send(f"```{text}```")
+            else:
+                await channel.send(text)
+        else:
+            coll = ""
+            for line in text.splitlines(keepends=True):
+                if len(coll) + len(line) > 1994:
+                    # if collecting is going to be too long, send  what you have so far
+                    if block:
+                        await channel.send(f"```{coll}```")
+                    else:
+                        await channel.send(coll)
+                    coll = ""
+                coll += line
+            await channel.send(coll)
 
 
 def setup(bot):
