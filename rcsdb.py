@@ -34,9 +34,6 @@ class RcsDB:
 
     async def get_clans(self):
         conn = self.bot.db.pool
-        sql = "SELECT clan_tag FROM rcs_clans ORDER BY clan_name"
-        rows = await conn.fetch(sql)
-        res = ""
-        for row in rows:
-            res += f"{row[0]}\n"
-        return res
+        sql = "SELECT clan_name, clan_tag FROM rcs_clans ORDER BY clan_name"
+        return await conn.fetch(sql)
+

@@ -1,3 +1,4 @@
+import discord
 from discord.ext import commands
 
 
@@ -92,6 +93,16 @@ class OwnerCog(commands.Cog):
         if self.bot.db.pool is not None:
             await self.bot.db.pool.close()
             await ctx.send("Database connection closed.")
+
+    @commands.command()
+    @commands.is_owner()
+    async def log(self, ctx, num_lines: int = 10):
+        with open("rcsbot.log", "r") as f:
+            list_start = -1 * num_lines
+            desc = f"Last {str(num_lines)} lines of oakbot.log"
+            embed = discord.Embed(title="RCS Bot Log", color=0x8d0798)
+            embed.add_field(name=desc, value="\n".join([line for line in f.read().splitlines()[list_start:]]))
+        await ctx.send(embed=embed)
 
 
 def setup(bot):

@@ -6,12 +6,9 @@ import asyncio
 from discord.ext import commands
 from config import settings
 from rcsdb import RcsDB
-import logging
+from loguru import logger
 
-logging.basicConfig(filename="rcsbot.log",
-                    filemode="a",
-                    level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger.add("rcsbot.log", rotation="100MB", level="INFO")
 logger.info("Starting bot")
 
 description = """Multi bot to serve the RCS - by TubaKid
@@ -49,6 +46,7 @@ if __name__ == "__main__":
     for extension in initialExtensions:
         try:
             bot.load_extension(extension)
+            logger.debug(f"{extension} loaded successfully")
         except Exception as e:
             logger.info(f"Failed to load extension {extension}")
             traceback.print_exc()
@@ -57,5 +55,6 @@ bot.db = RcsDB(bot)
 loop = asyncio.get_event_loop()
 pool = loop.run_until_complete(bot.db.create_pool())
 bot.db.pool = pool
-bot.coc_client = coc.Client(settings['supercell']['user'], settings['supercell']['pass'])
+bot.logger = logger
+bot.coc_client = coc.Client(settings['supercell']['user'], settings['supercell']['pass'], 5)
 bot.run(settings['discord']['testToken'])
