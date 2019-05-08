@@ -8,7 +8,7 @@ from config import settings
 from rcsdb import RcsDB
 from loguru import logger
 
-logger.add("rcsbot.log", rotation="100MB", level="INFO")
+logger.add("rcsbot.log", rotation="100MB", level="DEBUG")
 logger.info("Starting bot")
 
 description = """Multi bot to serve the RCS - by TubaKid
