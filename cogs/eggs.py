@@ -74,19 +74,19 @@ class Eggs(commands.Cog):
 
     @commands.command(name="zag", aliases=["zag-geek", "zaggeek"], hidden=True)
     async def zag(self, ctx):
-        bot_log(ctx.command, "zag Easter egg", ctx.author, ctx.guild)
+#        bot_log(ctx.command, "zag Easter egg", ctx.author, ctx.guild)
         await ctx.send(file=discord.File("/home/tuba/rcsbot/cogs/zag.jpg"))
 
     @commands.command(name="tuba", hidden=True)
     async def tuba(self, ctx):
-        bot_log(ctx.command, "tuba Easter egg", ctx.author, ctx.guild)
+#        bot_log(ctx.command, "tuba Easter egg", ctx.author, ctx.guild)
         await ctx.send(file=discord.File("/home/tuba/rcsbot/cogs/tuba.jpg"))
 
     @commands.command(name="password", hidden=True)
     async def password(self, ctx):
         content = """https://www.reddit.com/r/RedditClansHistory/wiki/the_history_of_the_reddit_
             clans#wiki_please_find_the_password"""
-        bot_log(ctx.command, "password Easter egg", ctx.author, ctx.guild)
+#        bot_log(ctx.command, "password Easter egg", ctx.author, ctx.guild)
         await ctx.send(content)
 
     @commands.command(name="cats", aliases=["cat"], hidden=True)
@@ -99,7 +99,7 @@ class Eggs(commands.Cog):
         r = requests.get(url, headers=headers)
         data = r.json()
         content = data[0]['url']
-        bot_log(ctx.command, "cat api", ctx.author, ctx.guild)
+#        bot_log(ctx.command, "cat api", ctx.author, ctx.guild)
         await ctx.send(content)
 
     @commands.command(name="dogs", aliases=["dog"], hidden=True)
@@ -112,7 +112,7 @@ class Eggs(commands.Cog):
         r = requests.get(url, headers=headers)
         data = r.json()
         content = data[0]['url']
-        bot_log(ctx.command, "dog api", ctx.author, ctx.guild)
+#        bot_log(ctx.command, "dog api", ctx.author, ctx.guild)
         await ctx.send(content)
 
 
