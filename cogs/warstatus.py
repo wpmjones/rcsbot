@@ -1,4 +1,5 @@
 import asyncio
+import traceback
 from datetime import datetime
 from discord.ext import commands
 from config import settings
@@ -13,25 +14,28 @@ class WarStatus(commands.Cog):
         await self.bot.wait_until_ready()
         channel = self.bot.get_channel(settings['oakChannels']['testChat'])
         while self == self.bot.get_cog("WarStatus"):
-            self.bot.logger.info("loop started")
-            clans = await self.bot.db.get_clans()
-            clan_list = end_times = []
-            for clan in clans:
-                clan_list.append(f"#{clan['clan_tag']}")
-                war = await self.bot.coc_client.get_current_war(f"#{clan['clan_tag']}")
-                self.bot.logger.debug(f"#{clan['clan_tag']}")
-                # async for war in self.bot.coc_client.get_current_wars(clan_list):
-                self.bot.logger.debug(f"{war.clan['name']} is {war.state}")
-                if war.state == "inWar":
-                    end_times.append(war.end_time)
-            await channel.send(end_times)
-            end_times.sort(key=lambda tup: tup[1])
-            await channel.send(end_times)
-            await channel.send(datetime.now())
-            await channel.send(end_times[0][1] - datetime.now())
-            seconds_until_post = end_times[0][1] - datetime.now()
-            await channel.send(f"Sleeping for {seconds_until_post // 60} minutes.")
-            await asyncio.sleep(seconds_until_post)
+            try:
+                clans = await self.bot.db.get_clans()
+                clan_list = []
+                end_times = [86400, 999000]
+                for clan in clans:
+                    clan_list.append(f"#{clan['clan_tag']}")
+                async for war in self.bot.coc_client.get_current_wars(["#80YGRPC9", "#CVCJR89",  "#UPVV99V"]):
+                    if war.state in ["inWar", "preparation", "warEnded"]:
+                        self.bot.logger.debug(f"{war.clan.name} is {war.state}. End time = {war.end_time.time}")
+                        end_times.append(war.end_time.seconds_until)
+                    else:
+                        self.bot.logger.debug(f"Clan not in war")
+                end_times.sort()
+                await channel.send(f"End times: {end_times}")
+                seconds_until_post = end_times[0]
+                await channel.send(f"Sleeping for {seconds_until_post // 60} minutes.")
+                await asyncio.sleep(seconds_until_post)
+            except:
+                self.bot.logger.exception("Test")
+                # tb_lines = traceback.format_exception(e.__class__, e, e.__traceback__)
+                # tb_text = "".join(tb_lines)
+                # self.bot.logger.error(tb_text)
             print("I'm awake now.")
             # conn = pymssql.connect(settings['database']['server'],
             #                        settings['database']['username'],

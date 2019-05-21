@@ -7,7 +7,7 @@ class RcsDB:
         self.bot = bot
 
     async def create_pool(self):
-        pool = await asyncpg.create_pool(settings['pg']['uri'])
+        pool = await asyncpg.create_pool(settings['pg']['uri'], max_size=85)
         return pool
 
     async def link_user(self, player_tag, discord_id):
