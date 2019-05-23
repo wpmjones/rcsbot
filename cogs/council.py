@@ -49,7 +49,6 @@ class CouncilCog(commands.Cog):
         await ctx.send(role_list)
 
     @commands.command(name="userInfo", aliases=["ui"], hidden=True)
-    @commands.check(is_rcs)
     @commands.has_any_role(settings['rcsRoles']['council'], settings['rcsRoles']['chatMods'])
     async def user_info(self, ctx, discord_id):
         """Command to retreive join date for Discord user."""
@@ -67,16 +66,20 @@ class CouncilCog(commands.Cog):
             await ctx.send(f":x: User specified **{discord_id}** is not a member of this discord server.")
             return
         today = datetime.now()
-        join_date = user.joined_at.strftime('%d %b %Y')
+        create_date = user.created_at.strftime("%d %b %Y")
+        create_delta = (today - user.created_at).days
+        join_date = user.joined_at.strftime("%d %b %Y")
         join_delta = (today - user.joined_at).days
         user_roles = []
         for role in user.roles:
             if role.name != "@everyone":
                 user_roles.append(role.name)
-        embed = discord.Embed(title=user.display_name, color=color_pick(255, 165, 0))
+        embed = discord.Embed(title=user.display_name,
+                              description=f"{user.name}#{user.discriminator}",
+                              color=color_pick(255, 165, 0))
         embed.set_thumbnail(url=user.avatar_url)
         embed.add_field(name="Joined RCS Server on", value=f"{join_date}\n({join_delta} days ago)", inline=True)
-        embed.add_field(name="Message Count", value="unknown", inline=True)
+        embed.add_field(name="Account Creation Date", value=f"{create_date}\n({create_delta} days ago", inline=True)
         embed.add_field(name="Roles", value=", ".join(user_roles), inline=False)
         embed.set_footer(text=f"User ID: {user.id}")
         await ctx.send(embed=embed)
