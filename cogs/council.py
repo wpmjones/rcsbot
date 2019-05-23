@@ -50,21 +50,21 @@ class CouncilCog(commands.Cog):
 
     @commands.command(name="userInfo", aliases=["ui"], hidden=True)
     @commands.has_any_role(settings['rcsRoles']['council'], settings['rcsRoles']['chatMods'])
-    async def user_info(self, ctx, discord_id):
+    async def user_info(self, ctx, user: discord.Member):
         """Command to retreive join date for Discord user."""
-        is_user, user = is_discord_user(ctx.guild, int(discord_id))
-        if not is_user:
-            if discord_id.startswith("<"):
-                discord_id = discord_id[2:-1]
-                if discord_id.startswith("!"):
-                    discord_id = discord_id[1:]
-            else:
-                await ctx.send(":x: That's not a good user.  It should look something like <@!123456789>.")
-                return
-            is_user, user = is_discord_user(ctx.guild, int(discord_id))
-        if not is_user:
-            await ctx.send(f":x: User specified **{discord_id}** is not a member of this discord server.")
-            return
+        # is_user, user = is_discord_user(ctx.guild, int(discord_id))
+        # if not is_user:
+        #     if discord_id.startswith("<"):
+        #         discord_id = discord_id[2:-1]
+        #         if discord_id.startswith("!"):
+        #             discord_id = discord_id[1:]
+        #     else:
+        #         await ctx.send(":x: That's not a good user.  It should look something like <@!123456789>.")
+        #         return
+        #     is_user, user = is_discord_user(ctx.guild, int(discord_id))
+        # if not is_user:
+        #     await ctx.send(f":x: User specified **{discord_id}** is not a member of this discord server.")
+        #     return
         today = datetime.now()
         create_date = user.created_at.strftime("%d %b %Y")
         create_delta = (today - user.created_at).days
@@ -79,7 +79,7 @@ class CouncilCog(commands.Cog):
                               color=color_pick(255, 165, 0))
         embed.set_thumbnail(url=user.avatar_url)
         embed.add_field(name="Joined RCS Server on", value=f"{join_date}\n({join_delta} days ago)", inline=True)
-        embed.add_field(name="Account Creation Date", value=f"{create_date}\n({create_delta} days ago", inline=True)
+        embed.add_field(name="Discord Creation Date", value=f"{create_date}\n({create_delta} days ago)", inline=True)
         embed.add_field(name="Roles", value=", ".join(user_roles), inline=False)
         embed.set_footer(text=f"User ID: {user.id}")
         await ctx.send(embed=embed)
