@@ -43,7 +43,7 @@ class CouncilCog(commands.Cog):
         await ctx.send(self.bot.guilds)
         for guild in self.bot.guilds:
             role_list = f"**Roles for {guild.name}**\n"
-            for role in guild.roles:
+            for role in guild.roles[1:]:
                 role_list += f"{role.name}: {role.id}\n"
             await ctx.send(role_list)
 
