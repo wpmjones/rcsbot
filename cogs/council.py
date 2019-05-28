@@ -12,9 +12,6 @@ class CouncilCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    def is_rcs(ctx):
-        return ctx.guild.id == int(settings['discord']['rcsGuildId'])
-
     @commands.command(name="form", aliases=["magic"], hidden=True)
     async def magic_form(self, ctx):
         if is_council(ctx.author.roles):
@@ -43,10 +40,11 @@ class CouncilCog(commands.Cog):
     @commands.command(name="rolelist")
     @commands.is_owner()
     async def role_list(self, ctx):
-        role_list = ""
-        for role in ctx.guild.roles:
-            role_list += f"{role.name}: {role.id}\n"
-        await ctx.send(role_list)
+        for guild in self.bot.guilds:
+            role_list = f"**Roles for {guild.name}**"
+            for role in guild.roles:
+                role_list += f"{role.name}: {role.id}\n"
+            await ctx.send(role_list)
 
     @commands.command(name="userInfo", aliases=["ui"], hidden=True)
     @commands.has_any_role(settings['rcsRoles']['council'], settings['rcsRoles']['chatMods'])
@@ -85,7 +83,6 @@ class CouncilCog(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(name="addClan", aliases=["clanAdd", "newClan"], hidden=True)
-    @commands.check(is_rcs)
     async def add_clan(self, ctx, *, clan_name: str = "x"):
         """Command to add a new verified clan to the RCS Database."""
         if is_council(ctx.author.roles):
@@ -343,7 +340,6 @@ class CouncilCog(commands.Cog):
     #    await member.send("This is a test DM from rcs-bot. Please let TubaKid know if you have received it.")
 
     @commands.command(name="removeClan", aliases=["clanRemove"], hidden=True)
-    @commands.check(is_rcs)
     async def remove_clan(self, ctx, *, arg: str = "x"):
         """Command to remove a verified clan from the RCS database."""
         if is_council(ctx.author.roles):
@@ -401,7 +397,6 @@ class CouncilCog(commands.Cog):
                            "Keep up these antics and I'll tell zig on you!")
 
     @commands.command(name="leader", hidden=True)
-    @commands.check(is_rcs)
     async def leader(self, ctx, *, arg: str = "x"):
         """Command to find the leader for the selected clan.
         Usage: ++leader Reddit Argon"""
