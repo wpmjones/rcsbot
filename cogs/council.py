@@ -40,8 +40,9 @@ class CouncilCog(commands.Cog):
     @commands.command(name="rolelist")
     @commands.is_owner()
     async def role_list(self, ctx):
+        await ctx.send(self.bot.guilds)
         for guild in self.bot.guilds:
-            role_list = f"**Roles for {guild.name}**"
+            role_list = f"**Roles for {guild.name}**\n"
             for role in guild.roles:
                 role_list += f"{role.name}: {role.id}\n"
             await ctx.send(role_list)
@@ -548,7 +549,8 @@ def is_authorized(user_roles):
     for role in user_roles:
         if role.id in [settings['rcsRoles']['leaders'],
                        settings['rcsRoles']['rcsLeaders'],
-                       settings['rcsRoles']['council']]:
+                       settings['rcsRoles']['council'],
+                       ]:
             return True
     return False
 
