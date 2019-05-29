@@ -50,11 +50,11 @@ class CouncilCog(commands.Cog):
     @commands.is_owner()
     async def my_roles(self, ctx):
         for guild in self.bot.guilds:
-            member = guild.get_member(366778328448892928)
-            role_list = f"Roles on {guild.name}"
+            member = guild.get_member(183544557382664192)    #(366778328448892928)
+            role_list = ""
             for role in member.roles:
                 if role.name != "@everyone":
-                    role_list += f"{role.name}: {role.id}"
+                    role_list += f"{role.name}: {role.id}\n"
             await ctx.send(f"**On the {guild.name} server, {member.name} has:**\n{role_list}")
 
     @commands.command(name="userInfo", aliases=["ui"], hidden=True)
