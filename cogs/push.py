@@ -85,15 +85,14 @@ class Push(commands.Cog):
                     clan_name = row['clanName']
                 msg_list.append({"name": f"{row['playerName']} ({clan_name})",
                                  "points": f"{str(row['clanPoints'])[:5]} ({str(row['currentTrophies'])})"})
-            content = "```RCS Trophy Push - {0:4}".format(arg.upper())
+            content = "RCS Trophy Push - {0:4}".format(arg.upper())
             content += "\n{0:25}{1:>17}".format("Player (Clan)", "Points (Trophies)")
             content += "\n------------------------------------------"
             for item in msg_list:
                 content += "\n{0:30}{1:>12}".format(item['name'], item['points'])
-            content += "```"
         else:
             # By clan
-            clan_tag, clan_name = resolveClanTag(arg)
+            clan_tag, clan_name = resolve_clan_tag(arg)
             if clan_tag == "x":
                 bot_log(ctx.command, arg, ctx.author, ctx.guild, 1)
                 await ctx.send("You have not provided a valid clan name or clan tag.")
@@ -131,35 +130,38 @@ class Push(commands.Cog):
                         await channel.send(coll)
                     coll = ""
                 coll += line
-            await channel.send(coll)
+            if block:
+                await channel.send(f"```{coll}```")
+            else:
+                await channel.send(coll)
 
 
-def getClanName(clan_tag):
+def get_clan_name(clan_tag):
     for clan in clans:
         if clan['clanTag'].lower() == clan_tag.lower():
             return clan['clanName']
     return "x"
 
 
-def getClanTag(clan_name):
+def get_clan_tag(clan_name):
     for clan in clans:
         if clan['clanName'].lower() == clan_name.lower():
             return clan['clanTag']
     return "x"
 
 
-def resolveClanTag(input):
+def resolve_clan_tag(input):
     if input.startswith("#"):
         clan_tag = input[1:]
-        clan_name = getClanName(clan_tag)
+        clan_name = get_clan_name(clan_tag)
     else:
-        clan_tag = getClanTag(input)
+        clan_tag = get_clan_tag(input)
         clan_name = input
         if clan_tag == "x":
-            clan_name = getClanName(input)
+            clan_name = get_clan_name(input)
             clan_tag = input
             if clan_name == "x":
-                return "x","x"
+                return "x", "x"
     return clan_tag, clan_name
 
 
