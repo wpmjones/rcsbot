@@ -48,9 +48,14 @@ class CouncilCog(commands.Cog):
 
     @commands.command(name="myroles")
     @commands.is_owner()
-    async def my_roles(self, ctx, member: discord.Member):
+    async def my_roles(self, ctx):
         for guild in self.bot.guilds:
-            await ctx.send(f"On the {guild.name} server, {member.name} has:\n{member.roles}")
+            member = guild.get_member(366778328448892928)
+            role_list = f"Roles on {guild.name}"
+            for role in member.roles:
+                if role.name != "@everyone":
+                    role_list += f"{role.name}: {role.id}"
+            await ctx.send(f"**On the {guild.name} server, {member.name} has:**\n{role_list}")
 
     @commands.command(name="userInfo", aliases=["ui"], hidden=True)
     @commands.has_any_role(settings['rcsRoles']['council'], settings['rcsRoles']['chatMods'])
