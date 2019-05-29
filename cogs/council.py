@@ -58,7 +58,7 @@ class CouncilCog(commands.Cog):
                         role_list += f"{role.name}: {role.id}\n"
                 await ctx.send(f"**On the {guild.name} server, {member.name} has:**\n{role_list}")
             except:
-                await ctx.send(f"**Member has no roles on {guild.name}.")
+                await ctx.send(f"**Member has no roles on {guild.name}.**")
 
     @commands.command(name="userInfo", aliases=["ui"], hidden=True)
     @commands.has_any_role(settings['rcsRoles']['council'], settings['rcsRoles']['chatMods'])
@@ -442,7 +442,7 @@ class CouncilCog(commands.Cog):
         """Command to to find a search string in Discord user names"""
         # TODO Figure out the None response on some names
         # TODO add regex or option to only search for string in clan name
-        if is_authorized(ctx.author.roles):
+        if is_authorized(ctx.author.roles) or 440585276042248192 in ctx.author.roles:
             if arg == "help":
                 embed = discord.Embed(title="rcs-bot Help File", 
                                       description="Help for the find/search command", 
