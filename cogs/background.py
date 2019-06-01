@@ -26,10 +26,11 @@ class Background(commands.Cog):
                          message.author.display_name, message.author.roles)
             return
         logger.debug("User has member role.")
-        conn = await asyncpg.connect(user=settings['pg']['user'],
-                                     password=settings['pg']['pass'],
-                                     host=settings['pg']['host'],
-                                     database=settings['pg']['db'])
+        # conn = await asyncpg.connect(user=settings['pg']['user'],
+        #                              password=settings['pg']['pass'],
+        #                              host=settings['pg']['host'],
+        #                              database=settings['pg']['db'])
+        conn = self.bot.db.pool
         logger.debug("Postgresql connection established.")
         row = await conn.fetchrow(f"SELECT * FROM rcs_discord WHERE discord_id = {message.author.id}")
         points = randint(7, 14)
