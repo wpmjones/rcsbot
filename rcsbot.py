@@ -19,7 +19,7 @@ You can use the clan tag (with or without the hashtag) or you can use the clan n
 
 There are easter eggs. Feel free to try and find them!"""
 
-bot = commands.Bot(command_prefix="++", description=description, case_insensitive=True)
+bot = commands.Bot(command_prefix=">", description=description, case_insensitive=True)
 bot.remove_command("help")
 bot.repo = git.Repo(os.getcwd())
 
@@ -56,5 +56,5 @@ loop = asyncio.get_event_loop()
 pool = loop.run_until_complete(bot.db.create_pool())
 bot.db.pool = pool
 bot.logger = logger
-bot.coc_client = coc.Client(settings['supercell']['user'], settings['supercell']['pass'], 5)
-bot.run(settings['discord']['rcsbotToken'])
+bot.coc_client = coc.Client(settings['supercell']['user'], settings['supercell']['pass'], key_names="dev")
+bot.run(settings['discord']['testToken'])

@@ -118,9 +118,10 @@ class Push(commands.Cog):
             # start push
             conn = self.bot.db.pool
             sql = (f"SELECT clan_tag FROM rcs_clans "
-                   f"WHERE clan_tag <> '888GPQ0J' AND classification <> 'feeder'")
+                   f"WHERE clan_tag <> '888GPQ0J'")
             fetch = await conn.fetch(sql)
             for row in fetch:
+                self.bot.logger.info(f"Starting {row['clan_tag']}")
                 clan = await self.bot.coc_client.get_clan(row['clan_tag'])
                 async for player in clan.get_detailed_members():
                     sql = (f"INSERT INTO rcspush_2019_1 "
@@ -129,6 +130,7 @@ class Push(commands.Cog):
                            f"VALUES ('{player.tag[1:]}', '{player.clan.tag[1:]}', {player.trophies}, "
                            f"{player.trophies}, {player.trophies}, {player.best_trophies}, "
                            f"'{player.name}', '{player.clan.name}')")
+                    self.bot.logger.debug(sql)
                     await conn.execute(sql)
         elif cmd in ["end", "finish", "stop"]:
             # run final sql push
