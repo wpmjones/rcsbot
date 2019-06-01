@@ -35,11 +35,10 @@ class Push(commands.Cog):
             for row in fetched:
                 msg_list.append({"clan": row['clanName'],
                                  "points": str(row['totals'])[:7]})
-            content = "```RCS Trophy Push - Standings\n{0:20}{1:>12}".format("Clan Name", "Point Total")
+            content = "RCS Trophy Push - Standings\n{0:20}{1:>12}".format("Clan Name", "Point Total")
             content += "\n--------------------------------"
             for item in msg_list:
                 content += "\n{0:20}{1:>12}".format(item['clan'], item['points'])
-            content += "```"
         elif arg[:3].lower() == "top":
             th_list = [12, 11, 10, 9, 8, 7]
             for level in th_list:
@@ -111,6 +110,41 @@ class Push(commands.Cog):
             for item in msg_list:
                 content += "\n{0:23}{1:>12}".format(item['name'], item['points'])
         await self.send_text(ctx.channel, content, 1)
+
+    @commands.command(name="xpush", hidden=True)
+    @commands.is_owner()
+    async def xpush(self, ctx, cmd: str):
+        if cmd in ["begin", "start", "add"]:
+            # start push
+            conn = self.bot.db.pool
+            sql = (f"SELECT clan_tag FROM rcs_clans "
+                   f"WHERE clan_tag <> '888GPQ0J' AND classification <> 'feeder'")
+            fetch = await conn.fetch(sql)
+            for row in fetch:
+                clan = await self.bot.coc_client.get_clan(row['clan_tag'])
+                async for player in clan.get_detailed_members():
+                    sql = (f"INSERT INTO rcspush_2019_1 "
+                           f"(player_tag, clan_tag, starting_trophies, current_trophies, "
+                           f"best_trophies, th_level, player_name, clan_name) "
+                           f"VALUES ('{player.tag[1:]}', '{player.clan.tag[1:]}', {player.trophies}, "
+                           f"{player.trophies}, {player.trophies}, {player.best_trophies}, "
+                           f"'{player.name}', '{player.clan.name}')")
+                    await conn.execute(sql)
+        elif cmd in ["end", "finish", "stop"]:
+            # run final sql push
+            conn = self.bot.db.pool
+            sql = (f"SELECT clan_tag FROM rcs_clans "
+                   f"WHERE clan_tag <> '888GPQ0J' AND classification <> 'feeder'")
+            fetch = await conn.fetch(sql)
+            for row in fetch:
+                clan = await self.bot.coc_client.get_clan(row['clan_tag'])
+                async for player in clan.get_detailed_members():
+                    sql = (f"UPDATE rcspush_2019_1 "
+                           f"SET current_trophies = {player.trophies}"
+                           f"WHERE player_tag = '{player.tag[1:]}'")
+                    await conn.execute(sql)
+        else:
+            await ctx.send(f"{cmd} is not a valid command for /xpush.")
 
     async def send_text(self, channel, text, block=None):
         """ Sends text ot channel, splitting if necessary """
