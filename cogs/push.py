@@ -1,5 +1,4 @@
 import pymssql
-import asyncpg
 import time
 from discord.ext import commands
 from datetime import datetime
@@ -120,46 +119,33 @@ class Push(commands.Cog):
             # start push
             start = time.perf_counter()
             # conn = self.bot.db.pool
-            conn = await asyncpg.connect(host=settings['pg']['host'],
-                                         port=settings['pg']['port'],
-                                         user=settings['pg']['user'],
-                                         password=settings['pg']['pass'],
-                                         database=settings['pg']['db'])
-            sql = (f"SELECT clan_tag FROM rcs_clans "
-                   f"WHERE clan_tag <> '888GPQ0J'")
-            async with conn.transaction():
-                async for clan in conn.cursor(sql):
-                    # fetch = await conn.fetch(sql)
-                    # for row in fetch:
-                    self.bot.logger.info(f"Starting {clan['clan_tag']}")
-                    clan = await self.bot.coc_client.get_clan(f"#{clan['clan_tag']}")
-                    self.bot.logger.info(f" - {clan.name}")
-                    async for player in clan.get_detailed_members():
-                        pname = player.name.replace("'", "''")
-                        cname = player.clan.name.replace("'", "''")
-                        sql = (f"INSERT INTO rcspush_2019_1 "
-                               f"(player_tag, clan_tag, starting_trophies, current_trophies, "
-                               f"best_trophies, th_level, player_name, clan_name) "
-                               f"VALUES ('{player.tag[1:]}', '{player.clan.tag[1:]}', {player.trophies}, "
-                               f"{player.trophies}, {player.best_trophies}, {player.town_hall}, "
-                               f"'{pname}', '{cname}')")
-                        self.bot.logger.debug(sql)
-                        await conn.execute(sql)
+            conn = pymssql.connect(server=settings['database']['server'],
+                                   user=settings['database']['username'],
+                                   password=settings['database']['password'],
+                                   database=settings['database']['database'])
+            conn.autocommit(True)
+            cursor = conn.cursor(as_dict=True)
+            sql = (f"SELECT clanTag FROM rcs_data "
+                   f"WHERE clanTag <> '888GPQ0J'")
+            cursor.execute(sql)
+            push_clans = cursor.fetchall()
+            for clan in push_clans:
+                self.bot.logger.info(f"Starting {clan['clanTag']}")
+                coc_clan = await self.bot.coc_client.get_clan(f"#{clan['clanTag']}")
+                self.bot.logger.info(f" - {coc_clan.name}")
+                async for player in coc_clan.get_detailed_members():
+                    pname = player.name.replace("'", "''")
+                    cname = player.clan.name.replace("'", "''")
+                    sql = (f"INSERT INTO rcspush_2019_1 "
+                           f"(playerTag, clanTag, startingTrophies, currentTrophies, "
+                           f"bestTrophies, thLevel, playerName, clanName) "
+                           f"VALUES ('{player.tag[1:]}', '{player.clan.tag[1:]}', {player.trophies}, "
+                           f"{player.trophies}, {player.best_trophies}, {player.town_hall}, "
+                           f"'{pname}', '{cname}')")
+                    self.bot.logger.debug(sql)
+                    cursor.execute(sql)
             conn.close()
             print(time.perf_counter() - start)
-        elif cmd in ["end", "finish", "stop"]:
-            # run final sql push
-            conn = self.bot.db.pool
-            sql = (f"SELECT clan_tag FROM rcs_clans "
-                   f"WHERE clan_tag <> '888GPQ0J' AND classification <> 'feeder'")
-            fetch = await conn.fetch(sql)
-            for row in fetch:
-                clan = await self.bot.coc_client.get_clan(row['clan_tag'])
-                async for player in clan.get_detailed_members():
-                    sql = (f"UPDATE rcspush_2019_1 "
-                           f"SET current_trophies = {player.trophies}"
-                           f"WHERE player_tag = '{player.tag[1:]}'")
-                    await conn.execute(sql)
         else:
             await ctx.send(f"{cmd} is not a valid command for ++xpush.")
 
