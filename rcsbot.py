@@ -56,5 +56,5 @@ loop = asyncio.get_event_loop()
 pool = loop.run_until_complete(bot.db.create_pool())
 bot.db.pool = pool
 bot.logger = logger
-bot.coc_client = coc.Client(settings['supercell']['user'], settings['supercell']['pass'], key_names="dev")
+bot.coc_client = coc.Client(settings['supercell']['user'], settings['supercell']['pass'], key_names="vps")
 bot.run(settings['discord']['rcsbotToken'])
