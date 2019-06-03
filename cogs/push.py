@@ -1,4 +1,6 @@
-import discord, pymssql
+import pymssql
+import asyncpg
+import time
 from discord.ext import commands
 from datetime import datetime
 from config import settings
@@ -116,23 +118,35 @@ class Push(commands.Cog):
     async def xpush(self, ctx, cmd: str):
         if cmd in ["begin", "start", "add"]:
             # start push
-            conn = self.bot.db.pool
+            start = time.perf_counter()
+            # conn = self.bot.db.pool
+            conn = await asyncpg.connect(host=settings['pg']['host'],
+                                         port=settings['pg']['port'],
+                                         user=settings['pg']['user'],
+                                         password=settings['pg']['pass'],
+                                         database=settings['pg']['db'])
             sql = (f"SELECT clan_tag FROM rcs_clans "
                    f"WHERE clan_tag <> '888GPQ0J'")
-            fetch = await conn.fetch(sql)
-            for row in fetch:
-                self.bot.logger.info(f"Starting {row['clan_tag']}")
-                clan = await self.bot.coc_client.get_clan(f"#{row['clan_tag']}")
-                self.bot.logger.info(f" - {clan.name}")
-                async for player in clan.get_detailed_members():
-                    sql = (f"INSERT INTO rcspush_2019_1 "
-                           f"(player_tag, clan_tag, starting_trophies, current_trophies, "
-                           f"best_trophies, th_level, player_name, clan_name) "
-                           f"VALUES ('{player.tag[1:]}', '{player.clan.tag[1:]}', {player.trophies}, "
-                           f"{player.trophies}, {player.trophies}, {player.best_trophies}, "
-                           f"'{player.name}', '{player.clan.name}')")
-                    self.bot.logger.debug(sql)
-                    await conn.execute(sql)
+            async with conn.transaction():
+                async for clan in conn.cursor(sql):
+                    # fetch = await conn.fetch(sql)
+                    # for row in fetch:
+                    self.bot.logger.info(f"Starting {clan['clan_tag']}")
+                    clan = await self.bot.coc_client.get_clan(f"#{clan['clan_tag']}")
+                    self.bot.logger.info(f" - {clan.name}")
+                    async for player in clan.get_detailed_members():
+                        pname = player.name.replace("'", "''")
+                        cname = player.clan.name.replace("'", "''")
+                        sql = (f"INSERT INTO rcspush_2019_1 "
+                               f"(player_tag, clan_tag, starting_trophies, current_trophies, "
+                               f"best_trophies, th_level, player_name, clan_name) "
+                               f"VALUES ('{player.tag[1:]}', '{player.clan.tag[1:]}', {player.trophies}, "
+                               f"{player.trophies}, {player.best_trophies}, {player.town_hall}, "
+                               f"'{pname}', '{cname}')")
+                        self.bot.logger.debug(sql)
+                        await conn.execute(sql)
+            conn.close()
+            print(time.perf_counter() - start)
         elif cmd in ["end", "finish", "stop"]:
             # run final sql push
             conn = self.bot.db.pool
@@ -147,7 +161,7 @@ class Push(commands.Cog):
                            f"WHERE player_tag = '{player.tag[1:]}'")
                     await conn.execute(sql)
         else:
-            await ctx.send(f"{cmd} is not a valid command for /xpush.")
+            await ctx.send(f"{cmd} is not a valid command for ++xpush.")
 
     async def send_text(self, channel, text, block=None):
         """ Sends text ot channel, splitting if necessary """
