@@ -28,7 +28,7 @@ class CouncilCog(commands.Cog):
 
     @commands.command(name="presence", hidden=True)
     @commands.is_owner()
-    async def presence(self, ctx, *, msg: str = "x"):
+    async def presence(self, ctx, *, msg: str = "default"):
         """Command to modify bot presence"""
         if msg.lower() == "default":
             activity = discord.Game("Clash of Clans")
