@@ -122,7 +122,7 @@ class Push(commands.Cog):
             fetch = await conn.fetch(sql)
             for row in fetch:
                 self.bot.logger.info(f"Starting {row['clan_tag']}")
-                clan = await self.bot.coc_client.get_clan(row['clan_tag'])
+                clan = await self.bot.coc_client.get_clan(f"#{row['clan_tag']}")
                 self.bot.logger.info(f" - {clan.name}")
                 async for player in clan.get_detailed_members():
                     sql = (f"INSERT INTO rcspush_2019_1 "
