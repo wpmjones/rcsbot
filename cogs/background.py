@@ -44,7 +44,7 @@ class Background(commands.Cog):
                 logger.info("{} receives {} for their message", message.author.display_name, points)
             else:
                 await conn.execute(f"UPDATE rcs_discord "
-                                   f"SET last_message = {datetime.now()} "
+                                   f"SET last_message = '{datetime.now()}' "
                                    f"WHERE discord_id = {message.author.id}")
                 logger.info("{} posted within the last minute. No points awarded.", message.author.display_name)
         else:
