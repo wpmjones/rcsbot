@@ -1,4 +1,5 @@
 import discord
+import requests
 from discord.ext import commands
 from config import settings
 from googleapiclient.discovery import build
@@ -24,8 +25,7 @@ class Contact(commands.Cog):
 
     @commands.command(name="tasks", aliases=["task", "tasklist", "list"], hidden=True)
     async def task_list(self, ctx, cmd, cmd_input: str = ""):
-        if is_council(ctx.author.roles):
-            # TODO add check for council channel OR dm
+        if is_council(ctx.author.roles) and (ctx.guild is None or ctx.channel.id == settings['rcsChannels']['council']):
             if cmd_input.lower() == "all":
                 await ctx.send("Reply all")
             if cmd_input.lower() in ("suggestions", "council", "verification", "other", "tasks"):
@@ -36,9 +36,16 @@ class Contact(commands.Cog):
             await ctx.send("This very special and important command is reserved for council members only!")
 
     @commands.command(name="add", aliases=["new", "newtask", "addtask"], hidden=True)
-    async def add_task(self, ctx, task):
-        if is_council(ctx.author.roles):
-            await ctx.send("Task added")
+    async def add_task(self, ctx, user: discord.Member, task):
+        if is_council(ctx.author.roles) and (ctx.guild is None or ctx.channel.id == settings['rcsChannels']['council']):
+            url = (f"{settings['google']['commLog']}?call=addtask&task={task.replace(' ', '%20')}&"
+                   f"discord={user.id}")
+            r = requests.get(url)
+            if r.status_code() == 200:
+                print(r.text)
+                await ctx.send("Task added")
+            else:
+                await ctx.send(f"Something went wrong. Here's an error code for you to play with.\n{r.text}")
         else:
             await ctx.send("This very special and important command is reserved for council members only!")
 
