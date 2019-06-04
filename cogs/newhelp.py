@@ -95,7 +95,9 @@ class newHelp(commands.Cog):
             help_text = "Remove clan from RCS database, remove feeder (if it exists), remove roles from leader."
             embed.add_field(name="++removeClan <clan name [no tags]>", value=help_text)
             help_text = "Reports user information on the Discord ID provided"
-            embed.add_field(name="++ui <Discord ID>", value=help_text)
+            embed.add_field(name="++ui <discord user or ID>", value=help_text)
+            help_text = "Responds with a larger version of the specified user's avatar"
+            embed.add_field(name="++avatar <discord user or ID>", value=help_text)
         embed.set_footer(icon_url="https://openclipart.org/image/300px/svg_to_png/122449/1298569779.png",
                          text="rcs-bot proudly maintained by TubaKid.")
         bot_log("help", command, ctx.author, ctx.guild)
