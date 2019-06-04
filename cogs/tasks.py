@@ -37,7 +37,7 @@ class Contact(commands.Cog):
 
     @commands.command(name="add", aliases=["new", "newtask", "addtask"], hidden=True)
     async def add_task(self, ctx, user: discord.Member, task):
-        if is_council(ctx.author.roles) and (ctx.guild is None or ctx.channel.id == settings['rcsChannels']['council']):
+        if is_council(ctx.author.roles):
             url = (f"{settings['google']['commLog']}?call=addtask&task={task.replace(' ', '%20')}&"
                    f"discord={user.id}")
             r = requests.get(url)
