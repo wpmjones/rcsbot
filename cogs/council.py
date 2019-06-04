@@ -64,19 +64,6 @@ class CouncilCog(commands.Cog):
     @commands.has_any_role(settings['rcsRoles']['council'], settings['rcsRoles']['chatMods'])
     async def user_info(self, ctx, user: discord.Member):
         """Command to retreive join date for Discord user."""
-        # is_user, user = is_discord_user(ctx.guild, int(discord_id))
-        # if not is_user:
-        #     if discord_id.startswith("<"):
-        #         discord_id = discord_id[2:-1]
-        #         if discord_id.startswith("!"):
-        #             discord_id = discord_id[1:]
-        #     else:
-        #         await ctx.send(":x: That's not a good user.  It should look something like <@!123456789>.")
-        #         return
-        #     is_user, user = is_discord_user(ctx.guild, int(discord_id))
-        # if not is_user:
-        #     await ctx.send(f":x: User specified **{discord_id}** is not a member of this discord server.")
-        #     return
         today = datetime.now()
         create_date = user.created_at.strftime("%d %b %Y")
         create_delta = (today - user.created_at).days
