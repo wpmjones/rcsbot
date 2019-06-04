@@ -36,14 +36,15 @@ class Contact(commands.Cog):
             await ctx.send("This very special and important command is reserved for council members only!")
 
     @commands.command(name="add", aliases=["new", "newtask", "addtask"], hidden=True)
-    async def add_task(self, ctx, user: discord.Member, task):
+    async def add_task(self, ctx, user: discord.Member, *task):
         if is_council(ctx.author.roles):
-            url = (f"{settings['google']['commLog']}?call=addtask&task={task.replace(' ', '%20')}&"
+            url = (f"{settings['google']['commLog']}?call=addtask&task={' '.join(task)}&"
                    f"discord={user.id}")
+            print(' '.join(task))
             r = requests.get(url)
-            if r.status_code() == 200:
+            if r.status_code == requests.codes.ok:
                 print(r.text)
-                await ctx.send("Task added")
+                await ctx.send(f"Task {r.text} - {' '.join(task)} added for <@{user.id}>")
             else:
                 await ctx.send(f"Something went wrong. Here's an error code for you to play with.\n{r.text}")
         else:
