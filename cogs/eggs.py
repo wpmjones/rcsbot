@@ -48,38 +48,27 @@ class Eggs(commands.Cog):
         await ctx.send(f"File updated.  The new season ends in {season.get_days_left()} days.")
 
     @commands.command(name="avatar", hidden=True)
-    async def avatar(self, ctx, member):
+    async def avatar(self, ctx, user: discord.Member):
         # convert discord mention to user id only
-        if member.startswith("<"):
-            discord_id = "".join(member[2:-1])
-            if discord_id.startswith("!"):
-                discord_id = discord_id[1:]
+        if user:
+            embed = discord.Embed(color=discord.Color.blue())
+            embed.add_field(name=f"{user.name}#{user.discriminator}", value=user.display_name, inline=True)
+            embed.add_field(name="Avatar URL", value=user.avatar_url, inline=True)
+            embed.set_image(url=user.avatar_url_as(size=128))
+            embed.set_footer(text=f"Discord ID: {user.id}",
+                             icon_url="https://discordapp.com/assets/2c21aeda16de354ba5334551a883b481.png")
+            await ctx.send(embed=embed)
+            bot_log(ctx.command, f"avatar for {user.id}", ctx.author)
         else:
             await ctx.send(emojis['other']['redx'] + """ I don't believe that's a real Discord user. Please 
-                make sure you are using the '@' prefix.""")
-            return
-        guild = ctx.bot.get_guild(settings['discord']['rcsGuildId'])
-        is_user, user = is_discord_user(guild, int(discord_id))
-        if not is_user:
-            await ctx.send(f"{emojis['other']['redx']} **{member}** is not a member of this discord server.")
-            return
-        embed = discord.Embed(color=discord.Color.blue())
-        embed.add_field(name=f"{user.name}#{user.discriminator}", value=user.display_name, inline=True)
-        embed.add_field(name="Avatar URL", value=user.avatar_url, inline=True)
-        embed.set_image(url=user.avatar_url_as(size=128))
-        embed.set_footer(text=f"Discord ID: {user.id}",
-                         icon_url="https://discordapp.com/assets/2c21aeda16de354ba5334551a883b481.png")
-        await ctx.send(embed=embed)
-        bot_log(ctx.command, member, ctx.author, ctx.guild)
+                make sure you are using the '@' prefix or give me an ID or something I can work with.""")
 
     @commands.command(name="zag", aliases=["zag-geek", "zaggeek"], hidden=True)
     async def zag(self, ctx):
-#        bot_log(ctx.command, "zag Easter egg", ctx.author, ctx.guild)
         await ctx.send(file=discord.File("/home/tuba/rcsbot/cogs/zag.jpg"))
 
     @commands.command(name="tuba", hidden=True)
     async def tuba(self, ctx):
-#        bot_log(ctx.command, "tuba Easter egg", ctx.author, ctx.guild)
         await ctx.send(file=discord.File("/home/tuba/rcsbot/cogs/tuba.jpg"))
 
     @commands.command(name="password", hidden=True)
