@@ -8,7 +8,7 @@ from config import settings
 from rcsdb import RcsDB
 from loguru import logger
 
-enviro = "LIVE"
+enviro = "dev"
 
 if enviro == "LIVE":
     token = settings['discord']['rcsbotToken']
