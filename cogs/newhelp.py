@@ -85,23 +85,48 @@ class newHelp(commands.Cog):
         if command in ["all", "reddit"]:
             help_text = "Responds with the subreddit link for the clan specified."
             embed.add_field(name="++reddit <clan name/tag>", value=help_text)
-        if command == "council":
-            help_text = "Leader command responds with the leader of the requested clan name/tag."
+        if command == "council" and is_council(ctx.author.roles):
+            help_text = "Responds with a link to the Council Magic Google Form"
+            embed.add_field(name="++magic", value=help_text)
+            help_text = "Leader command responds with the leader of the requested clan name/tag"
             embed.add_field(name="++leader <clan name/tag>", value=help_text)
-            help_text = "Find command responds with the Discord names that contain the specified string."
+            help_text = "Find command responds with the Discord names that contain the specified string"
             embed.add_field(name="++find <search string>", value=help_text)
-            help_text = "Adds clan to the RCS database, add leader roles."
+            help_text = "Adds clan to the RCS database, add leader roles"
             embed.add_field(name="++addClan <clan name [no tags]>", value=help_text)
-            help_text = "Remove clan from RCS database, remove feeder (if it exists), remove roles from leader."
+            help_text = "Remove clan from RCS database, remove feeder (if it exists), remove roles from leader"
             embed.add_field(name="++removeClan <clan name [no tags]>", value=help_text)
             help_text = "Reports user information on the Discord ID provided"
             embed.add_field(name="++ui <discord user or ID>", value=help_text)
             help_text = "Responds with a larger version of the specified user's avatar"
-            embed.add_field(name="++avatar <discord user or ID>", value=help_text)
+            embed.add_field(name="++avatar <discord mention or ID>", value=help_text)
+            help_text = ("Used to manage tasks for council\nThere are a number of commands for this category\n"
+                         "Please use `++help tasks` for more detailed information")
+            embed.add_field(name="++tasks ++add ++assign ++change ++done", value=help_text)
+        if command == "tasks" and is_council(ctx.author.roles):
+            help_text = "Responds with all tasks assigned to you (COMING SOON)"
+            embed.add_field(name="++tasks mine", value=help_text)
+            help_text = "Responds with all Suggestions"
+            embed.add_field(name="++tasks suggestions or ++tasks sugg", value=help_text)
+            help_text = "Responds with all Council Nominations"
+            embed.add_field(name="++tasks council", value=help_text)
+            help_text = "Responds with all Verification Requests"
+            embed.add_field(name="++tasks verification or ++tasks veri", value=help_text)
+            help_text = "Responds with all other comments from the Comm Log"
+            embed.add_field(name="++tasks other", value=help_text)
+            help_text = "Responds with all action items"
+            embed.add_field(name="++tasks action or ++tasks act", value=help_text)
         embed.set_footer(icon_url="https://openclipart.org/image/300px/svg_to_png/122449/1298569779.png",
                          text="rcs-bot proudly maintained by TubaKid.")
         bot_log("help", command, ctx.author, ctx.guild)
         await ctx.send(embed=embed)
+
+
+def is_council(user_roles):
+    for role in user_roles:
+        if role.id == settings['rcsRoles']['council']:
+            return True
+    return False
 
 
 def setup(bot):
