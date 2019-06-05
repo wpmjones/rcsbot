@@ -5,7 +5,7 @@ from discord.ext import commands
 from config import settings, color_pick, bot_log
 
 
-class newHelp(commands.Cog):
+class NewHelp(commands.Cog):
     """New help file for rcs-bot"""
     def __init__(self, bot):
         self.bot = bot
@@ -104,7 +104,12 @@ class newHelp(commands.Cog):
             help_text = ("Used to manage tasks for council\nThere are a number of commands for this category\n"
                          "Please use `++help tasks` for more detailed information")
             embed.add_field(name="++tasks ++add ++assign ++change ++done", value=help_text)
+        elif command == "council":
+            await ctx.send(":x: You've requested help for commands you cannot access.")
+            return
         if command == "tasks" and is_council(ctx.author.roles):
+            help_text = "Responds with all active tasks for the RCS Council (via DM)"
+            embed.add_field(name="++tasks all", value=help_text)
             help_text = "Responds with all tasks assigned to you (COMING SOON)"
             embed.add_field(name="++tasks mine", value=help_text, inline=False)
             help_text = "Responds with all Suggestions"
@@ -117,6 +122,9 @@ class newHelp(commands.Cog):
             embed.add_field(name="++tasks other", value=help_text, inline=False)
             help_text = "Responds with all action items"
             embed.add_field(name="++tasks action or ++tasks act", value=help_text, inline=False)
+        elif command == "tasks":
+            await ctx.send(":x: You've requested help for commands you cannot access.")
+            return
         embed.set_footer(icon_url="https://openclipart.org/image/300px/svg_to_png/122449/1298569779.png",
                          text="rcs-bot proudly maintained by TubaKid.")
         bot_log("help", command, ctx.author, ctx.guild)
@@ -131,4 +139,4 @@ def is_council(user_roles):
 
 
 def setup(bot):
-    bot.add_cog(newHelp(bot))
+    bot.add_cog(NewHelp(bot))
