@@ -19,14 +19,15 @@ class newHelp(commands.Cog):
                 "You can type ++help <command> to display only the help for that command.")
 
         command_list = ["all", "attacks", "defenses", "donations", "trophies", "besttrophies",
-                        "townhalls", "builderhalls", "warstars", "games", "push", "top", "reddit", "council"]
+                        "townhalls", "builderhalls", "warstars", "games", "push",
+                        "top", "reddit", "council", "tasks"]
 
         # respond if help is requested for a command that does not exist
         if command not in command_list:
             await ctx.send(":x: You have provided a command that does not exist.  "
                            "Perhaps try ++help to see all commands.")
             # TODO convert to aiohttp
-            r = requests.post(settings['discord']['botDev'], f"Do we need a help command for {command}?")
+            r = requests.post(settings['rcsHooks']['botDev'], f"Do we need a help command for {command}?")
             bot_log(ctx.command, f"{command} is an invalid option", ctx.author, ctx.guild)
             return
 
