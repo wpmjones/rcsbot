@@ -25,7 +25,10 @@ class Contact(commands.Cog):
 
     @commands.command(name="tasks", aliases=["task", "tasklist", "list"], hidden=True)
     async def task_list(self, ctx, cmd: str = ""):
-        if is_council(ctx.author.roles) and (ctx.guild is None or ctx.channel.id == settings['rcsChannels']['council']):
+        guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
+        role = guild.get_role(settings['rcsRoles']['council'])
+        members = role.members
+        if ctx.author in members and (ctx.guild is None or ctx.channel.id == settings['rcsChannels']['council']):
             if cmd.lower() == "all":
                 if ctx.channel.id == settings['rcsChannels']['council']:
                     await ctx.send("This is a long list. I'm going to send it to your DM. To view items "
@@ -135,7 +138,7 @@ class Contact(commands.Cog):
             if cmd.lower() == "":
                 await ctx.author.send(ctx.author, "Here's your personalized list")
         else:
-            await ctx.send("This very special and important command is reserved for council members only!")
+            await ctx.send("This very special and important command is reserved for #council-chat only!")
 
     @commands.command(name="add", aliases=["new", "newtask", "addtask"], hidden=True)
     async def add_task(self, ctx, user: discord.Member, *task):
