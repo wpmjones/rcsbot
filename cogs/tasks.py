@@ -25,7 +25,7 @@ class Contact(commands.Cog):
 
     @commands.command(name="tasks", aliases=["task", "tasklist", "list"], hidden=True)
     async def task_list(self, ctx, cmd: str = ""):
-        if True: # is_council(ctx.author.roles) and (ctx.guild is None or ctx.channel.id == settings['rcsChannels']['council']):
+        if is_council(ctx.author.roles) and (ctx.guild is None or ctx.channel.id == settings['rcsChannels']['council']):
             if cmd.lower() == "all":
                 if ctx.channel.id == settings['rcsChannels']['council']:
                     await ctx.send("This is a long list. I'm going to send it to your DM. To view items "
