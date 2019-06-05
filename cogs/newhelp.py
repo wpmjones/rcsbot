@@ -26,8 +26,8 @@ class newHelp(commands.Cog):
         if command not in command_list:
             await ctx.send(":x: You have provided a command that does not exist.  "
                            "Perhaps try ++help to see all commands.")
-            # TODO convert to aiohttp
-            requests.post(settings['rcsHooks']['botDev'], data=f"Do we need a help command for {command}?")
+            channel = self.bot.get_channel(settings['rcsChannels']['botDev'])
+            channel.send(f"Do we need a help command for {command}?")
             bot_log(ctx.command, f"{command} is an invalid option", ctx.author, ctx.guild)
             return
 
@@ -106,17 +106,17 @@ class newHelp(commands.Cog):
             embed.add_field(name="++tasks ++add ++assign ++change ++done", value=help_text)
         if command == "tasks" and is_council(ctx.author.roles):
             help_text = "Responds with all tasks assigned to you (COMING SOON)"
-            embed.add_field(name="++tasks mine", value=help_text)
+            embed.add_field(name="++tasks mine", value=help_text, inline=False)
             help_text = "Responds with all Suggestions"
-            embed.add_field(name="++tasks suggestions or ++tasks sugg", value=help_text)
+            embed.add_field(name="++tasks suggestions or ++tasks sugg", value=help_text, inline=False)
             help_text = "Responds with all Council Nominations"
-            embed.add_field(name="++tasks council", value=help_text)
+            embed.add_field(name="++tasks council", value=help_text, inline=False)
             help_text = "Responds with all Verification Requests"
-            embed.add_field(name="++tasks verification or ++tasks veri", value=help_text)
+            embed.add_field(name="++tasks verification or ++tasks veri", value=help_text, inline=False)
             help_text = "Responds with all other comments from the Comm Log"
-            embed.add_field(name="++tasks other", value=help_text)
+            embed.add_field(name="++tasks other", value=help_text, inline=False)
             help_text = "Responds with all action items"
-            embed.add_field(name="++tasks action or ++tasks act", value=help_text)
+            embed.add_field(name="++tasks action or ++tasks act", value=help_text, inline=False)
         embed.set_footer(icon_url="https://openclipart.org/image/300px/svg_to_png/122449/1298569779.png",
                          text="rcs-bot proudly maintained by TubaKid.")
         bot_log("help", command, ctx.author, ctx.guild)
