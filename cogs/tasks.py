@@ -142,7 +142,10 @@ class Contact(commands.Cog):
 
     @commands.command(name="add", aliases=["new", "newtask", "addtask"], hidden=True)
     async def add_task(self, ctx, user: discord.Member, *task):
-        if is_council(ctx.author.roles):
+        guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
+        role = guild.get_role(settings['rcsRoles']['council'])
+        members = role.members
+        if ctx.author in members:
             url = (f"{settings['google']['commLog']}?call=addtask&task={' '.join(task)}&"
                    f"discord={user.id}")
             print(' '.join(task))
