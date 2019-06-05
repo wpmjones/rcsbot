@@ -53,7 +53,9 @@ initialExtensions = ["cogs.general",
                      "cogs.newhelp",
                      "cogs.council",
                      "cogs.owner",
-                     "cogs.eggs"]
+                     "cogs.tasks",
+                     "cogs.eggs",
+                     ]
 
 if __name__ == "__main__":
     for extension in initialExtensions:

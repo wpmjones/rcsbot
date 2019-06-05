@@ -24,14 +24,116 @@ class Contact(commands.Cog):
         self.bot = bot
 
     @commands.command(name="tasks", aliases=["task", "tasklist", "list"], hidden=True)
-    async def task_list(self, ctx, cmd, cmd_input: str = ""):
-        if is_council(ctx.author.roles) and (ctx.guild is None or ctx.channel.id == settings['rcsChannels']['council']):
-            if cmd_input.lower() == "all":
-                await ctx.send("Reply all")
-            if cmd_input.lower() in ("suggestions", "council", "verification", "other", "tasks"):
-                await ctx.send("Here's your specific list")
-            if cmd_input.lower() == "":
-                await ctx.author.send(ctx.author, "Here's your full list")
+    async def task_list(self, ctx, cmd: str = ""):
+        if True: # is_council(ctx.author.roles) and (ctx.guild is None or ctx.channel.id == settings['rcsChannels']['council']):
+            if cmd.lower() == "all":
+                if ctx.channel.id == settings['rcsChannels']['council']:
+                    await ctx.send("This is a long list. I'm going to send it to your DM. To view items "
+                                   "in the Council Chat, please request them individually (`++tasks suggestions`).")
+                # Suggestions
+                result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Suggestions!A2:I").execute()
+                values = result.get("values", [])
+                embed = discord.Embed(title="RCS Council Suggestions", color=discord.Color.blurple())
+                for row in values:
+                    if len(row) < 9:
+                        embed.add_field(name=f"Suggestions from {row[1]}",
+                                        value=f"{row[3][:500]}\nDated {row[0]}",
+                                        inline=False)
+                await ctx.author.send(embed=embed)
+                # Council Nominations
+                result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Council!A2:I").execute()
+                values = result.get("values", [])
+                embed = discord.Embed(title="RCS Council Nominations", color=discord.Color.dark_gold())
+                for row in values:
+                    if len(row) < 9:
+                        embed.add_field(name=f"Council Nomination for {row[3]}",
+                                        value=f"Submitted by {row[1]}\nDated {row[0]}",
+                                        inline=False)
+                await ctx.author.send(embed=embed)
+                # Verification Requests
+                result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Verification!A2:I").execute()
+                values = result.get("values", [])
+                embed = discord.Embed(title="RCS Council Verification Requests", color=discord.Color.dark_blue())
+                for row in values:
+                    if len(row) < 9:
+                        embed.add_field(name=f"Verification for {row[1]}",
+                                        value=f"Leader: {row[3]}\nDated {row[0]}",
+                                        inline=False)
+                await ctx.author.send(embed=embed)
+                # Other Submissions
+                result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Other!A2:I").execute()
+                values = result.get("values", [])
+                embed = discord.Embed(title="RCS Council Other Items", color=discord.Color.gold())
+                for row in values:
+                    if len(row) < 9:
+                        embed.add_field(name=f"Other Comment from {row[1]}",
+                                        value=f"{row[3][:500]}\nDated {row[0]}",
+                                        inline=False)
+                await ctx.author.send(embed=embed)
+                # Tasks (Individual Action Items)
+                result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Tasks!A2:I").execute()
+                values = result.get("values", [])
+                embed = discord.Embed(title="RCS Council Action Items", color=discord.Color.dark_magenta())
+                for row in values:
+                    if len(row) < 9:
+                        embed.add_field(name=f"Task {row[4]} - {row[0]}",
+                                        value=f"<@{row[2]}>\n{row[1]}",
+                                        inline=False)
+                embed.set_footer(text="Use ++done <Task ID> to complete a task")
+                await ctx.author.send(embed=embed)
+            if cmd.lower() in ("suggestions", "suggest", "suggestion", "sugg", "sug"):
+                result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Suggestions!A2:I").execute()
+                values = result.get("values", [])
+                embed = discord.Embed(title="RCS Council Suggestions", color=discord.Color.blurple())
+                for row in values:
+                    if len(row) < 9:
+                        embed.add_field(name=f"Suggestions from {row[1]}\nDated {row[0]}",
+                                        value=row[3][:1023],
+                                        inline=True)
+                embed.set_footer(text="Please review the Communication Log if the suggestions is cut off.")
+                await ctx.send(embed=embed)
+            if cmd.lower() in ("council", "nomination", "nominations", "nomi", "coun"):
+                result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Council!A2:I").execute()
+                values = result.get("values", [])
+                embed = discord.Embed(title="RCS Council Nominations", color=discord.Color.dark_gold())
+                for row in values:
+                    if len(row) < 9:
+                        embed.add_field(name=f"Council Nomination for {row[3]}",
+                                        value=f"Submitted by {row[1]}\nDated {row[0]}",
+                                        inline=True)
+                await ctx.send(embed=embed)
+            if cmd.lower() in ("verification", "verifications", "veri"):
+                result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Verification!A2:I").execute()
+                values = result.get("values", [])
+                embed = discord.Embed(title="RCS Council Verification Requests", color=discord.Color.dark_blue())
+                for row in values:
+                    if len(row) < 9:
+                        embed.add_field(name=f"Verification for {row[1]}",
+                                        value=f"Leader: {row[3]}\nDated {row[0]}",
+                                        inline=True)
+                await ctx.send(embed=embed)
+            if cmd.lower() in ("other", "oth", "othe"):
+                result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Other!A2:I").execute()
+                values = result.get("values", [])
+                embed = discord.Embed(title="RCS Council Other Items", color=discord.Color.gold())
+                for row in values:
+                    if len(row) < 9:
+                        embed.add_field(name=f"Other Comment from {row[1]}\nDated {row[0]}",
+                                        value=row[3][:1023],
+                                        inline=True)
+                await ctx.send(embed=embed)
+            if cmd.lower() in ("tasks", "task", "action", "agenda", "act"):
+                result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Tasks!A2:I").execute()
+                values = result.get("values", [])
+                embed = discord.Embed(title="RCS Council Action Items", color=discord.Color.gold())
+                for row in values:
+                    if len(row) < 9:
+                        embed.add_field(name=f"Task {row[4]} - {row[0]}",
+                                        value=f"<@{row[2]}>\n{row[1]}",
+                                        inline=False)
+                await ctx.send(embed=embed)
+            if cmd.lower() == "":
+                await ctx.author.send(ctx.author, "Here's your personalized list")
         else:
             await ctx.send("This very special and important command is reserved for council members only!")
 
