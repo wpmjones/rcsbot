@@ -27,7 +27,7 @@ class newHelp(commands.Cog):
             await ctx.send(":x: You have provided a command that does not exist.  "
                            "Perhaps try ++help to see all commands.")
             # TODO convert to aiohttp
-            r = requests.post(settings['rcsHooks']['botDev'], f"Do we need a help command for {command}?")
+            requests.post(settings['rcsHooks']['botDev'], data=f"Do we need a help command for {command}?")
             bot_log(ctx.command, f"{command} is an invalid option", ctx.author, ctx.guild)
             return
 
