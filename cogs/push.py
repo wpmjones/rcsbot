@@ -121,6 +121,7 @@ class Push(commands.Cog):
     @commands.is_owner()
     async def xpush(self, ctx, cmd: str):
         if cmd in ["begin", "start", "add"]:
+            await ctx.send("Starting process...")
             # start push
             start = time.perf_counter()
             # conn = self.bot.db.pool
@@ -151,6 +152,7 @@ class Push(commands.Cog):
                     cursor.execute(sql)
             conn.close()
             print(time.perf_counter() - start)
+            await ctx.send(f"All members added. Elapsed time: {(time.perf_counter() - start)/60:.2f} minutes")
         else:
             await ctx.send(f"{cmd} is not a valid command for ++xpush.")
 
