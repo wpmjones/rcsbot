@@ -23,6 +23,15 @@ class Contact(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.command(name="getroles", hidden=True)
+    async def getroles(self, ctx, guild_id):
+        guild = self.bot.get_guild(guild_id)
+        await ctx.send(guild.name)
+        role_list = f"**Roles for {guild.name}**\n"
+        for role in guild.roles[1:]:
+            role_list += f"{role.name}: {role.id}\n"
+        await ctx.send(role_list)
+
     @commands.command(name="tasks", aliases=["task", "tasklist", "list"], hidden=True)
     async def task_list(self, ctx, cmd: str = ""):
         if ctx.guild is None or ctx.channel.id == settings['rcsChannels']['council']:
