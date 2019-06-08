@@ -73,7 +73,7 @@ class OwnerCog(commands.Cog):
         for guild in server_list:
             content = f"**{guild.name}**\n```"
             for emoji in guild.emojis:
-                content += f"\n{emoji.name}: {emoji.id}>"
+                content += f"\n{emoji.name}: {emoji.id}"
             content += "```"
             await ctx.send(content)
 
