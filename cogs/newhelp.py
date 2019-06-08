@@ -122,6 +122,19 @@ class NewHelp(commands.Cog):
             embed.add_field(name="++tasks other", value=help_text, inline=False)
             help_text = "Responds with all action items"
             embed.add_field(name="++tasks action or ++tasks act", value=help_text, inline=False)
+            help_text = ("Adds the specified action item and assigns it you choose. A DM will be sent to the "
+                         "user so they are aware of the action item.  Action items can only be assigned to "
+                         "council members.")
+            embed.add_field(name="++add <Discord User> <Action Item>", value=help_text, inline=False)
+            help_text = ("Assigns the specified task to the user you choose. Only suggestions, other items, and "
+                         "action items can be assigned to an individual. If you don't know the Task ID, use ++task "
+                         "to find it.")
+            embed.add_field(name="++assign <Discord User> <Task ID>", value=help_text, inline=False)
+            help_text = ("Modifies the status of a Clan Verification. If you know the status number, use it. If "
+                         "you leave off the status number, it will prompt you for the new status.")
+            embed.add_field(name="++verification <Task ID> <status number (optional)>", value=help_text, inline=False)
+            help_text = "Marks the specified task as completed."
+            embed.add_field(name="++done <Task ID>", value=help_text, inline=False)
         elif command == "tasks":
             await ctx.send(":x: You've requested help for commands you cannot access.")
             return

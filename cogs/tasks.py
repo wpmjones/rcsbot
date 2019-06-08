@@ -1,5 +1,6 @@
 import discord
 import requests
+import asyncio
 from discord.ext import commands
 from config import settings
 from googleapiclient.discovery import build
@@ -250,14 +251,127 @@ class Contact(commands.Cog):
     @commands.command(name="change", aliases=["modify", "alter"], hidden=True)
     async def change_task(self, ctx, task_id, new_task):
         if await self.is_council(ctx.author.id):
+            # TODO finish this one (only for action itms)
             await ctx.send("Task changed")
+        else:
+            await ctx.send("This very special and important command is reserved for council members only!")
+
+    @commands.command(name="verification", aliases=["veri", "verifications", "veris"], hidden=True)
+    async def veri(self, ctx, task_id, new_status: int = 9):
+
+        def check_reaction(reaction, user):
+            return user == ctx.message.author and str(reaction.emoji) in ["1⃣", "2⃣", "3⃣", "4⃣", "☑",
+                                                                          "<:upvote:295295304859910144>",
+                                                                          "<:downvote:295295520187088906>"]
+
+        if await self.is_council(ctx.author.id):
+            if task_id[:1].lower() != "v":
+                await ctx.send("This command only works on Verification tasks.")
+                return
+            result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Verification!A2:I").execute()
+            values = result.get("values", [])
+            row_num = 1
+            found = 0
+            for row in values:
+                row_num += 1
+                if row[7] == task_id:
+                    task_row = row_num
+                    clan_name = row[1]
+                    leader = row[3]
+                    if len(row) >= 9:
+                        cur_status_num = row[8]
+                    else:
+                        cur_status_num = 0
+                    found = 1
+            if found == 0:
+                await ctx.send(f"I could not find {task_id} in the Verification tab. Are you sure that's the "
+                               f"right ID?")
+                return
+            cur_status_text = " has not been addressed"
+            if cur_status_num == "1": cur_status_text = "is awaiting a scout"
+            if cur_status_num == "2": cur_status_text = "is currently being scouted"
+            if cur_status_num == "3": cur_status_text = "is awaiting the post-scout survey"
+            if cur_status_num == "4": cur_status_text = "is awaiting a decision by Council"
+            await ctx.send(f"Verification for {clan_name} {cur_status_text}\nLeader: {leader}")
+            if new_status == 9:
+                sent_msg = await ctx.send(f"Please select a new status:\n"
+                                          f":one: Awaiting a scout\n"
+                                          f":two: Being scouted\n"
+                                          f":three: Awaiting the post-scout surveys\n"
+                                          f":four: Awaiting a decision by Council\n"
+                                          f":ballot_box_with_check: Mark complete")
+                await sent_msg.add_reaction("1⃣")
+                await sent_msg.add_reaction("2⃣")
+                await sent_msg.add_reaction("3⃣")
+                await sent_msg.add_reaction("4⃣")
+                await sent_msg.add_reaction("☑")
+                try:
+                    reaction, user = await ctx.bot.wait_for("reaction_add", check=check_reaction, timeout=10)
+                except asyncio.TimeoutError:
+                    await sent_msg.clear_reactions()
+                    return await ctx.send("Time's up slow poke. Try again later!")
+                await sent_msg.clear_reactions()
+                if str(reaction.emoji) == "1⃣":
+                    new_status = 1
+                    await sent_msg.add_reaction("1⃣")
+
+                if str(reaction.emoji) == "2⃣":
+                    new_status = 2
+                    await sent_msg.add_reaction("2⃣")
+                if str(reaction.emoji) == "3⃣":
+                    new_status = 3
+                    await sent_msg.add_reaction("3⃣")
+                if str(reaction.emoji) == "4⃣":
+                    new_status = 4
+                    await sent_msg.add_reaction("4⃣")
+                if str(reaction.emoji) == "☑":
+                    new_status = "x"
+                    await sent_msg.add_reaction("☑")
+            if new_status == "x":
+                sent_msg = await ctx.send("Did this clan get verified?")
+                await sent_msg.add_reaction("upvote:295295304859910144")
+                await sent_msg.add_reaction("downvote:295295520187088906")
+                try:
+                    reaction, user = await ctx.bot.wait_for("reaction_add", check=check_reaction, timeout=10)
+                    await sent_msg.clear_reactions()
+                    if str(reaction.emoji) == "<:downvote:295295520187088906>":
+                        await sent_msg.add_reaction("downvote:295295520187088906")
+                        new_status = "no"
+                    if str(reaction.emoji) == "<:upvote:295295304859910144>":
+                        await sent_msg.add_reaction("upvote:295295304859910144")
+                        new_status = "yes"
+                except asyncio.TimeoutError:
+                    await ctx.send("I'm just going to pat it up, roll it up, and mark it with X. "
+                                   "Feel free to drop by the Comm Log later and change it if you like.")
+            url = f"{settings['google']['commLog']}?call=verification&status={new_status}&row={task_row}"
+            r = requests.get(url)
+            if r.status_code == requests.codes.ok:
+                if r.text == "1":
+                    await ctx.send(f"Verification for {clan_name} has been changed to {new_status}.")
+            else:
+                await ctx.send(f"Whoops! Something went sideways!\nVerification Error: {r.text}")
         else:
             await ctx.send("This very special and important command is reserved for council members only!")
 
     @commands.command(name="complete", aliases=["done", "finished", "x"], hidden=True)
     async def complete_task(self, ctx, task_id):
         if await self.is_council(ctx.author.id):
-            await ctx.send("Task marked complete")
+            if task_id[:1].lower() == "v":
+                await ctx.send("Tasks in this category should be modifed using `++veri`.")
+                return
+            if task_id[:1].lower() not in ("s", "c", "o", "a"):
+                await ctx.send("Please provide a valid task ID (Sug123, Cou123, Oth123, Act123).")
+                return
+            url = f"{settings['google']['commLog']}?call=completetask&task={task_id}"
+            r = requests.get(url)
+            if r.status_code == requests.codes.ok:
+                if r.text == "1":
+                    await ctx.send(f"Task {task_id} has been marked complete.")
+                if r.text == "2":
+                    await ctx.send(f"It would appear that tasks has already been completed!")
+            else:
+                await ctx.send(f"Yeah, we're going to have to try that one again.\n"
+                               f"Complete Task Error: {r.text}")
         else:
             await ctx.send("This very special and important command is reserved for council members only!")
 
