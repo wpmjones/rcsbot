@@ -35,6 +35,7 @@ class Contact(commands.Cog):
     @commands.command(name="tasks", aliases=["task", "tasklist", "list"], hidden=True)
     async def task_list(self, ctx, cmd: str = ""):
         if await self.is_council(ctx.author.id):
+            guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
             if cmd.lower() == "all":
                 if ctx.channel.id == settings['rcsChannels']['council']:
                     await ctx.send("This is a long list. I'm going to send it to your DM. To view items "
@@ -49,6 +50,7 @@ class Contact(commands.Cog):
                         embed.add_field(name=f"Suggestion from {row[1]}\n{row[7]}",
                                         value=f"{row[3][:500]}\nDated {row[0]}",
                                         inline=False)
+                embed.set_footer(text="Use ++done <Task ID> to complete a task")
                 if len(embed.fields) > 0:
                     flag = 1
                     await ctx.author.send(embed=embed)
@@ -61,6 +63,7 @@ class Contact(commands.Cog):
                         embed.add_field(name=f"Council Nomination for {row[3]}\n{row[9]}",
                                         value=f"Submitted by {row[1]}\nDated {row[0]}",
                                         inline=False)
+                embed.set_footer(text="Use ++done <Task ID> to complete a task")
                 if len(embed.fields) > 0:
                     flag = 1
                     await ctx.author.send(embed=embed)
@@ -81,6 +84,7 @@ class Contact(commands.Cog):
                         embed.add_field(name=f"Verification for {row[1]} {status}.\n{row[7]}",
                                         value=f"Leader: {row[3]}\nDated {row[0]}",
                                         inline=False)
+                embed.set_footer(text="Need fancy command for changing status")
                 if len(embed.fields) > 0:
                     flag = 1
                     await ctx.author.send(embed=embed)
@@ -90,9 +94,15 @@ class Contact(commands.Cog):
                 embed = discord.Embed(title="RCS Council Other Items", color=discord.Color.gold())
                 for row in values:
                     if len(row) < 9:
+                        if len(row[6]) > 1:
+                            assigned_to = f"Assigned to: {guild.get_member(int(row[6])).display_name}"
+                        else:
+                            assigned_to = "Unassigned"
                         embed.add_field(name=f"Other Comment from {row[1]}\n{row[7]}",
-                                        value=f"{row[3][:500]}\nDated {row[0]}",
+                                        value=(f"{row[3][:500]}\n{assigned_to}\n"
+                                               f"Dated {row[0]}"),
                                         inline=False)
+                embed.set_footer(text="Use ++done <Task ID> to complete a task")
                 if len(embed.fields) > 0:
                     flag = 1
                     await ctx.author.send(embed=embed)
@@ -102,8 +112,12 @@ class Contact(commands.Cog):
                 embed = discord.Embed(title="RCS Council Action Items", color=discord.Color.dark_magenta())
                 for row in values:
                     if len(row) < 9:
-                        embed.add_field(name=f"Task {row[7]} - {row[0]}",
-                                        value=f"<@{row[2]}>\n{row[1]}",
+                        if len(row[6]) > 1:
+                            assigned_to = f"Assigned to: {guild.get_member(int(row[6])).display_name}"
+                        else:
+                            assigned_to = "Unassigned"
+                        embed.add_field(name=f"{assigned_to}\n{row[7]}",
+                                        value=f"{row[1]}\nDated: {row[0]}",
                                         inline=False)
                 embed.set_footer(text="Use ++done <Task ID> to complete a task")
                 if len(embed.fields) > 0:
@@ -143,20 +157,31 @@ class Contact(commands.Cog):
                 values = result.get("values", [])
                 embed = discord.Embed(title="RCS Council Verification Requests", color=discord.Color.dark_blue())
                 for row in values:
-                    if len(row) < 9:
-                        embed.add_field(name=f"Verification for {row[1]}\n{row[7]}\nDated {row[0]}",
+                    if len(row) < 9 or row[8] in ("1", "2", "3", "4"):
+                        status = " has not been addressed"
+                        if row[8] == "1": status = " is awaiting a scout"
+                        if row[8] == "2": status = " is currently being scouted"
+                        if row[8] == "3": status = " is awaiting the post-scout survey"
+                        if row[8] == "4": status = " is awaiting a decision by Council"
+                        embed.add_field(name=f"Verification for {row[1]} {status}.\n{row[7]}\nDated {row[0]}",
                                         value=f"Leader: {row[3]}",
                                         inline=True)
-                await ctx.send(embed=embed)
+                embed.set_footer(text="Need fancy command to change status")
+                if len(embed.fields) > 0:
+                    await ctx.send(embed=embed)
             if cmd.lower() in ("other", "oth", "othe"):
                 result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Other!A2:I").execute()
                 values = result.get("values", [])
                 embed = discord.Embed(title="RCS Council Other Items", color=discord.Color.gold())
                 for row in values:
                     if len(row) < 9:
-                        embed.add_field(name=f"Other Comment from {row[1]}\n{row[7]}\nDated {row[0]}",
-                                        value=row[3][:1023],
-                                        inline=True)
+                        if len(row[6]) > 1:
+                            assigned_to = f"Assigned to: {guild.get_member(int(row[6])).display_name}"
+                        else:
+                            assigned_to = "Unassigned"
+                        embed.add_field(name=f"Other Comment from {row[1]}\n{row[7]}",
+                                        value=f"{row[3][:1000]}\n{assigned_to}\nDated: {row[0]}",
+                                        inline=False)
                 if len(embed.fields) > 0:
                     await ctx.send(embed=embed)
                 else:
@@ -164,11 +189,15 @@ class Contact(commands.Cog):
             if cmd.lower() in ("tasks", "task", "action", "agenda", "act"):
                 result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Tasks!A2:I").execute()
                 values = result.get("values", [])
-                embed = discord.Embed(title="RCS Council Action Items", color=discord.Color.gold())
+                embed = discord.Embed(title="RCS Council Action Items", color=discord.Color.dark_magenta())
                 for row in values:
                     if len(row) < 9:
-                        embed.add_field(name=f"Task {row[7]} - {row[0]}",
-                                        value=f"<@{row[2]}>\n{row[1]}",
+                        if len(row[6]) > 1:
+                            assigned_to = f"Assigned to: {guild.get_member(int(row[6])).display_name}"
+                        else:
+                            assigned_to = "Unassigned"
+                        embed.add_field(name=f"{assigned_to}\n{row[7]}",
+                                        value=f"{row[1]}\nDated: {row[0]}",
                                         inline=False)
                 if len(embed.fields):
                     await ctx.send(embed=embed)
@@ -182,15 +211,19 @@ class Contact(commands.Cog):
     @commands.command(name="add", aliases=["new", "newtask", "addtask"], hidden=True)
     async def add_task(self, ctx, user: discord.Member, *task):
         if await self.is_council(ctx.author.id):
-            url = (f"{settings['google']['commLog']}?call=addtask&task={' '.join(task)}&"
-                   f"discord={user.id}")
-            r = requests.get(url)
-            if r.status_code == requests.codes.ok:
-                await ctx.send(f"Task {r.text} - {' '.join(task)} added for <@{user.id}>")
-                await user.send(f"Task {r.text} - {' '.join(task)} was assigned to you by {ctx.author.display_name}.")
+            if await self.is_council(user.id):
+                url = (f"{settings['google']['commLog']}?call=addtask&task={' '.join(task)}&"
+                       f"discord={user.id}")
+                r = requests.get(url)
+                if r.status_code == requests.codes.ok:
+                    await ctx.send(f"Task {r.text} - {' '.join(task)} added for <@{user.id}>")
+                    await user.send(f"Task {r.text} - {' '.join(task)} was assigned to you by {ctx.author.display_name}.")
+                else:
+                    await ctx.send(f"Something went wrong. Here's an error code for you to play with.\n"
+                                   f"Add Task Error: {r.text}")
             else:
-                await ctx.send(f"Something went wrong. Here's an error code for you to play with.\n"
-                               f"Add Task Error: {r.text}")
+                await ctx.send("You are trying to assign this task to a non-council member and I'm not real "
+                               "comfortable doing that!")
         else:
             await ctx.send("This very special and important command is reserved for council members only!")
 
