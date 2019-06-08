@@ -24,9 +24,9 @@ class Contact(commands.Cog):
         self.bot = bot
 
     @commands.command(name="getroles", hidden=True)
+    @commands.is_owner()
     async def getroles(self, ctx, guild_id):
-        guild = self.bot.get_guild(guild_id)
-        await ctx.send(guild.name)
+        guild = self.bot.get_guild(int(guild_id))
         role_list = f"**Roles for {guild.name}**\n"
         for role in guild.roles[1:]:
             role_list += f"{role.name}: {role.id}\n"
@@ -34,7 +34,7 @@ class Contact(commands.Cog):
 
     @commands.command(name="tasks", aliases=["task", "tasklist", "list"], hidden=True)
     async def task_list(self, ctx, cmd: str = ""):
-        if ctx.guild is None or ctx.channel.id == settings['rcsChannels']['council']:
+        if await self.is_council(ctx.author.id):
             if cmd.lower() == "all":
                 if ctx.channel.id == settings['rcsChannels']['council']:
                     await ctx.send("This is a long list. I'm going to send it to your DM. To view items "
@@ -181,7 +181,7 @@ class Contact(commands.Cog):
 
     @commands.command(name="add", aliases=["new", "newtask", "addtask"], hidden=True)
     async def add_task(self, ctx, user: discord.Member, *task):
-        if is_council(ctx.author.roles) and ctx.channel.id == settings['rcsChannels']['council']:
+        if await self.is_council(ctx.author.id):
             url = (f"{settings['google']['commLog']}?call=addtask&task={' '.join(task)}&"
                    f"discord={user.id}")
             r = requests.get(url)
@@ -189,28 +189,41 @@ class Contact(commands.Cog):
                 await ctx.send(f"Task {r.text} - {' '.join(task)} added for <@{user.id}>")
                 await user.send(f"Task {r.text} - {' '.join(task)} was assigned to you by {ctx.author.display_name}.")
             else:
-                await ctx.send(f"Something went wrong. Here's an error code for you to play with.\n{r.text}")
+                await ctx.send(f"Something went wrong. Here's an error code for you to play with.\n"
+                               f"Add Task Error: {r.text}")
         else:
             await ctx.send("This very special and important command is reserved for council members only!")
 
     @commands.command(name="assign", hidden=True)
-    async def assign_task(self, ctx, user: discord.Member):
-        if is_council(ctx.author.roles):
-            await ctx.send("Task assigned")
-            await user.send("A new task was assigned to you by ...")
+    async def assign_task(self, ctx, user: discord.Member, task_id):
+        if await self.is_council(ctx.author.id):
+            if task_id[:1].lower() in ("c", "v"):
+                await ctx.send("Tasks in this category cannot be assigned to an individual.")
+                return
+            url = f"{settings['google']['commLog']}?call=assigntask&task={task_id}&discord={user.id}"
+            r = requests.get(url)
+            if r.status_code == requests.codes.ok and r.text != "-1":
+                if r.text == "1":
+                    await ctx.send(f"{task_id} assigned to {user.name}")
+                    await user.send(f"{task_id} was assigned to you by {ctx.author.display_name}.")
+                if r.text == "2":
+                    await ctx.send(f"It would appear that tasks has already been completed!")
+            else:
+                await ctx.send(f"That didn't work, but here's an error code to chew on.\n"
+                               f"Assign Task Error: {r.text}")
         else:
             await ctx.send("This very special and important command is reserved for council members only!")
 
     @commands.command(name="change", aliases=["modify", "alter"], hidden=True)
     async def change_task(self, ctx, task_id, new_task):
-        if is_council(ctx.author.roles):
+        if await self.is_council(ctx.author.id):
             await ctx.send("Task changed")
         else:
             await ctx.send("This very special and important command is reserved for council members only!")
 
     @commands.command(name="complete", aliases=["done", "finished", "x"], hidden=True)
     async def complete_task(self, ctx, task_id):
-        if is_council(ctx.author.roles):
+        if await self.is_council(ctx.author.id):
             await ctx.send("Task marked complete")
         else:
             await ctx.send("This very special and important command is reserved for council members only!")
@@ -237,12 +250,13 @@ class Contact(commands.Cog):
                 coll += line
             await channel.send(coll)
 
-
-def is_council(user_roles):
-    for role in user_roles:
-        if role.id == settings['rcsRoles']['council']:
+    async def is_council(self, user_id):
+        rcs_guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
+        council_role = rcs_guild.get_role(settings['rcsRoles']['council'])
+        council_members = [member.id for member in council_role.members]
+        if user_id in council_members:
             return True
-    return False
+        return False
 
 
 def setup(bot):
