@@ -217,8 +217,9 @@ class Contact(commands.Cog):
                        f"discord={user.id}")
                 r = requests.get(url)
                 if r.status_code == requests.codes.ok:
-                    await ctx.send(f"Task {r.text} - {' '.join(task)} added for <@{user.id}>")
-                    await user.send(f"Task {r.text} - {' '.join(task)} was assigned to you by {ctx.author.display_name}.")
+                    await ctx.send(f"Action Item {r.text} - {' '.join(task)} added for {user.display_name}")
+                    await user.send(f"Action Item {r.text} - {' '.join(task)} was assigned "
+                                    f"to you by {ctx.author.display_name}.")
                 else:
                     await ctx.send(f"Something went wrong. Here's an error code for you to play with.\n"
                                    f"Add Task Error: {r.text}")
