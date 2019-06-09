@@ -51,6 +51,12 @@ class OwnerCog(commands.Cog):
             print(f"{cog} reloaded successfully")
             await ctx.send("**`SUCCESS`**")
 
+    @commands.command(name="clear")
+    @commands.is_owner()
+    async def clear(self, ctx):
+        async for message in ctx.channel.history():
+            await message.delete()
+
     @commands.command(name="pull", hidden=True)
     @commands.is_owner()
     async def git_pull(self, ctx):
