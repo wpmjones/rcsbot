@@ -249,10 +249,21 @@ class Contact(commands.Cog):
             await ctx.send("This very special and important command is reserved for council members only!")
 
     @commands.command(name="change", aliases=["modify", "alter"], hidden=True)
-    async def change_task(self, ctx, task_id, new_task):
+    async def change_task(self, ctx, task_id, *new_task):
         if await self.is_council(ctx.author.id):
-            # TODO finish this one (only for action itms)
-            await ctx.send("Task changed")
+            if task_id[:1].lower() != "a":
+                await ctx.send("Only action items can be modified. Please try again with the proper Task ID.")
+                return
+            url = f"{settings['google']['commLog']}?call=changetask&task={task_id}&newtask={'%20'.join(new_task)}"
+            r = requests.get(url)
+            if r.status_code == requests.codes.ok and r.text != "-1":
+                if r.text == "1":
+                    await ctx.send(f"Action Item {task_id} changed.")
+                if r.text == "2":
+                    await ctx.send("I'd rather not change a task that is already complete.")
+            else:
+                await ctx.send("That action item was not found in the sheet. Make sure you have the "
+                               "correct Task ID. Use `++tasks action` if you are unsure.")
         else:
             await ctx.send("This very special and important command is reserved for council members only!")
 

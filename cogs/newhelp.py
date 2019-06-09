@@ -133,6 +133,8 @@ class NewHelp(commands.Cog):
             help_text = ("Modifies the status of a Clan Verification. If you know the status number, use it. If "
                          "you leave off the status number, it will prompt you for the new status.")
             embed.add_field(name="++verification <Task ID> <status number (optional)>", value=help_text, inline=False)
+            help_text = "Change the action item to the newly specified text."
+            embed.add_field(name="++change <Task ID> <new action item text>", value=help_text, inline=False)
             help_text = "Marks the specified task as completed."
             embed.add_field(name="++done <Task ID>", value=help_text, inline=False)
         elif command == "tasks":
