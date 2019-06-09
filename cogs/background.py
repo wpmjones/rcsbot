@@ -1,12 +1,8 @@
-import asyncpg
 from loguru import logger
 from discord.ext import commands
 from datetime import datetime, timedelta
 from random import randint
 from config import settings
-
-# logger.add("general.log", rotation="100MB",
-#            format="{time:YYYY-MM-DD HH:mm:ss} {level} {message}", level="INFO")
 
 
 class Background(commands.Cog):
