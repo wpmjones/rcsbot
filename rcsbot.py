@@ -15,11 +15,33 @@ if enviro == "LIVE":
     prefix = "++"
     log_level = "INFO"
     coc_names = "vps"
+    initialExtensions = ["cogs.general",
+                         "cogs.background",
+                         "cogs.push",
+                         "cogs.games",
+                         "cogs.newhelp",
+                         "cogs.council",
+                         "cogs.owner",
+                         "cogs.tasks",
+                         "cogs.discordcheck",
+                         "cogs.eggs",
+                         "cogs.downtime",
+                         ]
 else:
     token = settings['discord']['testToken']
     prefix = ">"
     log_level = "DEBUG"
     coc_names = "dev"
+    initialExtensions = ["cogs.general",
+                         "cogs.push",
+                         "cogs.games",
+                         "cogs.newhelp",
+                         "cogs.council",
+                         "cogs.owner",
+                         "cogs.tasks",
+                         "cogs.eggs",
+                         "cogs.downtime",
+                         ]
 
 logger.add("rcsbot.log", rotation="100MB", level=log_level)
 logger.info("Starting bot")
@@ -44,19 +66,6 @@ async def on_ready():
     logger.info("-------")
     channel = bot.get_channel(settings['oakChannels']['testChat'])
     await channel.send("RCS bot has started")
-
-
-initialExtensions = ["cogs.general",
-                     "cogs.background",
-                     "cogs.push",
-                     "cogs.games",
-                     "cogs.newhelp",
-                     "cogs.council",
-                     "cogs.owner",
-                     "cogs.tasks",
-                     "cogs.discordcheck",
-                     "cogs.eggs",
-                     ]
 
 if __name__ == "__main__":
     for extension in initialExtensions:
