@@ -54,6 +54,7 @@ initialExtensions = ["cogs.general",
                      "cogs.council",
                      "cogs.owner",
                      "cogs.tasks",
+                     "cogs.discordcheck",
                      "cogs.eggs",
                      ]
 

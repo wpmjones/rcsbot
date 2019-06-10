@@ -3,6 +3,7 @@ import time
 import pymssql
 import re
 import discord
+import requests
 from datetime import datetime, date
 from discord.ext import commands
 from config import settings, color_pick
@@ -118,11 +119,11 @@ class DiscordCheck(commands.Cog):
                     embed.set_footer(text="If someone is no longer in your clan, please notify a Chat Mod "
                                           "to have their Member role removed.",
                                      icon_url="http://www.mayodev.com/images/dangerbot.png")
-                    # await channel.send(f"{clan['leader_tag']} Please check the following list of members to make "
-                    #                    f"sure everyone is still in your clan (or feeder).")
-                    # await channel.send(embed=embed)
-                    # if clan['clan_name'] in ["Ninja Killers", "Faceless Ninjas"]:
-                    #     requests.post(settings['rcsWebhooks']['ninjas'])
+                    await channel.send(f"{clan['leader_tag']} Please check the following list of members to make "
+                                       f"sure everyone is still in your clan (or feeder).")
+                    await channel.send(embed=embed)
+                    if clan['clan_name'] in ["Ninja Killers", "Faceless Ninjas"]:
+                        requests.post(settings['rcsWebhooks']['ninjas'])
                 else:
                     channel = guild.get_channel(settings['rcsChannels']['botDev'])
                     await channel.send(f"No members for {clan['clan_name']}")
