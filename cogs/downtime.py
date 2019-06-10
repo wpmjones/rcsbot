@@ -7,7 +7,7 @@ from datetime import datetime
 class Downtime(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.downtime = datetime(2019, 6, 10, 21, 15)
+        self.downtime = datetime(2019, 6, 11, 2, 15)
         self.bg_task = self.bot.loop.create_task(self.main())
 
     async def main(self):
