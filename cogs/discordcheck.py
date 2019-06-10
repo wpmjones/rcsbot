@@ -41,6 +41,7 @@ class DiscordCheck(commands.Cog):
 
     async def main(self):
         while self.flag == 1:
+
             start = time.perf_counter()
             guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
             danger_channel = guild.get_channel(settings['rcsChannels']['dangerBot'])
@@ -119,7 +120,7 @@ class DiscordCheck(commands.Cog):
                     embed.set_footer(text="If someone is no longer in your clan, please notify a Chat Mod "
                                           "to have their Member role removed.",
                                      icon_url="http://www.mayodev.com/images/dangerbot.png")
-                    await channel.send(f"{clan['leader_tag']} Please check the following list of members to make "
+                    await channel.send(f"<@{clan['leader_tag']}> Please check the following list of members to make "
                                        f"sure everyone is still in your clan (or feeder).")
                     await channel.send(embed=embed)
                     if clan['clan_name'] in ["Ninja Killers", "Faceless Ninjas"]:
