@@ -147,7 +147,7 @@ class DiscordCheck(commands.Cog):
                     await channel.send(embed=embed)
             elapsed = time.perf_counter() - start
             channel = guild.get_channel(settings['rcsChannels']['botDev'])
-            await channel.send(f"I'm going to sleep for {(60*60*24) - elapsed}")
+            await channel.send(f"I'm going to sleep for {((60*60*24) - elapsed):.2f} seconds. See you tomorrow!")
             await asyncio.sleep((60*60*24) - elapsed)
 
     @commands.command(name="flip_discord")
