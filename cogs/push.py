@@ -84,7 +84,7 @@ class Push(commands.Cog):
             conn.close()
             msg_list = []
             for row in fetched:
-                if row['clanName'][:6] == 'Reddit':
+                if row['clanName'][:7] == 'Reddit ':
                     clan_name = row['clanName'][7:]
                 else:
                     clan_name = row['clanName']
