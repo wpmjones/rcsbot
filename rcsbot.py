@@ -25,7 +25,6 @@ if enviro == "LIVE":
                          "cogs.tasks",
                          "cogs.discordcheck",
                          "cogs.eggs",
-                         "cogs.downtime",
                          ]
 else:
     token = settings['discord']['testToken']
@@ -40,7 +39,6 @@ else:
                          "cogs.owner",
                          "cogs.tasks",
                          "cogs.eggs",
-                         "cogs.downtime",
                          ]
 
 logger.add("rcsbot.log", rotation="100MB", level=log_level)

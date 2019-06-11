@@ -13,36 +13,34 @@ class DiscordCheck(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.flag = 1
-        conn = pymssql.connect(settings['database']['server'],
-                               settings['database']['username'],
-                               settings['database']['password'],
-                               settings['database']['database'])
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM rcs_vwDiscordClans ORDER BY clanName")
-        fetch = cursor.fetchall()
-        self.daily_clans = [{"short_name": row[1], "leader_tag": row[2], "clan_name": row[3]} for row in fetch]
-        cursor.execute("SELECT clanName, discordTag FROM rcs_data ORDER BY clanName")
-        fetch = cursor.fetchall()
-        self.rcs_clans = {}
-        for row in fetch:
-            self.rcs_clans[row[0]] = row[1]
-        self.rcs_clans = [{"clan_name": row[0], "leader_tag": row[1]} for row in fetch]
-        cursor.execute("SELECT shortName, clanName FROM rcs_data ORDER BY clanName")
-        fetch = cursor.fetchall()
-        self.clan_list = []
-        for row in fetch:
-            if "/" in row[0]:
-                for clan in row[0].split("/"):
-                    self.clan_list.append(clan)
-            else:
-                self.clan_list.append(row[0])
-        conn.close()
         self.bg_task = self.bot.loop.create_task(self.main())
 
     async def main(self):
         while self.flag == 1:
-
             start = time.perf_counter()
+            conn = pymssql.connect(settings['database']['server'],
+                                   settings['database']['username'],
+                                   settings['database']['password'],
+                                   settings['database']['database'])
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM rcs_vwDiscordClans ORDER BY clanName")
+            fetch = cursor.fetchall()
+            daily_clans = [{"short_name": row[1], "leader_tag": row[2], "clan_name": row[3]} for row in fetch]
+            cursor.execute("SELECT clanName, discordTag FROM rcs_data ORDER BY clanName")
+            fetch = cursor.fetchall()
+            rcs_clans = {}
+            for row in fetch:
+                rcs_clans[row[0]] = row[1]
+            rcs_clans = [{"clan_name": row[0], "leader_tag": row[1]} for row in fetch]
+            cursor.execute("SELECT shortName, clanName FROM rcs_data ORDER BY clanName")
+            fetch = cursor.fetchall()
+            clan_list = []
+            for row in fetch:
+                if "/" in row[0]:
+                    for clan in row[0].split("/"):
+                        clan_list.append(clan)
+                else:
+                    clan_list.append(row[0])
             guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
             danger_channel = guild.get_channel(settings['rcsChannels']['dangerBot'])
             async for message in danger_channel.history():
@@ -67,22 +65,17 @@ class DiscordCheck(commands.Cog):
                     continue   # this is a clan, not a player
                 try:
                     player = await self.bot.coc_client.get_player(tag)
-                    if player.clan and player.clan in self.rcs_clans:
-                        conn = pymssql.connect(settings['database']['server'],
-                                               settings['database']['username'],
-                                               settings['database']['password'],
-                                               settings['database']['database'])
-                        cursor = conn.cursor(as_dict=True)
+                    if player.clan and player.clan in rcs_clans:
                         cursor.execute(f"SELECT COUNT(timestamp) AS reported, clanTag, memberTag "
                                        f"FROM rcs_notify "
                                        f"WHERE memberTag = {player.tag[1:]} AND clanTag = {player.clan.tag[1:]} "
                                        f"GROUP BY clanTag, memberTag")
                         row = cursor.fetchone()
-                        reported = row['reported']
+                        reported = row[0]
                         if reported > 3:
                             embed = discord.Embed(color=discord.Color.dark_red())
                             embed.add_field(name="Leader Note found:",
-                                            value=f"<@{self.rcs_clans[player.clan.tag[1:]]['leader_tag']}> "
+                                            value=f"<@{rcs_clans[player.clan.tag[1:]]['leader_tag']}> "
                                             f"{player.name} ({player.tag}) is in {player.clan.name}. Please "
                                             f"search for `in:leader-notes {player.tag}` for details.")
                             embed.set_footer(text="Reminder: This is not a ban list, simply information that this "
@@ -97,7 +90,7 @@ class DiscordCheck(commands.Cog):
                 except:
                     print("Bad player tag")
             # THIS IS THE BEGINNING OF THE NAME CHECKS
-            for clan in self.daily_clans:
+            for clan in daily_clans:
                 report_list = []
                 short_list = clan['short_name'].split("/")
                 for short_name in short_list:
@@ -133,7 +126,7 @@ class DiscordCheck(commands.Cog):
                 for member in guild.members:
                     if member_role in member.roles:
                         test = 0
-                        for short_name in self.clan_list:
+                        for short_name in clan_list:
                             if short_name in member.display_name.lower():
                                 test = 1
                                 continue
@@ -148,6 +141,7 @@ class DiscordCheck(commands.Cog):
             elapsed = time.perf_counter() - start
             channel = guild.get_channel(settings['rcsChannels']['botDev'])
             await channel.send(f"I'm going to sleep for {((60*60*24) - elapsed):.2f} seconds. See you tomorrow!")
+            conn.close()
             await asyncio.sleep((60*60*24) - elapsed)
 
     @commands.command(name="flip_discord")
