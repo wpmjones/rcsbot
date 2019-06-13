@@ -135,6 +135,8 @@ class Push(commands.Cog):
                    f"WHERE clanTag <> '888GPQ0J'")
             cursor.execute(sql)
             push_clans = cursor.fetchall()
+            push_clans.append({"clanTag": "29Q9809"})
+            print(push_clans)
             for clan in push_clans:
                 self.bot.logger.info(f"Starting {clan['clanTag']}")
                 coc_clan = await self.bot.coc_client.get_clan(f"#{clan['clanTag']}")
@@ -148,7 +150,6 @@ class Push(commands.Cog):
                            f"VALUES ('{player.tag[1:]}', '{player.clan.tag[1:]}', {player.trophies}, "
                            f"{player.trophies}, {player.best_trophies}, {player.town_hall}, "
                            f"'{pname}', '{cname}')")
-                    self.bot.logger.debug(sql)
                     cursor.execute(sql)
             conn.close()
             print(time.perf_counter() - start)
