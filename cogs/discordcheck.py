@@ -67,8 +67,6 @@ class DiscordCheck(commands.Cog):
             ban_list = list(ban_set)
             self.bot.logger.debug("Starting to loop through ban_list")
             for tag in ban_list:
-                if tag == '#UQRJVPJV':
-                    continue   # this is a clan, not a player
                 try:
                     player = await self.bot.coc_client.get_player(tag)
                     if player.clan and player.clan in rcs_clans:
@@ -116,7 +114,6 @@ class DiscordCheck(commands.Cog):
                     content = ""
                     for entry in report_list:
                         content += f"  {entry}\n"
-                    print(len(content))
                     embed = discord.Embed(color=color_pick(181, 0, 0))
                     embed.add_field(name=clan_header, value=content, inline=False)
                     embed.set_footer(text="If someone is no longer in your clan, please notify a Chat Mod "
