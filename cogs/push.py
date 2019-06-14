@@ -45,6 +45,7 @@ class Push(commands.Cog):
                          "\n  - <top> responds with the top ten players for each town hall level and their scores.")
             embed.add_field(name="++push <category or clan name/tag>", value=help_text)
             await ctx.send(embed=embed)
+            return
         if arg == "all":
             cursor.execute("SELECT clanName, SUM(clanPoints) AS totals FROM rcspush_vwClanPointsTop30 "
                            "GROUP BY clanName "
