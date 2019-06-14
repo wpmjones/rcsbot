@@ -136,6 +136,7 @@ class Push(commands.Cog):
             cursor.execute(sql)
             push_clans = cursor.fetchall()
             push_clans.append({"clanTag": "29Q9809"})
+            push_clans.append({"clanTag": "90CLYP88"})
             print(push_clans)
             for clan in push_clans:
                 self.bot.logger.info(f"Starting {clan['clanTag']}")
