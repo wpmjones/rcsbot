@@ -82,7 +82,7 @@ class NewHelp(commands.Cog):
                          "\n  - <TH#> responds with all players of the town hall level specified and their scores."
                          "\n  - <clan name or tag> responds with all players in the clan specified and their scores."
                          "\n  - <top> responds with the top ten players for each town hall level and their scores.")
-            embed.add_field(name="++push <category or clan name/tag", value=help_text)
+            embed.add_field(name="++push <category or clan name/tag>", value=help_text)
         if command in ["all", "reddit"]:
             help_text = "Responds with the subreddit link for the clan specified."
             embed.add_field(name="++reddit <clan name/tag>", value=help_text)

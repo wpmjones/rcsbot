@@ -1,8 +1,9 @@
 import pymssql
 import time
+import discord
 from discord.ext import commands
 from datetime import datetime
-from config import settings
+from config import settings, color_pick
 
 """Cog for trophy push"""
 
@@ -31,6 +32,19 @@ class Push(commands.Cog):
                                database=settings['database']['database'])
         conn.autocommit(True)
         cursor = conn.cursor(as_dict=True)
+        if arg == "help":
+            embed = discord.Embed(title="rcs-bot Help File",
+                                  description="All commands must begin with a ++\n"
+                                              "References to a clan can be in the form of the clan name "
+                                              "(spelled correctly) or the clan tag (with or without the #).",
+                                  color=color_pick(15, 250, 15))
+            help_text = ("Responds with the Trophy Push information for the category specified."
+                         "\n  - <all (or no category)> responds with all RCS clans and their current Trophy Push score."
+                         "\n  - <TH#> responds with all players of the town hall level specified and their scores."
+                         "\n  - <clan name or tag> responds with all players in the clan specified and their scores."
+                         "\n  - <top> responds with the top ten players for each town hall level and their scores.")
+            embed.add_field(name="++push <category or clan name/tag>", value=help_text)
+            await ctx.send(embed=embed)
         if arg == "all":
             cursor.execute("SELECT clanName, SUM(clanPoints) AS totals FROM rcspush_vwClanPointsTop30 "
                            "GROUP BY clanName "
