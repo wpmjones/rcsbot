@@ -12,12 +12,12 @@ class Push(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="push", hidden=True)
+    @commands.command(name="zpush", hidden=True)
     async def zpush(self, ctx, arg: str = "all"):
         await ctx.send("The RCS Summer 2019 Trophy Push begins at 6pm ET.  Please check back then to all the latest "
                        "scores!")
 
-    @commands.command(name="zpush", hidden=True)
+    @commands.command(name="push", hidden=True)
     async def push(self, ctx, *, arg: str = "all"):
         """Report stats on trophy push.
 
