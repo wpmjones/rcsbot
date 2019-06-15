@@ -46,6 +46,16 @@ class Push(commands.Cog):
             embed.add_field(name="++push <category or clan name/tag>", value=help_text)
             await ctx.send(embed=embed)
             return
+        if arg == "end":
+            now = datetime.now()
+            end_time = datetime(2019, 6, 23, 23, 0)
+            delta = end_time - now
+            embed = discord.Embed(title="Push Information", color=discord.Color.green())
+            embed.add_field(name="Push End", value="23 June 2019, 6pm ET")
+            embed.add_field(name="Days Left", value=str(delta.days))
+            embed.set_thumbnail(url="http://www.mayodev.com/images/clock.png")
+            await ctx.send(embed=embed)
+            return
         if arg == "all":
             cursor.execute("SELECT clanName, SUM(clanPoints) AS totals FROM rcspush_vwClanPointsTop30 "
                            "GROUP BY clanName "
