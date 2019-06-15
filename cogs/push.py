@@ -42,7 +42,8 @@ class Push(commands.Cog):
                          "\n  - <all (or no category)> responds with all RCS clans and their current Trophy Push score."
                          "\n  - <TH#> responds with all players of the town hall level specified and their scores."
                          "\n  - <clan name or tag> responds with all players in the clan specified and their scores."
-                         "\n  - <top> responds with the top ten players for each town hall level and their scores.")
+                         "\n  - <top> responds with the top ten players for each town hall level and their scores."
+                         "\n  - <gain> responds with the top 25 players in trophies gained.")
             embed.add_field(name="++push <category or clan name/tag>", value=help_text)
             await ctx.send(embed=embed)
             return
