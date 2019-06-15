@@ -120,6 +120,15 @@ class Push(commands.Cog):
             content += "\n------------------------------------------"
             for item in msg_list:
                 content += "\n{0:30}{1:>12}".format(item['name'], item['points'])
+        elif arg in ("gains", "gain", "increase"):
+            cursor.execute("SELECT * FROM rcspush_vwGains ORDER BY trophyGain DESC")
+            fetched = cursor.fetchall()
+            conn.close()
+            content = "RCS Trophy Push - Trophy Gains"
+            content += "\n{0:25}{1:>17}".format("Player (Clan)", "Trophies Gained")
+            content += "\n------------------------------------------"
+            for row in fetched:
+                content += f"\n{row['player']:30}{row['trophyGain']:>12}"
         else:
             # By clan
             clan_tag, clan_name = resolve_clan_tag(arg)
