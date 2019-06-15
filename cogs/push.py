@@ -95,7 +95,7 @@ class Push(commands.Cog):
                 await ctx.send(content)
             conn.close()
             return
-        elif arg[:2].lower() == "th":
+        elif arg[:2].lower() == "th" and arg[2].isdigit():
             th_level = int(arg[2:])
             if (th_level > 12) or (th_level< 6):
                 bot_log(ctx.command, arg, ctx.author, ctx.guild, 1)
