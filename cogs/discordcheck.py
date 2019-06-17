@@ -110,18 +110,14 @@ class DiscordCheck(commands.Cog):
                             report_list.append(member.display_name.replace('||', '|'))
                 self.bot.logger.debug(f"Reviewed all members for {clan['clan_name']}")
                 if report_list:
+                    await danger_channel.send(f"<@{clan['leader_tag']}> Please check the following list of "
+                                              f"members to make sure everyone is still in your clan "
+                                              f"(or feeder).")
                     clan_header = f"Results for {clan['clan_name']}"
                     content = ""
                     for entry in report_list:
                         content += f"  {entry}\n"
-                    embed = discord.Embed(color=color_pick(181, 0, 0))
-                    embed.add_field(name=clan_header, value=content, inline=False)
-                    embed.set_footer(text="If someone is no longer in your clan, please notify a Chat Mod "
-                                          "to have their Member role removed.",
-                                     icon_url="http://www.mayodev.com/images/dangerbot.png")
-                    await danger_channel.send(f"<@{clan['leader_tag']}> Please check the following list of members "
-                                              f"to make sure everyone is still in your clan (or feeder).")
-                    await danger_channel.send(embed=embed)
+                    await self.send_embed(danger_channel, clan_header, content)
                     if clan['clan_name'] in ["Ninja Killers", "Faceless Ninjas"]:
                         requests.post(settings['rcsWebhooks']['ninjas'])
                 else:
@@ -154,6 +150,32 @@ class DiscordCheck(commands.Cog):
         if self.flag == 1:
             self.flag = 0
             await ctx.send("Flag changed to 0")
+
+    async def send_embed(self, channel, header, text):
+        """ Sends embed to channel, splitting if necessary """
+        if len(text) < 1000:
+            embed = discord.Embed(color=color_pick(181, 0, 0))
+            embed.add_field(name=header, value=text, inline=False)
+            embed.set_footer(text="If someone is no longer in your clan, please notify a Chat Mod "
+                                  "to have their Member role removed.",
+                             icon_url="http://www.mayodev.com/images/dangerbot.png")
+            await channel.send(embed=embed)
+        else:
+            coll = ""
+            for line in text.splitlines(keepends=True):
+                if len(coll) + len(line) > 1000:
+                    embed = discord.Embed(color=color_pick(181, 0, 0))
+                    embed.add_field(name=header, value=text, inline=False)
+                    await channel.send(embed=embed)
+                    header = "Continued..."
+                    coll = ""
+                coll += line
+            embed = discord.Embed(color=color_pick(181, 0, 0))
+            embed.add_field(name=header, value=text, inline=False)
+            embed.set_footer(text="If someone is no longer in your clan, please notify a Chat Mod "
+                                  "to have their Member role removed.",
+                             icon_url="http://www.mayodev.com/images/dangerbot.png")
+            await channel.send(embed=embed)
 
 
 def setup(bot):
