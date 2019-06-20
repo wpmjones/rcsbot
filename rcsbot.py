@@ -17,6 +17,7 @@ if enviro == "LIVE":
     coc_names = "vps"
     initialExtensions = ["cogs.general",
                          "cogs.push",
+                         "cogs.background",
                          "cogs.games",
                          "cogs.newhelp",
                          "cogs.council",
@@ -73,10 +74,10 @@ if __name__ == "__main__":
             logger.info(f"Failed to load extension {extension}")
             traceback.print_exc()
 
-    # bot.db = RcsDB(bot)
+    bot.db = RcsDB(bot)
     loop = asyncio.get_event_loop()
-    # pool = loop.run_until_complete(bot.db.create_pool())
-    # bot.db.pool = pool
+    pool = loop.run_until_complete(bot.db.create_pool())
+    bot.db.pool = pool
     bot.logger = logger
     bot.coc_client = coc.login(settings['supercell']['user'], settings['supercell']['pass'], key_names=coc_names)
     bot.run(token)
