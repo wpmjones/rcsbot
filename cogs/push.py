@@ -96,6 +96,25 @@ class Push(commands.Cog):
                 await ctx.send(content)
             conn.close()
             return
+        elif arg in ("diff", "diffs", "dif", "difs", "difference", "differential"):
+            cursor.execute("SELECT clanName, SUM(clanPoints) AS totals FROM rcspush_vwClanPointsTop30 "
+                           "GROUP BY clanName "
+                           "ORDER BY totals DESC")
+            fetched = cursor.fetchall()
+            conn.close()
+            msg_list = []
+            for row in fetched:
+                msg_list.append({"clan": row['clanName'],
+                                 "points": row['totals']})
+
+            content = "RCS Trophy Push - Standings\n{0:20}{1:>12}".format("Clan Name", "Point Diffs")
+            content += "\n--------------------------------"
+            iter_list = iter(msg_list)
+            item = next(iter_list)
+            top_score = item['points']
+            content += "\n{0:20}{1:>12}".format(item['clan'], str(item['points'])[:7])
+            for item in iter_list:
+                content += "\n{0:20}{1:>12}".format(item['clan'], "-" + str(top_score - item['points'])[:6])
         elif arg[:2].lower() == "th" and arg[2].isdigit():
             th_level = int(arg[2:])
             if (th_level > 12) or (th_level< 6):
