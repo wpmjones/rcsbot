@@ -79,6 +79,7 @@ class NewHelp(commands.Cog):
         if command in ["all", "push"]:
             help_text = ("Responds with the Trophy Push information for the category specified."
                          "\n  - <all (or no category)> responds with all RCS clans and their current Trophy Push score."
+                         "\n  - <diff> responds with the top clan and the difference in points for the other clans."
                          "\n  - <TH#> responds with all players of the town hall level specified and their scores."
                          "\n  - <clan name or tag> responds with all players in the clan specified and their scores."
                          "\n  - <top> responds with the top ten players for each town hall level and their scores."
