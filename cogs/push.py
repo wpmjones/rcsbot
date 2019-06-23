@@ -49,11 +49,11 @@ class Push(commands.Cog):
             return
         if arg == "end":
             now = datetime.now()
-            end_time = datetime(2019, 6, 23, 23, 0)
+            end_time = datetime(2019, 6, 24, 5, 0)
             delta = end_time - now
             embed = discord.Embed(title="Push Information", color=discord.Color.green())
-            embed.add_field(name="Push End", value="23 June 2019, 6pm ET")
-            embed.add_field(name="Days Left", value=str(delta.days))
+            embed.add_field(name="Push End", value="24 June 2019, 12am ET")
+            embed.add_field(name="Hours Left", value=str(delta.hours))
             embed.set_thumbnail(url="http://www.mayodev.com/images/clock.png")
             await ctx.send(embed=embed)
             return
