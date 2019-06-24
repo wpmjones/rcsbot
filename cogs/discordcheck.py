@@ -110,14 +110,15 @@ class DiscordCheck(commands.Cog):
                             report_list.append(member.display_name.replace('||', '|'))
                 self.bot.logger.debug(f"Reviewed all members for {clan['clan_name']}")
                 if report_list:
-                    await danger_channel.send(f"<@{clan['leader_tag']}> Please check the following list of "
+                    await botdev_channel.send(f"<@{clan['leader_tag']}> Please check the following list of "
                                               f"members to make sure everyone is still in your clan "
                                               f"(or feeder).")
                     clan_header = f"Results for {clan['clan_name']}"
                     content = ""
                     for entry in report_list:
                         content += f"  {entry}\n"
-                    await self.send_embed(danger_channel, clan_header, content)
+                    self.bot.logger.debug(f"Content is {len(content)} characters long.")
+                    await self.send_embed(botdev_channel, clan_header, content)
                     if clan['clan_name'] in ["Ninja Killers", "Faceless Ninjas"]:
                         requests.post(settings['rcsWebhooks']['ninjas'])
                 else:
