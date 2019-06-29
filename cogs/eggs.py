@@ -2,6 +2,7 @@ import discord
 import requests
 import season
 import traceback
+import pymssql
 from discord.ext import commands
 from datetime import datetime
 from config import settings, emojis
@@ -34,12 +35,8 @@ class Eggs(commands.Cog):
             return
         try:
             await ctx.send(arg)
-            # await ctx.send(datetime.strptime(arg, "%Y-%m-%d"))
-            # new_end_date = datetime.strptime(arg, "%Y-%m-%d")
             season.update_season(arg)
         except ValueError as ex:
-            # await ctx.send(f"The date you provided is not in the correct format. "
-            #                f"{arg} should be in the YYYY-MM-DD format.")
             await ctx.send(log_traceback(ex))
             return
         except Exception as ex:
@@ -58,7 +55,7 @@ class Eggs(commands.Cog):
             embed.set_footer(text=f"Discord ID: {user.id}",
                              icon_url="https://discordapp.com/assets/2c21aeda16de354ba5334551a883b481.png")
             await ctx.send(embed=embed)
-            bot_log(ctx.command, f"avatar for {user.id}", ctx.author)
+            self.bot.logger.info(ctx.command, f"avatar for {user.id}", ctx.author)
         else:
             await ctx.send(emojis['other']['redx'] + """ I don't believe that's a real Discord user. Please 
                 make sure you are using the '@' prefix or give me an ID or something I can work with.""")
@@ -73,9 +70,8 @@ class Eggs(commands.Cog):
 
     @commands.command(name="password", hidden=True)
     async def password(self, ctx):
-        content = """https://www.reddit.com/r/RedditClansHistory/wiki/the_history_of_the_reddit_
-            clans#wiki_please_find_the_password"""
-#        bot_log(ctx.command, "password Easter egg", ctx.author, ctx.guild)
+        content = ("https://www.reddit.com/r/RedditClansHistory/wiki/the_history_of_the_reddit_clans"
+                   "#wiki_please_find_the_password")
         await ctx.send(content)
 
     @commands.command(name="cats", aliases=["cat"], hidden=True)
@@ -88,7 +84,6 @@ class Eggs(commands.Cog):
         r = requests.get(url, headers=headers)
         data = r.json()
         content = data[0]['url']
-#        bot_log(ctx.command, "cat api", ctx.author, ctx.guild)
         await ctx.send(content)
 
     @commands.command(name="dogs", aliases=["dog"], hidden=True)
@@ -101,8 +96,47 @@ class Eggs(commands.Cog):
         r = requests.get(url, headers=headers)
         data = r.json()
         content = data[0]['url']
-#        bot_log(ctx.command, "dog api", ctx.author, ctx.guild)
         await ctx.send(content)
+
+    @commands.command(name="in_war", aliases=["inwar"], hidden=True)
+    @commands.has_any_role("Admin1", "Leaders", "Council")
+    async def in_war(self, ctx):
+        sent_msg = await ctx.send("Retrieving clan war status...")
+        conn = pymssql.connect(settings['database']['server'],
+                               settings['database']['username'],
+                               settings['database']['password'],
+                               settings['database']['database'])
+        cursor = conn.cursor(as_dict=True)
+        cursor.execute("SELECT '#' + clanTag AS tag FROM rcs_data WHERE classification <> 'feeder' ORDER BY clanName")
+        clans = cursor.fetchall()
+        conn.close()
+        tags = [clan['tag'] for clan in clans]
+        in_prep = ""
+        in_war = ""
+        # async for war in self.bot.coc_client.get_current_wars(tags):
+        for tag in tags:
+            print(tag)
+            try:
+                war = await self.bot.coc_client.get_clan_war(tag)
+                if war.state == "preparation":
+                    in_prep += f"{war.clan.name} ({tag}) has {war.end_time.seconds_until // 3600:.0f} hours until war.\n"
+                if war.state == "inWar":
+                    in_war += f"{war.clan.name} ({tag}) has {war.end_time.seconds_until // 3600:.0f} hours left in war.\n"
+            except Exception as e:
+                self.bot.logger.exception("get war state")
+        await sent_msg.delete()
+        embed = discord.Embed(title="RCS Clan War Status", color=discord.Color.dark_gold())
+        embed.add_field(name="Clans in prep day",
+                        value=in_prep,
+                        inline=False)
+        embed.set_footer(text="This does not include CWL wars.")
+        await ctx.send(embed=embed)
+        embed = discord.Embed(title="RCS Clan War Status", color=discord.Color.dark_red())
+        embed.add_field(name="Clans in war",
+                        value=in_war,
+                        inline=False)
+        embed.set_footer(text="This does not include CWL wars.")
+        await ctx.send(embed=embed)
 
 
 def is_council(user_roles):
@@ -121,15 +155,6 @@ def is_discord_user(guild, discord_id):
             return True, user
     except:
         return False, None
-
-
-def bot_log(command, author, err_flag=0):
-    msg = str(datetime.now())[:16] + " - "
-    if err_flag == 0:
-        msg += f"Printing {command}. Requested by {author}."
-    else:
-        msg += f"ERROR: User provided an incorrect argument for {command}. Requested by {author}."
-    print(msg)
 
 
 def log_traceback(ex):
