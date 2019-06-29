@@ -119,7 +119,7 @@ class Eggs(commands.Cog):
             try:
                 war = await self.bot.coc_client.get_clan_war(tag)
                 if war.state == "preparation":
-                    in_prep += f"{war.clan.name} ({tag}) has {war.end_time.seconds_until // 3600:.0f} hours until war.\n"
+                    in_prep += f"{war.clan.name} ({tag}) has {war.start_time.seconds_until // 3600:.0f} hours until war.\n"
                 if war.state == "inWar":
                     in_war += f"{war.clan.name} ({tag}) has {war.end_time.seconds_until // 3600:.0f} hours left in war.\n"
             except Exception as e:
