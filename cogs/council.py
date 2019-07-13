@@ -51,7 +51,7 @@ class CouncilCog(commands.Cog):
     async def my_roles(self, ctx):
         for guild in self.bot.guilds:
             try:
-                member = guild.get_member(183544557382664192)    #(366778328448892928)
+                member = guild.get_member(366778328448892928)
                 role_list = ""
                 for role in member.roles:
                     if role.name != "@everyone":
@@ -424,6 +424,30 @@ class CouncilCog(commands.Cog):
             await ctx.send(f"This command can only be performed by leaders/council on the RCS Discord server. "
                            "Keep up these antics and I'll tell zig on you!")
 
+    @commands.command(name="leader_dm", aliases=["dmleaders", "dm_leaders"], hidden=True)
+    @commands.has_role(settings['rcsRoles']['council'])
+    async def leader_dm(self, ctx, *, message):
+        """Sends message as a DM to all RCS leaders"""
+        if not message:
+            await ctx.send("I'm not going to send a blank message you goofball!")
+            return
+        conn = pymssql.connect(settings['database']['server'],
+                               settings['database']['username'],
+                               settings['database']['password'],
+                               settings['database']['database'])
+        cursor = conn.cursor(as_dict=True)
+        cursor.execute("SELECT DISTINCT discordTag FROM rcs_data")
+        rows = cursor.fetchall()
+        conn.close()
+        counter = 0
+        for row in rows:
+            member = ctx.guild.get_member(row['discordTag'])
+            await member.send(message)
+            counter += 1
+        member = ctx.guild.get_member(251150854571163648)
+        await member.send(f"**The following has been sent to all RCS leaders by {ctx.author}\n\n{message}")
+        await ctx.send(f"Message sent to {counter} RCS leaders.")
+
     @commands.command(name="find", aliases=["search"], hidden=True)
     async def find(self, ctx, *, arg: str = "help"):
         """Command to to find a search string in Discord user names"""
@@ -443,7 +467,6 @@ class CouncilCog(commands.Cog):
                 await ctx.send(embed=embed)
                 return
             # if not help, code picks up here
-            guest_role = "301438407576387584"
             member_role = "296416358415990785"
             guild = str(settings['discord']['rcsGuildId'])
 
