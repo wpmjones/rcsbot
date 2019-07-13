@@ -28,7 +28,7 @@ if enviro == "LIVE":
                          ]
 else:
     token = settings['discord']['testToken']
-    prefix = "<"
+    prefix = ">"
     log_level = "DEBUG"
     coc_names = "dev"
     initialExtensions = ["cogs.general",
