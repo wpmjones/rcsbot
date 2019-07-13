@@ -103,6 +103,8 @@ class NewHelp(commands.Cog):
             embed.add_field(name="++ui <discord user or ID>", value=help_text)
             help_text = "Responds with a larger version of the specified user's avatar"
             embed.add_field(name="++avatar <discord mention or ID>", value=help_text)
+            help_text = "Sends the provided message to all RCS leaders via DM"
+            embed.add_field(name="++dm_leaders <message>", value=help_text)
             help_text = ("Used to manage tasks for council\nThere are a number of commands for this category\n"
                          "Please use `++help tasks` for more detailed information")
             embed.add_field(name="++tasks ++add ++assign ++change ++done", value=help_text)

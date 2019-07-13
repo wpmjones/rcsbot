@@ -21,7 +21,7 @@ class Background(commands.Cog):
         self.bot.logger.debug("New message received.")
         if settings['rcsRoles']['members'] not in [role.id for role in message.author.roles]:
             self.bot.logger.debug("No member role.\n{} has the following roles.\n{}",
-                         message.author.display_name, message.author.roles)
+                                  message.author.display_name, message.author.roles)
             return
         self.bot.logger.debug("User has member role.")
         conn = self.bot.db.pool
