@@ -1,4 +1,5 @@
 from loguru import logger
+import discord
 from discord.ext import commands
 from datetime import datetime, timedelta
 from random import randint
@@ -12,6 +13,10 @@ class Background(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        if isinstance(message.channel, discord.DMChannel):
+            await message.channel.send("Thanks for chatting, but I'm really not set up for that. Perhaps try a "
+                                       "command like `++help`.")
+            return
         if message.guild.id != settings['discord']['rcsGuildId']:
             return
         logger.debug("New message received.")
@@ -22,10 +27,6 @@ class Background(commands.Cog):
                          message.author.display_name, message.author.roles)
             return
         logger.debug("User has member role.")
-        # conn = await asyncpg.connect(user=settings['pg']['user'],
-        #                              password=settings['pg']['pass'],
-        #                              host=settings['pg']['host'],
-        #                              database=settings['pg']['db'])
         conn = self.bot.db.pool
         logger.debug("Postgresql connection established.")
         row = await conn.fetchrow(f"SELECT * FROM rcs_discord WHERE discord_id = {message.author.id}")
