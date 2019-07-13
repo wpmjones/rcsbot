@@ -441,11 +441,14 @@ class CouncilCog(commands.Cog):
         conn.close()
         counter = 0
         for row in rows:
-            member = ctx.guild.get_member(row['discordTag'])
-            await member.send(message)
-            counter += 1
+            try:
+                member = ctx.guild.get_member(int(row['discordTag']))
+                await member.send(message)
+                counter += 1
+            except:
+                self.bot.logger.exception("DM send attempt")
         member = ctx.guild.get_member(251150854571163648)
-        await member.send(f"**The following has been sent to all RCS leaders by {ctx.author}\n\n{message}")
+        await member.send(f"**The following has been sent to all RCS leaders by {ctx.author}**\n\n{message}")
         await ctx.send(f"Message sent to {counter} RCS leaders.")
 
     @commands.command(name="find", aliases=["search"], hidden=True)
