@@ -110,15 +110,14 @@ class DiscordCheck(commands.Cog):
                             report_list.append(member.display_name.replace('||', '|'))
                 self.bot.logger.debug(f"Reviewed all members for {clan['clan_name']}")
                 if report_list:
-                    await botdev_channel.send(f"<@{clan['leader_tag']}> Please check the following list of "
+                    await danger_channel.send(f"<@{clan['leader_tag']}> Please check the following list of "
                                               f"members to make sure everyone is still in your clan "
                                               f"(or feeder).")
                     clan_header = f"Results for {clan['clan_name']}"
                     content = ""
                     for entry in report_list:
-                        content += f"  {entry}\n"
-                    self.bot.logger.debug(f"Content is {len(content)} characters long.")
-                    await self.send_embed(botdev_channel, clan_header, content)
+                        content += f"\u2800\u2800{entry}\n"
+                    await self.send_embed(danger_channel, clan_header, content)
                     if clan['clan_name'] in ["Ninja Killers", "Faceless Ninjas"]:
                         requests.post(settings['rcsWebhooks']['ninjas'])
                 else:
@@ -154,6 +153,7 @@ class DiscordCheck(commands.Cog):
 
     async def send_embed(self, channel, header, text):
         """ Sends embed to channel, splitting if necessary """
+        self.bot.logger.debug(f"Content is {len(text)} characters long.")
         if len(text) < 1000:
             embed = discord.Embed(color=color_pick(181, 0, 0))
             embed.add_field(name=header, value=text, inline=False)
@@ -166,13 +166,13 @@ class DiscordCheck(commands.Cog):
             for line in text.splitlines(keepends=True):
                 if len(coll) + len(line) > 1000:
                     embed = discord.Embed(color=color_pick(181, 0, 0))
-                    embed.add_field(name=header, value=text, inline=False)
+                    embed.add_field(name=header, value=coll, inline=False)
                     await channel.send(embed=embed)
                     header = "Continued..."
                     coll = ""
                 coll += line
             embed = discord.Embed(color=color_pick(181, 0, 0))
-            embed.add_field(name=header, value=text, inline=False)
+            embed.add_field(name=header, value=coll, inline=False)
             embed.set_footer(text="If someone is no longer in your clan, please notify a Chat Mod "
                                   "to have their Member role removed.",
                              icon_url="http://www.mayodev.com/images/dangerbot.png")
