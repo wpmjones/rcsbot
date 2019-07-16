@@ -23,7 +23,6 @@ if enviro == "LIVE":
                          "cogs.council",
                          "cogs.owner",
                          "cogs.tasks",
-                         "cogs.discordcheck",
                          "cogs.eggs",
                          ]
 else:
