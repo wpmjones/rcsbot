@@ -107,10 +107,11 @@ class Eggs(commands.Cog):
                                settings['database']['password'],
                                settings['database']['database'])
         cursor = conn.cursor(as_dict=True)
-        cursor.execute("SELECT '#' + clanTag AS tag FROM rcs_data WHERE classification <> 'feeder' ORDER BY clanName")
+        cursor.execute("SELECT '#' + clanTag AS tag, isWarLogPublic FROM rcs_data "
+                       "WHERE classification <> 'feeder' ORDER BY clanName")
         clans = cursor.fetchall()
         conn.close()
-        tags = [clan['tag'] for clan in clans]
+        tags = [clan['tag'] for clan in clans if clan['isWarLogPublic'] == 1]
         in_prep = ""
         in_war = ""
         # async for war in self.bot.coc_client.get_current_wars(tags):
