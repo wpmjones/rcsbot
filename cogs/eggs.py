@@ -126,18 +126,39 @@ class Eggs(commands.Cog):
             except Exception as e:
                 self.bot.logger.exception("get war state")
         await sent_msg.delete()
-        embed = discord.Embed(title="RCS Clan War Status", color=discord.Color.dark_gold())
-        embed.add_field(name="Clans in prep day",
-                        value=in_prep,
-                        inline=False)
-        embed.set_footer(text="This does not include CWL wars.")
-        await ctx.send(embed=embed)
-        embed = discord.Embed(title="RCS Clan War Status", color=discord.Color.dark_red())
-        embed.add_field(name="Clans in war",
-                        value=in_war,
-                        inline=False)
-        embed.set_footer(text="This does not include CWL wars.")
-        await ctx.send(embed=embed)
+        await self.send_embed(ctx.channel,
+                              "RCS Clan War Status",
+                              "This does not include CWL wars.",
+                              in_prep,
+                              discord.Color.dark_gold())
+        await self.send_embed(ctx.channel,
+                              "RCS Clan War Status",
+                              "This does not include CWL wars.",
+                              in_war,
+                              discord.Color.dark_red())
+
+    async def send_embed(self, channel, header, footer, text, embed_color):
+        """ Sends embed to channel, splitting if necessary """
+        self.bot.logger.debug(f"Content is {len(text)} characters long.")
+        if len(text) < 1000:
+            embed = discord.Embed(color=embed_color)
+            embed.add_field(name=header, value=text, inline=False)
+            embed.set_footer(text=footer)
+            await channel.send(embed=embed)
+        else:
+            coll = ""
+            for line in text.splitlines(keepends=True):
+                if len(coll) + len(line) > 1000:
+                    embed = discord.Embed(color=embed_color)
+                    embed.add_field(name=header, value=coll, inline=False)
+                    await channel.send(embed=embed)
+                    header = "Continued..."
+                    coll = ""
+                coll += line
+            embed = discord.Embed(color=embed_color)
+            embed.add_field(name=header, value=coll, inline=False)
+            embed.set_footer(text=footer)
+            await channel.send(embed=embed)
 
 
 def is_council(user_roles):
