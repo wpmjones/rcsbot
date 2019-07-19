@@ -1,10 +1,8 @@
 import discord
 import requests
-import season
 import traceback
 import pymssql
 from discord.ext import commands
-from datetime import datetime
 from config import settings, emojis
 
 
@@ -14,53 +12,6 @@ class Eggs(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
-
-    @commands.command(name="season", hidden=True)
-    async def season(self, ctx, arg: str = ""):
-        """Command to show and modify the season information"""
-        if arg == "":
-            # Return start/stop of current season and days left
-            embed = discord.Embed(title="Season Information", color=discord.Color.green())
-            embed.add_field(name="Season Start", value=season.get_season_start())
-            embed.add_field(name="Season End", value=season.get_season_end())
-            embed.add_field(name="Days Left", value=season.get_days_left())
-            embed.set_thumbnail(url="http://www.mayodev.com/images/clock.png")
-            await ctx.send(embed=embed)
-            return
-        if not is_council(ctx.author.roles):
-            await ctx.send("I'm sorry. I'd love to help, but you're not authorized to make changes to the season.")
-            return
-        if datetime.now() < datetime.strptime(season.get_season_end(), "%Y-%m-%d"):
-            await ctx.send("I would much prefer it if you waited until the season ends to change the dates.")
-            return
-        try:
-            await ctx.send(arg)
-            season.update_season(arg)
-        except ValueError as ex:
-            await ctx.send(log_traceback(ex))
-            return
-        except Exception as ex:
-            await ctx.send(log_traceback(ex))
-            return
-        await ctx.send(f"File updated.  The new season ends in {season.get_days_left()} days.")
-
-    @commands.command(name="new_games", hidden=True)
-    @commands.is_owner()
-    async def new_games(self, ctx, start_date, games_length: int = 6, ind_points: int = 4000, clan_points: int = 50000):
-        """Command to add new Clan Games dates to SQL database"""
-        conn = pymssql.connect(settings['database']['server'],
-                               settings['database']['username'],
-                               settings['database']['password'],
-                               settings['database']['database'])
-        cursor = conn.cursor(as_dict=True)
-        start_day = int(start_date[8:9])
-        end_day = str(start_day+games_length)
-        end_date = start_date[:9] + end_day
-        sql = (f"INSERT INTO rcs_events (eventType, startTime, endTime, playerPoints, clanPoints) "
-               f"VALUES (5, '{start_date}', '{end_date}', {ind_points}, {clan_points})")
-        cursor.execute(sql)
-        await ctx.send(sql)
-        await ctx.send(f"New games info added to database. {end_date}")
 
     @commands.command(name="avatar", hidden=True)
     async def avatar(self, ctx, user: discord.Member):
