@@ -56,11 +56,11 @@ class Eggs(commands.Cog):
         start_day = int(start_date[8:9])
         end_day = str(start_day+games_length)
         end_date = start_date[:7] + end_day
-        print(end_date)
         sql = (f"INSERT INTO rcs_events (eventType, startTime, endTime, playerPoints, clanPoints) "
                f"VALUES (5, {start_date}, {end_date}, {ind_points}, {clan_points})")
         cursor.execute(sql)
-        await ctx.send("New games info added to database.")
+        await ctx.send(sql)
+        await ctx.send(f"New games info added to database. {end_date}")
 
     @commands.command(name="avatar", hidden=True)
     async def avatar(self, ctx, user: discord.Member):
