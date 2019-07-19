@@ -44,6 +44,24 @@ class Eggs(commands.Cog):
             return
         await ctx.send(f"File updated.  The new season ends in {season.get_days_left()} days.")
 
+    @commands.command(name="new_games", hidden=True)
+    @commands.is_owner()
+    async def new_games(self, ctx, start_date, games_length: int = 6, ind_points: int = 4000, clan_points: int = 50000):
+        """Command to add new Clan Games dates to SQL database"""
+        conn = pymssql.connect(settings['database']['server'],
+                               settings['database']['username'],
+                               settings['database']['password'],
+                               settings['database']['database'])
+        cursor = conn.cursor(as_dict=True)
+        start_day = int(start_date[8:9])
+        end_day = str(start_day+games_length)
+        end_date = start_date[:7] + end_day
+        print(end_date)
+        sql = (f"INSERT INTO rcs_events (eventType, startTime, endTime, playerPoints, clanPoints) "
+               f"VALUES (5, {start_date}, {end_date}, {ind_points}, {clan_points})")
+        cursor.execute(sql)
+        await ctx.send("New games info added to database.")
+
     @commands.command(name="avatar", hidden=True)
     async def avatar(self, ctx, user: discord.Member):
         # convert discord mention to user id only
