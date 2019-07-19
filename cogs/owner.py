@@ -144,6 +144,8 @@ class OwnerCog(commands.Cog):
         start_day = int(start_date[8:9])
         end_day = str(start_day+games_length)
         end_date = start_date[:9] + end_day
+        # TODO add eventId (auto generated?)
+        # TODO regex for date OR enter date only
         sql = (f"INSERT INTO rcs_events (eventType, startTime, endTime, playerPoints, clanPoints) "
                f"VALUES (5, '{start_date}', '{end_date}', {ind_points}, {clan_points})")
         cursor.execute(sql)
