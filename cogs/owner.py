@@ -86,7 +86,7 @@ class OwnerCog(commands.Cog):
             content = f"**{guild.name}**\n"
             for emoji in guild.emojis:
                 content += f"\n{emoji} - {emoji.name}: {emoji.id}"
-            await ctx.send(content)
+            await self.send_text(ctx.channel, content)
 
     @commands.command(name="server")
     @commands.is_owner()
