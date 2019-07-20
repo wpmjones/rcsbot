@@ -83,10 +83,9 @@ class OwnerCog(commands.Cog):
                        self.bot.get_guild(506645764512940032),
                        self.bot.get_guild(531660501709750282)]
         for guild in server_list:
-            content = f"**{guild.name}**\n```"
+            content = f"**{guild.name}**\n"
             for emoji in guild.emojis:
-                content += f"\n{emoji.name}: {emoji.id}"
-            content += "```"
+                content += f"\n{emoji} - {emoji.name}: {emoji.id}"
             await ctx.send(content)
 
     @commands.command(name="server")

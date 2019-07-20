@@ -24,7 +24,6 @@ class WarStatus(commands.Cog):
                f"FROM rcs_wars "
                f"WHERE clanTag = '{war.clan.tag[1:]}' "
                f"AND endTime = '{datetime.strptime(war.end_time.raw_time, '%Y%m%dT%H%M%S.%fZ')}'")
-        print(f"{self.line_num()} - {sql}")
         cursor.execute(sql)
         return cursor.fetchone()
 
@@ -46,7 +45,6 @@ class WarStatus(commands.Cog):
                f"0, 0, 0, 0, {war.team_size}, 0, 0, "
                f"'{datetime.strptime(war.end_time.raw_time, '%Y%m%dT%H%M%S.%fZ')}', "
                f"'{war.state}', 0)")
-        print(f"{self.line_num()} - {sql}")
         cursor.execute(sql)
         self.bot.logger.debug(f"Added new war for {war.clan.name} ({war.clan.tag})")
         return cursor.lastrowid()
@@ -73,13 +71,11 @@ class WarStatus(commands.Cog):
                    f"reported = 1, "
                    f"warState = '{war.state}' "
                    f"WHERE war_id = {war_id}")
-        print(f"{self.line_num()} - {sql}")
         cursor.execute(sql)
         self.bot.logger.debug(f"Updated war for {war.clan.name} ({war.clan.tag})")
 
     async def update_attacks(self, attacks, war_id, cursor):
         sql = f"SELECT MAX(attackOrder) AS attackOrder FROM rcs_warattacks WHERE war_id = {war_id}"
-        print(f"{self.line_num()} - {sql}")
         cursor.execute(sql)
         fetched = cursor.fetchone()
         # Because we're asking for MAX, attackOrder is NULL instead of fetched being None
@@ -88,10 +84,8 @@ class WarStatus(commands.Cog):
         else:
             last_attack = 0
         max_attack = last_attack
-        print(f"Last Attack: {last_attack}")
         for attack in attacks:
             if attack.order > last_attack:
-                print(f" - {attack.order}. {attack.attacker.name} {attack.attacker.town_hall} {attack.attacker.map_position}")
                 sql = (f"INSERT INTO rcs_warattacks "
                        f"(war_id, attackerTag, defenderTag, stars, destruction, attackOrder, "
                        f"attackerTownhall, defenderTownhall, attackerMap, defenderMap) "
@@ -99,7 +93,6 @@ class WarStatus(commands.Cog):
                        f"{attack.stars}, {attack.destruction}, {attack.order},"
                        f"{attack.attacker.town_hall}, {attack.defender.town_hall}, "
                        f"{attack.attacker.map_position}, {attack. defender.map_position})")
-                print(f"{self.line_num()} - {sql}")
                 cursor.execute(sql)
                 if attack.order > max_attack:
                     max_attack = attack.order
@@ -113,7 +106,6 @@ class WarStatus(commands.Cog):
     def breakdown(members, process=None):
         res = {}
         for member in members:
-            print(member.__dict__)
             th = member.town_hall if member.town_hall > 8 else 8
             if th not in res:
                 res[th] = 0
