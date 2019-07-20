@@ -85,7 +85,7 @@ class OwnerCog(commands.Cog):
                        self.bot.get_guild(602130772098416678)]
         for guild in server_list:
             content = f"**{guild.name}**\n"
-            for emoji in guild.emojis:
+            for emoji in sorted(guild.emojis):
                 content += f"\n{emoji} - {emoji.name}:{emoji.id}"
             await self.send_text(ctx.channel, content)
 
