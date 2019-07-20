@@ -79,13 +79,17 @@ class OwnerCog(commands.Cog):
     @commands.command(name="emojis")
     @commands.is_owner()
     async def emoji_list(self, ctx):
+
+        def get_key(item):
+            return item.name
+
         server_list = [self.bot.get_guild(506645671009583105),
                        self.bot.get_guild(506645764512940032),
                        self.bot.get_guild(531660501709750282),
                        self.bot.get_guild(602130772098416678)]
         for guild in server_list:
             content = f"**{guild.name}**\n"
-            for emoji in sorted(guild.emojis):
+            for emoji in sorted(guild.emojis, key=get_key):
                 content += f"\n{emoji} - {emoji.name}:{emoji.id}"
             await self.send_text(ctx.channel, content)
 
