@@ -85,7 +85,7 @@ class Contact(commands.Cog):
                         embed.add_field(name=f"Verification for {row[1]} {status}.\n{row[7]}",
                                         value=f"Leader: {row[3]}\nDated {row[0]}",
                                         inline=False)
-                embed.set_footer(text="Need fancy command for changing status")
+                embed.set_footer(text="User ++verification <Task ID> to change the status.")
                 if len(embed.fields) > 0:
                     flag = 1
                     await ctx.author.send(embed=embed)
@@ -135,7 +135,7 @@ class Contact(commands.Cog):
                         embed.add_field(name=f"Suggestion from {row[1]}\n{row[7]}\nDated {row[0]}",
                                         value=row[3][:1023],
                                         inline=True)
-                embed.set_footer(text="Please review the Communication Log if the suggestions is cut off.")
+                embed.set_footer(text="Use ++done <Task ID> to complete a task")
                 if len(embed.fields) > 0:
                     await ctx.send(embed=embed)
                 else:
@@ -149,6 +149,7 @@ class Contact(commands.Cog):
                         embed.add_field(name=f"Council Nomination for {row[3]}\n{row[9]}\nDated {row[0]}",
                                         value=f"Submitted by {row[1]}",
                                         inline=True)
+                embed.set_footer(text="Use ++done <Task ID> to complete a task")
                 if len(embed.fields) > 0:
                     await ctx.send(embed=embed)
                 else:
@@ -159,11 +160,11 @@ class Contact(commands.Cog):
                 embed = discord.Embed(title="RCS Council Verification Requests", color=discord.Color.dark_blue())
                 for row in values:
                     if len(row) < 9 or row[8] in ("1", "2", "3", "4"):
-                        status = " has not been addressed"
-                        if row[8] == "1": status = " is awaiting a scout"
-                        if row[8] == "2": status = " is currently being scouted"
-                        if row[8] == "3": status = " is awaiting the post-scout survey"
-                        if row[8] == "4": status = " is awaiting a decision by Council"
+                        status = "has not been addressed"
+                        if row[8] == "1": status = "is awaiting a scout"
+                        if row[8] == "2": status = "is currently being scouted"
+                        if row[8] == "3": status = "is awaiting the post-scout survey"
+                        if row[8] == "4": status = "is awaiting a decision by Council"
                         embed.add_field(name=f"Verification for {row[1]} {status}.\n{row[7]}\nDated {row[0]}",
                                         value=f"Leader: {row[3]}",
                                         inline=True)
@@ -184,6 +185,7 @@ class Contact(commands.Cog):
                             embed.add_field(name=f"Other Comment from {row[1]}\n{row[7]}",
                                             value=f"{row[3][:1000]}\n{assigned_to}\nDated: {row[0]}",
                                             inline=False)
+                    embed.set_footer(text="Use ++done <Task ID> to complete a task")
                     if len(embed.fields) > 0:
                         await ctx.send(embed=embed)
                     else:
@@ -203,6 +205,7 @@ class Contact(commands.Cog):
                         embed.add_field(name=f"{assigned_to}\n{row[7]}",
                                         value=f"{row[1]}\nDated: {row[0]}",
                                         inline=False)
+                embed.set_footer(text="Use ++done <Task ID> to complete a task")
                 if len(embed.fields):
                     await ctx.send(embed=embed)
                 else:
