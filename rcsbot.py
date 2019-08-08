@@ -58,7 +58,7 @@ async def on_ready():
     logger.info(f"Logged in as {bot.user}")
     logger.info("-------")
     channel = bot.get_channel(settings['oakChannels']['testChat'])
-    logger.add(send_log, level="DEBUG")
+    logger.add(send_log, level="INFO")
     logger.info("rcs-bot has started")
     await channel.send("RCS bot has started")
 
