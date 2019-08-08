@@ -171,22 +171,25 @@ class Contact(commands.Cog):
                 if len(embed.fields) > 0:
                     await ctx.send(embed=embed)
             if cmd.lower() in ("other", "oth", "othe"):
-                result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Other!A2:I").execute()
-                values = result.get("values", [])
-                embed = discord.Embed(title="RCS Council Other Items", color=discord.Color.gold())
-                for row in values:
-                    if len(row) < 9:
-                        if len(row[6]) > 1:
-                            assigned_to = f"Assigned to: {guild.get_member(int(row[6])).display_name}"
-                        else:
-                            assigned_to = "Unassigned"
-                        embed.add_field(name=f"Other Comment from {row[1]}\n{row[7]}",
-                                        value=f"{row[3][:1000]}\n{assigned_to}\nDated: {row[0]}",
-                                        inline=False)
-                if len(embed.fields) > 0:
-                    await ctx.send(embed=embed)
-                else:
-                    await ctx.send("No tasks in the Other category at this time.")
+                try:
+                    result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Other!A2:I").execute()
+                    values = result.get("values", [])
+                    embed = discord.Embed(title="RCS Council Other Items", color=discord.Color.gold())
+                    for row in values:
+                        if len(row) < 9:
+                            if len(row[6]) > 1:
+                                assigned_to = f"Assigned to: {guild.get_member(int(row[6])).display_name}"
+                            else:
+                                assigned_to = "Unassigned"
+                            embed.add_field(name=f"Other Comment from {row[1]}\n{row[7]}",
+                                            value=f"{row[3][:1000]}\n{assigned_to}\nDated: {row[0]}",
+                                            inline=False)
+                    if len(embed.fields) > 0:
+                        await ctx.send(embed=embed)
+                    else:
+                        await ctx.send("No tasks in the Other category at this time.")
+                except:
+                    self.bot.logger.exception("++tasks other failed")
             if cmd.lower() in ("tasks", "task", "action", "agenda", "act"):
                 result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Tasks!A2:I").execute()
                 values = result.get("values", [])

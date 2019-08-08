@@ -31,7 +31,6 @@ else:
     log_level = "DEBUG"
     coc_names = "dev"
     initialExtensions = ["cogs.general",
-                         "cogs.push",
                          "cogs.games",
                          "cogs.newhelp",
                          "cogs.council",
@@ -39,9 +38,6 @@ else:
                          "cogs.tasks",
                          "cogs.eggs",
                          ]
-
-logger.add("rcsbot.log", rotation="100MB", level=log_level)
-logger.info("Starting bot")
 
 description = """Multi bot to serve the RCS - by TubaKid
 
@@ -62,7 +58,19 @@ async def on_ready():
     logger.info(f"Logged in as {bot.user}")
     logger.info("-------")
     channel = bot.get_channel(settings['oakChannels']['testChat'])
+    logger.add(send_log, level="DEBUG")
+    logger.info("rcs-bot has started")
     await channel.send("RCS bot has started")
+
+
+def send_log(message):
+    asyncio.ensure_future(send_message(message))
+
+
+async def send_message(message):
+    await bot.get_channel(settings['logChannels']['rcs']).send(f"`{message}`")
+
+logger.add("rcsbot.log", rotation="100MB", level=log_level)
 
 if __name__ == "__main__":
     for extension in initialExtensions:

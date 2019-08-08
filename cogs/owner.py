@@ -7,6 +7,14 @@ from datetime import datetime
 from discord.ext import commands
 
 
+def log_traceback(ex):
+    tb_lines = traceback.format_exception(ex.__class__, ex, ex.__traceback__)
+    tb_text = ''.join(tb_lines)
+    # I'll let you implement the ExceptionLogger class,
+    # and the timestamping.
+    return tb_text
+
+
 class OwnerCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -88,7 +96,7 @@ class OwnerCog(commands.Cog):
                        self.bot.get_guild(531660501709750282),
                        self.bot.get_guild(602130772098416678)]
         for guild in server_list:
-            content = f"**{guild.name}**\n"
+            content = f"\n**{guild.name}**"
             for emoji in sorted(guild.emojis, key=get_key):
                 content += f"\n{emoji} - {emoji.name}:{emoji.id}"
             await self.send_text(ctx.channel, content)
@@ -96,7 +104,7 @@ class OwnerCog(commands.Cog):
     @commands.command(name="server")
     @commands.is_owner()
     async def server_list(self, ctx):
-        guild_count = len(self.bot.guilds)
+        # guild_count = len(self.bot.guilds)
         # TODO create embed with guild.name and guild.owner
         for guild in self.bot.guilds:
             await ctx.send(guild.name)
@@ -164,7 +172,8 @@ class OwnerCog(commands.Cog):
             list_start = -1 * num_lines
             await self.send_text(ctx.channel, "\n".join([line for line in f.read().splitlines()[list_start:]]))
 
-    async def send_text(self, channel, text, block=None):
+    @staticmethod
+    async def send_text(channel, text, block=None):
         """ Sends text ot channel, splitting if necessary """
         if len(text) < 2000:
             if block:
