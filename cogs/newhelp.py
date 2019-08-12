@@ -13,12 +13,12 @@ class NewHelp(commands.Cog):
     @commands.command(name="help", hidden=True)
     async def help(self, ctx, command: str = "all"):
         """Welcome to the rcs-bot"""
-        desc = ("All commands must begin with a ++\n\n"        
+        desc = ("All commands must begin with a ++\n\n"
                 "References to a clan can be in the form of the clan name (spelled correctly) or the clan tag "
                 "(with or without the #).\n\n"
                 "You can type ++help <command> to display only the help for that command.")
 
-        command_list = ["all", "attacks", "defenses", "donations", "trophies", "besttrophies",
+        command_list = ["all", "cwl", "attacks", "defenses", "donations", "trophies", "besttrophies",
                         "townhalls", "builderhalls", "warstars", "games", "push",
                         "top", "reddit", "council", "tasks"]
 
