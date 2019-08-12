@@ -394,9 +394,16 @@ class General(commands.Cog):
                            f"WHERE clanTag = '{clan_tag}'")
             conn.commit()
             conn.close()
-            await self.bot.get_channel(settings["rcsChannels"]["leaderChat"]).send(f"<@{leader}> {clan}'s CWL league "
-                                                                                   f"has been updated to {league} "
-                                                                                   f"by {ctx.author.mention}.")
+            if ctx.author.id == leader:
+                await ctx.send("Update complete!")
+            else:
+                try:
+                    leader_chat = self.bot.get_channel(settings["rcsChannels"]["leaderChat"])
+                    await leader_chat.send(f"<@{leader}> {clan}'s CWL league has been updated to {league} "
+                                           f"by {ctx.author.mention}.")
+                except:
+                    logger.exception("Failed to send to Leader Chat")
+
         else:
             await ctx.send("Please provide a clan name and CWL league in that order. `++cwl Reddit Example Bronze ii`")
             return
