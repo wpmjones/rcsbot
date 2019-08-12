@@ -395,7 +395,7 @@ class General(commands.Cog):
             conn.commit()
             conn.close()
             logger.debug(f"Context ID: {ctx.author.id}\nLeader Tag: {leader}")
-            if ctx.author.id == leader:
+            if str(ctx.author.id) == str(leader):
                 await ctx.send("Update complete!")
             else:
                 try:
