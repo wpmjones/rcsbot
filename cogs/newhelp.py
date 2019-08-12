@@ -34,6 +34,9 @@ class NewHelp(commands.Cog):
         # respond to help request
         embed = discord.Embed(title="rcs-bot Help File", description=desc, color=color_pick(15, 250, 15))
         embed.add_field(name="Commands:", value="-----------")
+        if command in ["all", "cwl"]:
+            help_text = "Updates the specified clan's CWL league"
+            embed.add_field(name="++cwl <clan name> <CWL league name>", value=help_text)
         if command in ["all", "attacks", "attack", "attackwins", "att"]:
             help_text = "Responds with the current attack wins for all members of the clan specified."
             embed.add_field(name="++attacks <clan name or tag>", value=help_text)
