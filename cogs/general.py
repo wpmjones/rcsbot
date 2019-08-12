@@ -401,6 +401,7 @@ class General(commands.Cog):
                     leader_chat = self.bot.get_channel(settings["rcsChannels"]["leaderChat"])
                     await leader_chat.send(f"<@{leader}> {clan}'s CWL league has been updated to {league} "
                                            f"by {ctx.author.mention}.")
+                    await ctx.send("Update complete!")
                 except:
                     logger.exception("Failed to send to Leader Chat")
 
