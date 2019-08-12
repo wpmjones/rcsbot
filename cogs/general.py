@@ -394,6 +394,7 @@ class General(commands.Cog):
                            f"WHERE clanTag = '{clan_tag}'")
             conn.commit()
             conn.close()
+            logger.debug(f"Context ID: {ctx.author.id}\nLeader Tag: {leader}")
             if ctx.author.id == leader:
                 await ctx.send("Update complete!")
             else:
