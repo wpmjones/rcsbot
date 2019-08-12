@@ -330,7 +330,79 @@ class General(commands.Cog):
         else:
             await ctx.send("This clan does not have a subreddit.")
 
-    async def send_text(self, channel, text, block=None):
+    @commands.command(name="cwl")
+    async def cwl(self, ctx, *args):
+        conn = pymssql.connect(server=settings['database']['server'],
+                               user=settings['database']['username'],
+                               password=settings['database']['password'],
+                               database=settings['database']['database'])
+        cursor = conn.cursor(as_dict=True)
+        cursor.execute("SELECT clanName, clanTag, discordTag FROM rcs_data ORDER BY clanName")
+        fetched = cursor.fetchall()
+        clans = []
+        clans_tag = []
+        for clan in fetched:
+            clans.append(clan["clanName"].lower())
+            clans_tag.append([clan["clanTag"], clan["clanName"], clan["discordTag"]])
+        leagues = ["bronze iii",
+                   "bronze ii",
+                   "bronze i",
+                   "silver iii",
+                   "silver ii",
+                   "silver i",
+                   "gold iii",
+                   "gold ii",
+                   "gold i",
+                   "crystal iii",
+                   "crystal ii",
+                   "crystal i",
+                   "master iii", "masters iii",
+                   "master ii", "masters ii",
+                   "master i", "masters i",
+                   "champion iii", "champions iii", "champs iii",
+                   "champion ii", "champions ii", "champs ii",
+                   "champion i", "champions i", "champs i"
+                   ]
+        if len(args) == 4:
+            clan = f"{args[0]} {args[1]}"
+            league = f"{args[2]} {args[3]}"
+        elif len(args) == 3:
+            clan = f"{args[0]}"
+            league = f"{args[1]} {args[2]}"
+        elif len(args) == 5:
+            clan = f"{args[0]} {args[1]} {args[2]}"
+            league = f"{args[3]} {args[4]}"
+        else:
+            await ctx.send("Please provide a clan name and CWL league in that order. `++cwl Reddit Example Bronze ii`")
+            return
+        if clan.lower() in clans and league.lower() in leagues:
+            league_num = "I" * len(args[len(args) - 1])
+            if args[len(args) - 2].lower() in ["master", "masters"]:
+                league = f"Master {league_num}"
+            elif args[len(args) - 2].lower() in ["champ", "champs", "champion", "champions"]:
+                league = f"Champion {league_num}"
+            else:
+                league = f"{args[len(args) - 2].title()} {league_num}"
+            for clan_tuple in clans_tag:
+                if clan.lower() == clan_tuple[1].lower():
+                    clan = clan_tuple[1]
+                    clan_tag = clan_tuple[0]
+                    leader = clan_tuple[2]
+                    break
+            cursor.execute(f"UPDATE rcs_data "
+                           f"SET cwlLeague = '{league}' "
+                           f"WHERE clanTag = '{clan_tag}'")
+            conn.commit()
+            conn.close()
+            await self.bot.get_channel(settings["rcsChannels"]["leaderChat"]).send(f"<@{leader}> {clan}'s CWL league "
+                                                                                   f"has been updated to {league} "
+                                                                                   f"by {ctx.author.mention}.")
+        else:
+            await ctx.send("Please provide a clan name and CWL league in that order. `++cwl Reddit Example Bronze ii`")
+            return
+
+    @staticmethod
+    async def send_text(channel, text, block=None):
         """ Sends text to channel, splitting if necessary """
         if len(text) < 2000:
             if block:
