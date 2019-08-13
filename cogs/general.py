@@ -363,26 +363,31 @@ class General(commands.Cog):
                    "champion ii", "champions ii", "champs ii",
                    "champion i", "champions i", "champs i"
                    ]
+        league_num = "I"
+        if args[-1] == "3":
+            league_num = "III"
+        if args[-1] == "2":
+            league_num = "II"
         if len(args) == 4:
             clan = f"{args[0]} {args[1]}"
-            league = f"{args[2]} {args[3]}"
+            league = f"{args[2]} {league_num}"
         elif len(args) == 3:
             clan = f"{args[0]}"
-            league = f"{args[1]} {args[2]}"
+            league = f"{args[1]} {league_num}"
         elif len(args) == 5:
             clan = f"{args[0]} {args[1]} {args[2]}"
-            league = f"{args[3]} {args[4]}"
+            league = f"{args[3]} {league_num}"
         else:
-            await ctx.send("Please provide a clan name and CWL league in that order. `++cwl Reddit Example Bronze ii`")
+            await ctx.send("Please provide a clan name and CWL league in that order. `++cwl Reddit Example Bronze II`")
             return
         if clan.lower() in clans and league.lower() in leagues:
-            league_num = "I" * len(args[len(args) - 1])
-            if args[len(args) - 2].lower() in ["master", "masters"]:
+            league_num = "I" * args[-1]
+            if args[-2].lower() in ["master", "masters"]:
                 league = f"Master {league_num}"
-            elif args[len(args) - 2].lower() in ["champ", "champs", "champion", "champions"]:
+            elif args[-2].lower() in ["champ", "champs", "champion", "champions"]:
                 league = f"Champion {league_num}"
             else:
-                league = f"{args[len(args) - 2].title()} {league_num}"
+                league = f"{args[-2].title()} {league_num}"
             for clan_tuple in clans_tag:
                 if clan.lower() == clan_tuple[1].lower():
                     clan = clan_tuple[1]
