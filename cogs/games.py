@@ -15,7 +15,7 @@ class Games(commands.Cog):
         self.bot = bot
 
     @commands.command(name="games_add", aliases=["games+", "ga"])
-    async def games_add(self, ctx, player_tag, clan_tag, games_points):
+    async def games_add(self, ctx, player_tag, clan_tag, games_points: int):
         """Add player who missed the initial pull"""
         player_tag = coc.utils.correct_tag(player_tag)
         clan_tag = coc.utils.correct_tag(clan_tag)
