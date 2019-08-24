@@ -29,15 +29,13 @@ class Games(commands.Cog):
             raise commands.BadArgument("That looks like a player tag, but I can't find any accounts with that tag. "
                                        "Any chance it's the wrong tag?")
         if player.clan.tag == clan_tag:
-            self.bot.logger.debug("Inside if")
             conn = pymssql.connect(server=settings['database']['server'],
                                    user=settings['database']['username'],
                                    password=settings['database']['password'],
                                    database=settings['database']['database'])
             conn.autocommit(True)
             cursor = conn.cursor(as_dict=True)
-            self.bot.logger.debug("Connection established")
-            cursor.execute("SELECT MAX(eventId) FROM rcs_events WHERE eventTypeId = 5")
+            cursor.execute("SELECT MAX(eventId) FROM rcs_events WHERE eventType = 5")
             row = cursor.fetchone()
             event_id = row['eventId']
             self.bot.logger.debug(event_id)
