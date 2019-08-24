@@ -1,14 +1,52 @@
-import discord, pymssql
+import pymssql
+import coc
+import re
 from discord.ext import commands
 from config import settings, bot_log
 
 """Cog for trophy push"""
+
+tag_validator = re.compile("^#?[PYLQGRJCUV0289]+$")
 
 
 class Games(commands.Cog):
     """Cog for Clan Games"""
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.command(name="games_add", aliases=["games+", "ga"])
+    async def games_add(self, ctx, player_tag, clan_tag, games_points):
+        """Add player who missed the initial pull"""
+        player_tag = coc.utils.correct_tag(player_tag)
+        clan_tag = coc.utils.correct_tag(clan_tag)
+        if not tag_validator.match(player_tag):
+            await ctx.send("Please provide a valid player tag.")
+        if not tag_validator.match(clan_tag):
+            await ctx.send("Please provide a valid clan tag.")
+        try:
+            player = await self.bot.coc_client.get_player(player_tag)
+        except coc.NotFound:
+            raise commands.BadArgument("That looks like a player tag, but I can't find any accounts with that tag. "
+                                       "Any chance it's the wrong tag?")
+        if player.clan.tag == clan_tag:
+            conn = pymssql.connect(server=settings['database']['server'],
+                                   user=settings['database']['username'],
+                                   password=settings['database']['password'],
+                                   database=settings['database']['database'])
+            conn.autocommit(True)
+            cursor = conn.cursor(as_dict=True)
+            cursor.execute("SELECT MAX(eventId) FROM rcs_events WHERE eventTypeId = 5")
+            row = cursor.fetchone()
+            event_id = row['eventId']
+            starting_points = player.achievements_dict['Games Champion'].value - games_points
+            current_points = player.achievements_dict['Games Champion'].value
+            sql = (f"INSERT INTO rcs_clanGames (eventId, playerTag, clanTag, startingPoints, currentPoints) "
+                   f"VALUES ({event_id}, {player.tag[1:]}, {player.clan.tag[1:]}, {starting_points}, {current_points})")
+            cursor.execute(sql)
+            await ctx.send(f"{player.name} ({player.clan.name}) has been added to the games database.")
+        else:
+            response = f"{player.name}({player.tag}) is not current in {player.clan.name}({player.clan.tag})."
+            await ctx.send(response)
 
     @commands.command()
     async def games(self, ctx, *, arg: str = 'all'):
