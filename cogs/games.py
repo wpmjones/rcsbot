@@ -35,9 +35,12 @@ class Games(commands.Cog):
                                    database=settings['database']['database'])
             conn.autocommit(True)
             cursor = conn.cursor(as_dict=True)
-            cursor.execute("SELECT MAX(eventId) FROM rcs_events WHERE eventType = 5")
-            row = cursor.fetchone()
-            event_id = row['eventId']
+            try:
+                cursor.execute("SELECT MAX(eventId) FROM rcs_events WHERE eventType = 5")
+                row = cursor.fetchone()
+                event_id = row['eventId']
+            except:
+                self.bot.logger.exception("SELECT failed")
             self.bot.logger.debug(event_id)
             starting_points = player.achievements_dict['Games Champion'].value - games_points
             current_points = player.achievements_dict['Games Champion'].value
