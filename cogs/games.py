@@ -39,11 +39,15 @@ class Games(commands.Cog):
             row = cursor.fetchone()
             event_id = row['eventId']
             self.bot.logger.debug(event_id)
-            starting_points = player.achievements_dict['Games Champion'].value - games_points
-            current_points = player.achievements_dict['Games Champion'].value
+            try:
+                starting_points = player.achievements_dict['Games Champion'].value - games_points
+                current_points = player.achievements_dict['Games Champion'].value
+            except:
+                self.bot.logger.debug("points assignment")
             sql = (f"INSERT INTO rcs_clanGames (eventId, playerTag, clanTag, startingPoints, currentPoints) "
                    f"VALUES ({event_id}, '{player.tag[1:]}', '{player.clan.tag[1:]}', "
                    f"{starting_points}, {current_points})")
+            self.bot.logger.debug(sql)
             cursor.execute(sql)
             conn.close()
             await ctx.send(f"{player.name} ({player.clan.name}) has been added to the games database.")
