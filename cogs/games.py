@@ -43,6 +43,7 @@ class Games(commands.Cog):
             sql = (f"INSERT INTO rcs_clanGames (eventId, playerTag, clanTag, startingPoints, currentPoints) "
                    f"VALUES ({event_id}, {player.tag[1:]}, {player.clan.tag[1:]}, {starting_points}, {current_points})")
             cursor.execute(sql)
+            conn.close()
             await ctx.send(f"{player.name} ({player.clan.name}) has been added to the games database.")
         else:
             response = f"{player.name}({player.tag}) is not current in {player.clan.name}({player.clan.tag})."
