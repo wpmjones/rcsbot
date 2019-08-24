@@ -23,20 +23,20 @@ class Games(commands.Cog):
             await ctx.send("Please provide a valid player tag.")
         if not tag_validator.match(clan_tag):
             await ctx.send("Please provide a valid clan tag.")
-        self.bot.logger.info("Player and clan tags are good.")
         try:
             player = await self.bot.coc_client.get_player(player_tag)
         except coc.NotFound:
             raise commands.BadArgument("That looks like a player tag, but I can't find any accounts with that tag. "
                                        "Any chance it's the wrong tag?")
-        self.bot.logger.debug(f"COC info: {player.clan.tag}\nProvided info: {clan_tag}")
         if player.clan.tag == clan_tag:
+            self.bot.logger.debug("Inside if")
             conn = pymssql.connect(server=settings['database']['server'],
                                    user=settings['database']['username'],
                                    password=settings['database']['password'],
                                    database=settings['database']['database'])
             conn.autocommit(True)
             cursor = conn.cursor(as_dict=True)
+            self.bot.logger.debug("Connection established")
             cursor.execute("SELECT MAX(eventId) FROM rcs_events WHERE eventTypeId = 5")
             row = cursor.fetchone()
             event_id = row['eventId']
