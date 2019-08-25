@@ -431,6 +431,7 @@ class CouncilCog(commands.Cog):
         if not message:
             await ctx.send("I'm not going to send a blank message you goofball!")
             return
+        msg = await ctx.send("One moment while I track down these leaders...")
         conn = pymssql.connect(settings['database']['server'],
                                settings['database']['username'],
                                settings['database']['password'],
@@ -449,7 +450,7 @@ class CouncilCog(commands.Cog):
                 self.bot.logger.exception("DM send attempt")
         member = ctx.guild.get_member(251150854571163648)
         await member.send(f"**The following has been sent to all RCS leaders by {ctx.author}**\n\n{message}")
-        await ctx.send(f"Message sent to {counter} RCS leaders.")
+        await msg.edit(f"Message sent to {counter} RCS leaders.")
 
     @commands.command(name="find", aliases=["search"], hidden=True)
     async def find(self, ctx, *, arg: str = "help"):
