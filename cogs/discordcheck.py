@@ -123,7 +123,7 @@ class DiscordCheck(commands.Cog):
                 else:
                     await botdev_channel.send(f"No members for {clan['clan_name']}")
             # THIS SECTION CHECKS FOR MEMBERS WITHOUT ANY CLAN AFFILIATION
-            if date.today().weekday() == 6:
+            if date.today().weekday() == 3:
                 errors = []
                 for member in guild.members:
                     if member_role in member.roles:
