@@ -123,7 +123,7 @@ class DiscordCheck(commands.Cog):
                 else:
                     await botdev_channel.send(f"No members for {clan['clan_name']}")
             # THIS SECTION CHECKS FOR MEMBERS WITHOUT ANY CLAN AFFILIATION
-            if date.today().weekday() == 3:
+            if date.today().weekday() == 4:
                 errors = []
                 for member in guild.members:
                     if member_role in member.roles:
@@ -134,6 +134,8 @@ class DiscordCheck(commands.Cog):
                                 continue
                         if test == 0:
                             errors.append(f"{member.mention} did not identify with any clan.")
+                            self.bot.logger.info(f"{member.mention} did not identify with any clan.")
+                self.bot.logger.debug(errors)
                 if errors:
                     embed = discord.Embed(color=color_pick(181, 0, 0))
                     embed.add_field(name="We found some Members without a clan:",
