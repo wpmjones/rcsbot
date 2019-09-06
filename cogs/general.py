@@ -424,7 +424,7 @@ class General(commands.Cog):
             emoji = "\u2705"
             await ctx.message.add_reaction(emoji)
         except:
-            self.bot.logger.error("Something went wrong while adding a discord link")
+            self.bot.logger.exception("Something went wrong while adding a discord link")
             await ctx.send("I'm sorry, but something has gone wrong. I notified the important people and they will "
                            "look into it for you.")
 

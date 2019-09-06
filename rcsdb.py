@@ -17,20 +17,20 @@ class RcsDB:
         if row is not None:
             if row['discord_id'] == discord_id:
                 # player record is already in db
-                await self.bot.test_channel.send(f"{player_tag} is already in the database.")
+                self.bot.logger.debug(f"{player_tag} is already in the database.")
                 return
             # row exists but has a different discord_id
             sql = (f"UPDATE rcs_discord_links"
                    f"SET discord_id = {discord_id}"
                    f"WHERE player_tag = '{player_tag}'")
             await conn.execute(sql)
-            await self.bot.test_channel.send(f"The discord id did not match {discord_id}, so I updated it!")
+            self.bot.logger.debug(f"The discord id did not match {discord_id}, so I updated it!")
             return
         # no player record in db
         sql = (f"INSERT INTO rcs_discord_links (discord_id, player_tag) "
                f"VALUES ({discord_id}, '{player_tag}')")
         await conn.execute(sql)
-        await self.bot.test_channel.send(f"{player_tag} added to the database")
+        self.bot.logger.debug(f"{player_tag} added to the database")
 
     async def get_clans(self):
         conn = self.bot.db.pool
