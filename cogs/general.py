@@ -1,4 +1,5 @@
 import pymssql
+from cogs.utils import helper
 from loguru import logger
 from discord.ext import commands
 from config import settings, emojis
@@ -414,6 +415,18 @@ class General(commands.Cog):
         else:
             await ctx.send("Please provide a clan name and CWL league in that order. `++cwl Reddit Example Bronze ii`")
             return
+
+    @commands.command(name="link")
+    async def link(self, ctx, player_tag):
+        player_tag = helper.correct_tag(player_tag)
+        try:
+            await self.bot.db.link_user(player_tag, ctx.author.id)
+            emoji = "\u2705"
+            await ctx.message.add_reaction(emoji)
+        except:
+            self.bot.logger.error("Something went wrong while adding a discord link")
+            await ctx.send("I'm sorry, but something has gone wrong. I notified the important people and they will "
+                           "look into it for you.")
 
     @staticmethod
     async def send_text(channel, text, block=None):
