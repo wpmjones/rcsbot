@@ -2,10 +2,14 @@ import traceback
 import os
 import git
 import coc
+import sys
 import asyncio
+import discord
+from cogs.utils import context
+from cogs.utils.db import RcsDB
 from discord.ext import commands
+from datetime import datetime
 from config import settings
-from rcsdb import RcsDB
 from loguru import logger
 
 enviro = "LIVE"
@@ -15,29 +19,31 @@ if enviro == "LIVE":
     prefix = "++"
     log_level = "INFO"
     coc_names = "vps"
-    initialExtensions = ["cogs.general",
-                         "cogs.push",
-                         "cogs.background",
-                         "cogs.games",
-                         "cogs.newhelp",
-                         "cogs.council",
-                         "cogs.owner",
-                         "cogs.tasks",
-                         "cogs.eggs",
-                         ]
+    initial_extensions = ["cogs.general",
+                          "cogs.push",
+                          "cogs.background",
+                          "cogs.games",
+                          "cogs.newhelp",
+                          "cogs.council",
+                          "cogs.owner",
+                          "cogs.admin",
+                          "cogs.tasks",
+                          "cogs.eggs",
+                          ]
 else:
     token = settings['discord']['testToken']
     prefix = ">"
     log_level = "DEBUG"
     coc_names = "dev"
-    initialExtensions = ["cogs.general",
-                         "cogs.games",
-                         "cogs.newhelp",
-                         "cogs.council",
-                         "cogs.owner",
-                         "cogs.tasks",
-                         "cogs.eggs",
-                         ]
+    initial_extensions = ["cogs.general",
+                          "cogs.games",
+                          "cogs.newhelp",
+                          "cogs.council",
+                          "cogs.owner",
+                          "cogs.tasks",
+                          "cogs.eggs",
+                          "cogs.admin"
+                          ]
 
 description = """Multi bot to serve the RCS - by TubaKid
 
@@ -47,44 +53,123 @@ You can use the clan tag (with or without the hashtag) or you can use the clan n
 
 There are easter eggs. Feel free to try and find them!"""
 
-bot = commands.Bot(command_prefix=prefix, description=description, case_insensitive=True)
-bot.remove_command("help")
-bot.repo = git.Repo(os.getcwd())
+coc_client = coc.login(settings['supercell']['user'],
+                       settings['supercell']['pass'],
+                       client=coc.EventsClient,
+                       key_names=coc_names)
 
 
-@bot.event
-async def on_ready():
-    logger.info("-------")
-    logger.info(f"Logged in as {bot.user}")
-    logger.info("-------")
-    channel = bot.get_channel(settings['oakChannels']['testChat'])
-    logger.add(send_log, level="INFO")
-    logger.info("rcs-bot has started")
-    await channel.send("RCS bot has started")
+class RcsBot(commands.Bot):
+    def __init__(self):
+        super().__init__(command_prefix=prefix,
+                         description=description,
+                         case_insensitive=True)
+        self.remove_command("help")
+        self.coc = coc_client
+        self.color = discord.Color.dark_red()
 
+        coc_client.add_events(self.on_event_error)
 
-def send_log(message):
-    asyncio.ensure_future(send_message(message))
+        for extension in initial_extensions:
+            try:
+                self.load_extension(extension)
+                logger.debug(f"{extension} loaded successfully")
+            except Exception as extension:
+                logger.error(f"Failed to load extension {extension}.", file=sys.stderr)
+                traceback.print_exc()
 
+    @property
+    def log_channel(self):
+        return self.get_channel(settings['logChannels']['rcs'])
 
-async def send_message(message):
-    await bot.get_channel(settings['logChannels']['rcs']).send(f"`{message}`")
+    def send_log(self, message):
+        asyncio.ensure_future(self.send_message(message))
 
-logger.add("rcsbot.log", rotation="100MB", level=log_level)
+    async def send_message(self, message):
+        await self.log_channel.send(f"`{message}`")
+
+    async def on_message(self, message):
+        if message.author.bot:
+            return
+        await self.process_commands(message)
+
+    async def process_commands(self, message):
+        ctx = await self.get_context(message, cls=context.Context)
+        if ctx.command is None:
+            return
+        async with ctx.acquire():
+            await self.invoke(ctx)
+
+    async def on_command_error(self, ctx, error):
+        if isinstance(error, commands.NoPrivateMessage):
+            await ctx.author.send("This command cannot be used in private messages.")
+        elif isinstance(error, commands.DisabledCommand):
+            await ctx.author.send("Oops. This command is disabled and cannot be used.")
+        elif isinstance(error, commands.CommandInvokeError):
+            original = error.original
+            if not isinstance(original, discord.HTTPException):
+                logger.error(f"In {ctx.command.qualified_name}:", file=sys.stderr)
+                traceback.print_tb(original.__traceback__)
+                logger.error(f"{original.__class__.__name__}: {original}", file=sys.stderr)
+        elif isinstance(error, commands.ArgumentParsingError):
+            await ctx.send(error)
+
+    async def on_event_error(self, event_name, *args, **kwargs):
+        e = discord.Embed(title="COC Event Error", colour=0xa32952)
+        e.add_field(name="Event", value=event_name)
+        e.description = f"```py\n{traceback.format_exc()}\n```"
+        e.timestamp = datetime.utcnow()
+
+        args_str = ["```py"]
+        for index, arg in enumerate(args):
+            args_str.append(f"[{index}]: {arg!r}")
+        args_str.append("```")
+        e.add_field(name="Args", value="\n".join(args_str), inline=False)
+        try:
+            self.log_channel.send(embed=e)
+        except:
+            pass
+
+    async def on_error(self, event_method, *args, **kwargs):
+        e = discord.Embed(title="Discord Event Error", color=0xa32952)
+        e.add_field(name="Event", value=event_method)
+        e.description = f"```py\n{traceback.format_exc()}\n```"
+        e.timestamp = datetime.utcnow()
+
+        args_str = ["```py"]
+        for index, arg in enumerate(args):
+            args_str.append(f"[{index}]: {arg!r}")
+        args_str.append("```")
+        e.add_field(name="Args", value="\n".join(args_str), inline=False)
+        try:
+            await self.log_channel.send(embed=e)
+        except:
+            pass
+
+    async def on_ready(self):
+        logger.add(self.send_log, level="DEBUG")
+        logger.info("rcs-bot has started")
+        activity = discord.Game(" Clash of Clans")
+        await bot.change_presence(activity=activity)
+        logger.info(f'Ready: {self.user} (ID: {self.user.id})')
+
+    async def on_resumed(self):
+        logger.info("resumed...")
+
+    async def close(self):
+        await super().close()
+        await self.coc.close()
+
 
 if __name__ == "__main__":
-    for extension in initialExtensions:
-        try:
-            bot.load_extension(extension)
-            logger.debug(f"{extension} loaded successfully")
-        except Exception as e:
-            logger.info(f"Failed to load extension {extension}")
-            traceback.print_exc()
-
-    bot.db = RcsDB(bot)
-    loop = asyncio.get_event_loop()
-    pool = loop.run_until_complete(bot.db.create_pool())
-    bot.db.pool = pool
-    bot.logger = logger
-    bot.coc_client = coc.login(settings['supercell']['user'], settings['supercell']['pass'], key_names=coc_names)
-    bot.run(token)
+    try:
+        bot = RcsBot()
+        bot.repo = git.Repo(os.getcwd())
+        bot.db = RcsDB(bot)
+        loop = asyncio.get_event_loop()
+        pool = loop.run_until_complete(bot.db.create_pool())
+        bot.pool = pool
+        bot.logger = logger
+        bot.run(token, reconnect=True)
+    except:
+        traceback.print_exc()

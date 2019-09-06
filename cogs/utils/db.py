@@ -6,12 +6,13 @@ class RcsDB:
     def __init__(self, bot):
         self.bot = bot
 
-    async def create_pool(self):
+    @staticmethod
+    async def create_pool():
         pool = await asyncpg.create_pool(f"{settings['pg']['uri']}/psadmin", max_size=85)
         return pool
 
     async def link_user(self, player_tag, discord_id):
-        conn = self.bot.db.pool
+        conn = self.bot.pool
         sql = f"SELECT discord_id FROM rcs_discord_links WHERE player_tag = '{player_tag}'"
         row = await conn.fetchrow(sql)
         if row is not None:
@@ -33,7 +34,6 @@ class RcsDB:
         self.bot.logger.debug(f"{player_tag} added to the database")
 
     async def get_clans(self):
-        conn = self.bot.db.pool
+        conn = self.bot.pool
         sql = "SELECT clan_name, clan_tag FROM rcs_clans ORDER BY clan_name"
         return await conn.fetch(sql)
-

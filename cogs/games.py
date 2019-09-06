@@ -38,7 +38,6 @@ class Games(commands.Cog):
             cursor.execute("SELECT MAX(eventId) as eventId FROM rcs_events WHERE eventType = 5")
             row = cursor.fetchone()
             event_id = row['eventId']
-            self.bot.logger.debug(event_id)
             try:
                 starting_points = player.achievements_dict['Games Champion'].value - games_points
                 current_points = player.achievements_dict['Games Champion'].value
@@ -47,7 +46,6 @@ class Games(commands.Cog):
             sql = (f"INSERT INTO rcs_clanGames (eventId, playerTag, clanTag, startingPoints, currentPoints) "
                    f"VALUES ({event_id}, '{player.tag[1:]}', '{player.clan.tag[1:]}', "
                    f"{starting_points}, {current_points})")
-            self.bot.logger.debug(sql)
             cursor.execute(sql)
             conn.close()
             await ctx.send(f"{player.name} ({player.clan.name}) has been added to the games database.")

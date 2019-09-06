@@ -24,7 +24,7 @@ class Background(commands.Cog):
                                   message.author.display_name, message.author.roles)
             return
         self.bot.logger.debug("User has member role.")
-        conn = self.bot.db.pool
+        conn = self.bot.pool
         self.bot.logger.debug("Postgresql connection established.")
         row = await conn.fetchrow(f"SELECT * FROM rcs_discord WHERE discord_id = {message.author.id}")
         points = randint(7, 14)
