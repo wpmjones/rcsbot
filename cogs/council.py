@@ -384,9 +384,9 @@ class CouncilCog(commands.Cog):
                            "in the next 3 hours.")
             await ctx.send("<@251150854571163648> Please recycle the bot so we aren't embarassed with old data!")
             await ctx.send(f"Please don't forget to remove {fetched['leaderReddit'][22:]} as a mod from META and "
-                           "update the META clan directory.  I've removed the Leaders, RCS Leaders, and Clan "
-                           "Recruiters role from <@{fetched['discordTag']}>. If they have any other roles, "
-                           "you will need to remove them manually.")
+                           f"update the META clan directory.  I've removed the Leaders, RCS Leaders, and Clan "
+                           f"Recruiters role from <@{fetched['discordTag']}>. If they have any other roles, "
+                           f"you will need to remove them manually.")
         else:
             print(f"{datetime.now()} - ERROR: {ctx.author} from {ctx.guild} tried to use the ++{ctx.command} "
                   "command but shouldn't be doing that.")
