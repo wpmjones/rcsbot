@@ -149,8 +149,8 @@ class RcsBot(commands.Bot):
     async def on_ready(self):
         logger.add(self.send_log, level="DEBUG")
         logger.info("rcs-bot has started")
-        activity = discord.Game(" Clash of Clans")
-        await bot.change_presence(activity=activity)
+        activity = discord.Game("Clash of Clans")
+        await self.change_presence(status=discord.Status.online, activity=activity)
         logger.info(f'Ready: {self.user} (ID: {self.user.id})')
 
     async def on_resumed(self):
