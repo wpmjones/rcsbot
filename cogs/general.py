@@ -316,6 +316,9 @@ class General(commands.Cog):
             logger.info(info_string, ctx.command, category, ctx.author, ctx.guild)
 
     @commands.command(name="link")
+    @commands.has_any_role(settings['rcsRoles']['council'],
+                           settings['rcsRoles']['chatMods'],
+                           settings['rcsRoles']['leaders'])
     async def link(self, ctx, member: discord.Member, player_tag):
         try:
             player = await PlayerConverter().convert(ctx, player_tag)
