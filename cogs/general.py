@@ -339,7 +339,7 @@ class General(commands.Cog):
                 await ctx.send("I'm sorry, but something has gone wrong. I notified the important people and they will "
                                "look into it for you.")
         else:
-            await ctx.send(f"I see that you ({player.name}) are in {player.clan} which is not an RCS clan. Try again "
+            await ctx.send(f"I see that {player.name} is in {player.clan} which is not an RCS clan. Try again "
                            f"when you are in an RCS clan.")
 
     @commands.command(name="reddit", aliases=["subreddit"])
