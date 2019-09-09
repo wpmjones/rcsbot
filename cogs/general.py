@@ -429,7 +429,7 @@ class General(commands.Cog):
         self.bot.logger.debug(self.clans)
         if player.clan.tag[1:] in [clan['clanTag'] for clan in self.clans]:
             try:
-                await self.bot.db.link_user(player.tag, ctx.author.id)
+                await self.bot.db.link_user(player.tag[1:], ctx.author.id)
                 emoji = "\u2705"
                 await ctx.message.add_reaction(emoji)
             except:
