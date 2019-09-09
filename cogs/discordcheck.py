@@ -91,7 +91,7 @@ class DiscordCheck(commands.Cog):
                             conn.commit()
                         conn.close()
                 except:
-                    self.bot.logger.debug(f"{tag} is not a real player tag.")
+                    pass  # TODO need to deal with this better
             # THIS IS THE BEGINNING OF THE NAME CHECKS
             self.bot.logger.debug("Beginning of daily clan check")
             for clan in daily_clans:

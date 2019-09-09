@@ -313,7 +313,31 @@ class General(commands.Cog):
                 content += f"\n{item['name']:33}{str(item['points']):>7}"
             await self.send_text(ctx.channel, content, 1)
             logger.info(info_string, ctx.command, category, ctx.author, ctx.guild)
-            
+
+    @commands.command(name="link")
+    async def link(self, ctx, player_tag):
+        print(ctx.guild)
+        try:
+            player = await PlayerConverter().convert(ctx, player_tag)
+        except:
+            self.bot.logger.error(f"{ctx.author} provided {player_tag} for the link command.")
+            # TODO Provide some random fun here
+            return await ctx.send("I don't particularly care for that player tag. Wanna try again?")
+        if player.clan.tag[1:] in [clan['clanTag'] for clan in self.clans]:
+            try:
+                await self.bot.db.link_user(player.tag[1:], ctx.author.id)
+                emoji = "\u2705"
+                member_role = ctx.bot.get_guild(settings['discord']['rcsGuildId']).get_role(settings['rcsRoles']['members'])
+                await ctx.author.add_roles(member_role)
+                await ctx.message.add_reaction(emoji)
+            except:
+                self.bot.logger.exception("Something went wrong while adding a discord link")
+                await ctx.send("I'm sorry, but something has gone wrong. I notified the important people and they will "
+                               "look into it for you.")
+        else:
+            await ctx.send(f"I see that you ({player.name}) are in {player.clan} which is not an RCS clan. Try again "
+                           f"when you are in an RCS clan.")
+
     @commands.command(name="reddit", aliases=["subreddit"])
     async def reddit(self, ctx, *, arg: str = "x"):
         """Return link to specified clan's subreddit"""
@@ -423,22 +447,6 @@ class General(commands.Cog):
         else:
             await ctx.send("Please provide a clan name and CWL league in that order. `++cwl Reddit Example Bronze ii`")
             return
-
-    @commands.command(name="link")
-    async def link(self, ctx, *, player: PlayerConverter):
-        self.bot.logger.debug(self.clans)
-        if player.clan.tag[1:] in [clan['clanTag'] for clan in self.clans]:
-            try:
-                await self.bot.db.link_user(player.tag[1:], ctx.author.id)
-                emoji = "\u2705"
-                await ctx.message.add_reaction(emoji)
-            except:
-                self.bot.logger.exception("Something went wrong while adding a discord link")
-                await ctx.send("I'm sorry, but something has gone wrong. I notified the important people and they will "
-                               "look into it for you.")
-        else:
-            await ctx.send(f"I see that you ({player.name}) are in {player.clan} which is not an RCS clan. Try again "
-                           f"when you are in an RCS clan.")
 
     @staticmethod
     async def send_text(channel, text, block=None):

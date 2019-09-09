@@ -22,6 +22,7 @@ if enviro == "LIVE":
     initial_extensions = ["cogs.general",
                           "cogs.push",
                           "cogs.background",
+                          "cogs.discordcheck",
                           "cogs.games",
                           "cogs.newhelp",
                           "cogs.council",
