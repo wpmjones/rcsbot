@@ -1,4 +1,5 @@
 import pymssql
+import discord
 from cogs.utils.converters import PlayerConverter
 from loguru import logger
 from discord.ext import commands
@@ -315,20 +316,20 @@ class General(commands.Cog):
             logger.info(info_string, ctx.command, category, ctx.author, ctx.guild)
 
     @commands.command(name="link")
-    async def link(self, ctx, player_tag):
-        print(ctx.guild)
+    async def link(self, ctx, member: discord.Member, player_tag):
         try:
             player = await PlayerConverter().convert(ctx, player_tag)
         except:
             self.bot.logger.error(f"{ctx.author} provided {player_tag} for the link command.")
             # TODO Provide some random fun here
             return await ctx.send("I don't particularly care for that player tag. Wanna try again?")
+        print(player.name)
         if player.clan.tag[1:] in [clan['clanTag'] for clan in self.clans]:
             try:
-                await self.bot.db.link_user(player.tag[1:], ctx.author.id)
+                await self.bot.db.link_user(player.tag[1:], member.id)
                 emoji = "\u2705"
-                member_role = ctx.bot.get_guild(settings['discord']['rcsGuildId']).get_role(settings['rcsRoles']['members'])
-                await ctx.author.add_roles(member_role)
+                member_role = ctx.guild.get_role(settings['rcsRoles']['members'])
+                await member.add_roles(member_role)
                 await ctx.message.add_reaction(emoji)
             except:
                 self.bot.logger.exception("Something went wrong while adding a discord link")
