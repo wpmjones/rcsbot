@@ -16,7 +16,7 @@ class Background(commands.Cog):
             await message.channel.send("Thanks for chatting, but I'm really not set up for that. Perhaps try a "
                                        "command like `++help`.")
             return
-        if message.author == self.bot.user or message.guild.id != settings['discord']['rcsGuildId']:
+        if message.author.bot or message.guild.id != settings['discord']['rcsGuildId']:
             return
         if settings['rcsRoles']['members'] not in [role.id for role in message.author.roles]:
             self.bot.logger.debug("No member role.\n{} has the following roles.\n{}",
