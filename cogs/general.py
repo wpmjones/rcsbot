@@ -1,5 +1,5 @@
 import pymssql
-from cogs.utils import helper
+from cogs.utils.converters import PlayerConverter
 from loguru import logger
 from discord.ext import commands
 from config import settings, emojis
@@ -14,6 +14,14 @@ class General(commands.Cog):
     """Cog for General bot commands"""
     def __init__(self, bot):
         self.bot = bot
+        conn = pymssql.connect(settings['database']['server'],
+                               settings['database']['username'],
+                               settings['database']['password'],
+                               settings['database']['database'])
+        cursor = conn.cursor(as_dict=True)
+        cursor.execute("SELECT clanName, clanTag FROM rcs_data ORDER BY clanName")
+        self.clans = cursor.fetchall()
+        conn.close()
 
     @commands.command(name="attacks", aliases=["att", "attack", "attackwin", "attackwins"])
     async def attacks(self, ctx, *, arg: str = "x"):
@@ -23,7 +31,7 @@ class General(commands.Cog):
                                password=settings['database']['password'],
                                database=settings['database']['database'])
         cursor = conn.cursor(as_dict=True)
-        clan_tag, clan_name = resolve_clan_tag(arg)
+        clan_tag, clan_name = self.resolve_clan_tag(arg)
         if clan_tag == "x":
             logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
             await ctx.send("You have not provided a valid clan name or clan tag.")
@@ -52,7 +60,7 @@ class General(commands.Cog):
                                settings['database']['password'],
                                settings['database']['database'])
         cursor = conn.cursor(as_dict=True)
-        clan_tag, clan_name = resolve_clan_tag(arg)
+        clan_tag, clan_name = self.resolve_clan_tag(arg)
         if clan_tag == "x":
             logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
             await ctx.send("You have not provided a valid clan name or clan tag.")
@@ -80,7 +88,7 @@ class General(commands.Cog):
                                settings['database']['password'],
                                settings['database']['database'])
         cursor = conn.cursor(as_dict=True)
-        clan_tag, clan_name = resolve_clan_tag(arg)
+        clan_tag, clan_name = self.resolve_clan_tag(arg)
         if clan_tag == "x":
             logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
             await ctx.send("You have not provided a valid clan name or clan tag.")
@@ -109,7 +117,7 @@ class General(commands.Cog):
                                settings['database']['password'],
                                settings['database']['database'])
         cursor = conn.cursor(as_dict=True)
-        clan_tag, clan_name = resolve_clan_tag(arg)
+        clan_tag, clan_name = self.resolve_clan_tag(arg)
         if clan_tag == "x":
             logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
             await ctx.send("You have not provided a valid clan name or clan tag.")
@@ -137,7 +145,7 @@ class General(commands.Cog):
                                settings['database']['password'], 
                                settings['database']['database'])
         cursor = conn.cursor(as_dict=True)
-        clan_tag, clan_name = resolve_clan_tag(arg)
+        clan_tag, clan_name = self.resolve_clan_tag(arg)
         if clan_tag == "x":
             logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
             await ctx.send("You have not provided a valid clan name or clan tag.")
@@ -165,7 +173,7 @@ class General(commands.Cog):
                                settings['database']['password'], 
                                settings['database']['database'])
         cursor = conn.cursor(as_dict=True)
-        clan_tag, clan_name = resolve_clan_tag(arg)
+        clan_tag, clan_name = self.resolve_clan_tag(arg)
         if clan_tag == "x":
             logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
             await ctx.send("You have not provided a valid clan name or clan tag.")
@@ -195,7 +203,7 @@ class General(commands.Cog):
                                settings['database']['password'], 
                                settings['database']['database'])
         cursor = conn.cursor(as_dict=True)
-        clan_tag, clan_name = resolve_clan_tag(arg)
+        clan_tag, clan_name = self.resolve_clan_tag(arg)
         if clan_tag == "x":
             logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
             await ctx.send("You have not provided a valid clan name or clan tag.")
@@ -225,7 +233,7 @@ class General(commands.Cog):
                                settings['database']['password'], 
                                settings['database']['database'])
         cursor = conn.cursor(as_dict=True)
-        clan_tag, clan_name = resolve_clan_tag(arg)
+        clan_tag, clan_name = self.resolve_clan_tag(arg)
         if clan_tag == "x":
             logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
             await ctx.send("You have not provided a valid clan name or clan tag.")
@@ -313,7 +321,7 @@ class General(commands.Cog):
             logger.error(error_string, ctx.command, "clan missing", ctx.author, ctx.guild)
             await ctx.send("You must provide a clan name or tag.")
             return
-        clan_tag, clan_name = resolve_clan_tag(arg)
+        clan_tag, clan_name = self.resolve_clan_tag(arg)
         if clan_tag == "x":
             logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
             await ctx.send("You have not provided a valid clan name or clan tag.")
@@ -417,16 +425,20 @@ class General(commands.Cog):
             return
 
     @commands.command(name="link")
-    async def link(self, ctx, player_tag):
-        player_tag = helper.correct_tag(player_tag)
-        try:
-            await self.bot.db.link_user(player_tag, ctx.author.id)
-            emoji = "\u2705"
-            await ctx.message.add_reaction(emoji)
-        except:
-            self.bot.logger.exception("Something went wrong while adding a discord link")
-            await ctx.send("I'm sorry, but something has gone wrong. I notified the important people and they will "
-                           "look into it for you.")
+    async def link(self, ctx, *, player: PlayerConverter):
+        self.bot.logger.debug(self.clans)
+        if player.clan.tag[1:] in [clan['clanTag'] for clan in self.clans]:
+            try:
+                await self.bot.db.link_user(player.tag, ctx.author.id)
+                emoji = "\u2705"
+                await ctx.message.add_reaction(emoji)
+            except:
+                self.bot.logger.exception("Something went wrong while adding a discord link")
+                await ctx.send("I'm sorry, but something has gone wrong. I notified the important people and they will "
+                               "look into it for you.")
+        else:
+            await ctx.send(f"I see that you ({player.name}) are in {player.clan} which is not an RCS clan. Try again "
+                           f"when you are in an RCS clan.")
 
     @staticmethod
     async def send_text(channel, text, block=None):
@@ -449,44 +461,31 @@ class General(commands.Cog):
                 coll += line
             await channel.send(coll)
 
+    def get_clan_name(self, clan_tag):
+        for clan in self.clans:
+            if clan['clanTag'].lower() == clan_tag.lower():
+                return clan['clanName']
+        return "x"
 
-def get_clan_name(clan_tag):
-    for clan in clans:
-        if clan['clanTag'].lower() == clan_tag.lower():
-            return clan['clanName']
-    return "x"
+    def get_clan_tag(self, clan_name):
+        for clan in self.clans:
+            if clan['clanName'].lower() == clan_name.lower():
+                return clan['clanTag']
+        return "x"
 
-
-def get_clan_tag(clan_name):
-    for clan in clans:
-        if clan['clanName'].lower() == clan_name.lower():
-            return clan['clanTag']
-    return "x"
-
-
-def resolve_clan_tag(clan_input):
-    if clan_input.startswith("#"):
-        clan_tag = clan_input[1:]
-        clan_name = get_clan_name(clan_tag)
-    else:
-        clan_tag = get_clan_tag(clan_input)
-        clan_name = clan_input
-        if clan_tag == "x":
-            clan_name = get_clan_name(clan_input)
-            clan_tag = clan_input
-            if clan_name == "x":
-                return "x", "x"
-    return clan_tag, clan_name
-    
-
-mainConn = pymssql.connect(settings['database']['server'], 
-                           settings['database']['username'], 
-                           settings['database']['password'], 
-                           settings['database']['database'])
-mainCursor = mainConn.cursor(as_dict=True)
-mainCursor.execute("SELECT clanName, clanTag FROM rcs_data ORDER BY clanName")
-clans = mainCursor.fetchall()
-mainConn.close()
+    def resolve_clan_tag(self, clan_input):
+        if clan_input.startswith("#"):
+            clan_tag = clan_input[1:]
+            clan_name = self.get_clan_name(clan_tag)
+        else:
+            clan_tag = self.get_clan_tag(clan_input)
+            clan_name = clan_input
+            if clan_tag == "x":
+                clan_name = self.get_clan_name(clan_input)
+                clan_tag = clan_input
+                if clan_name == "x":
+                    return "x", "x"
+        return clan_tag, clan_name
 
 
 def setup(bot):
