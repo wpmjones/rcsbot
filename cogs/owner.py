@@ -71,33 +71,6 @@ class OwnerCog(commands.Cog):
             await self.bot.db.pool.close()
             await ctx.send("Database connection closed.")
 
-    @commands.command(name="season", hidden=True)
-    @commands.is_owner()
-    async def season(self, ctx, arg: str = ""):
-        """Command to show and modify the season information"""
-        if arg == "":
-            # Return start/stop of current season and days left
-            embed = discord.Embed(title="Season Information", color=discord.Color.green())
-            embed.add_field(name="Season Start", value=season.get_season_start())
-            embed.add_field(name="Season End", value=season.get_season_end())
-            embed.add_field(name="Days Left", value=season.get_days_left())
-            embed.set_thumbnail(url="http://www.mayodev.com/images/clock.png")
-            await ctx.send(embed=embed)
-            return
-        if datetime.now() < datetime.strptime(season.get_season_end(), "%Y-%m-%d"):
-            await ctx.send("I would much prefer it if you waited until the season ends to change the dates.")
-            return
-        try:
-            await ctx.send(arg)
-            season.update_season(arg)
-        except ValueError as ex:
-            await ctx.send(log_traceback(ex))
-            return
-        except Exception as ex:
-            await ctx.send(log_traceback(ex))
-            return
-        await ctx.send(f"File updated.  The new season ends in {season.get_days_left()} days.")
-
     @commands.command(name="new_games", hidden=True)
     @commands.is_owner()
     async def new_games(self, ctx, start_date, games_length: int = 6, ind_points: int = 4000, clan_points: int = 50000):
