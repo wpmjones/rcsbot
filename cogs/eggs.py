@@ -5,7 +5,7 @@ import pymssql
 import season as coc_season
 from datetime import datetime
 from discord.ext import commands
-from config import settings, emojis
+from config import settings, emojis, color_pick
 
 
 class Eggs(commands.Cog):
@@ -112,7 +112,14 @@ class Eggs(commands.Cog):
     async def season(self, ctx):
         """Group of commands to deal with the current COC season"""
         if ctx.invoked_subcommand is None:
-            return await ctx.send_help(ctx.command)
+            desc = "All commands must begin with a ++"
+            embed = discord.Embed(title="rcs-bot Help File", description=desc, color=color_pick(15, 250, 15))
+            embed.add_field(name="Commands:", value="-----------", inline=False)
+            help_text = "Responds with the information on the current COC season."
+            embed.add_field(name="++season info", value=help_text)
+            embed.set_footer(icon_url="https://openclipart.org/image/300px/svg_to_png/122449/1298569779.png",
+                             text="rcs-bot proudly maintained by TubaKid.")
+            return await ctx.send(embed=embed)
 
     @season.command(name="change")
     @commands.is_owner()
