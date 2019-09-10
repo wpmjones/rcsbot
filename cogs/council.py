@@ -420,13 +420,18 @@ class CouncilCog(commands.Cog):
             await ctx.send("This command can only be performed by leaders/council on the RCS Discord server. "
                            "Keep up these antics and I'll tell zig on you!")
 
-    @commands.command(name="leader_dm", aliases=["dmleaders", "dm_leaders"], hidden=True)
+    @commands.group(invoke_without_subcommand=True)
     @commands.has_role(settings['rcsRoles']['council'])
-    async def leader_dm(self, ctx, *, message):
+    async def dm(self, ctx):
+        """Group command to send DMs to various roles in the RCS Discord Server"""
+        if ctx.invoked_subcommand is None:
+            await ctx.send_help(ctx.command)
+
+    @dm.command(name="leaders", aliases=["leader", "rcsleaders"])
+    async def dm_leaders(self, ctx, *, message):
         """Sends message as a DM to all RCS leaders"""
         if not message:
-            await ctx.send("I'm not going to send a blank message you goofball!")
-            return
+            return await ctx.send("I'm not going to send a blank message you goofball!")
         msg = await ctx.send("One moment while I track down these leaders...")
         conn = pymssql.connect(settings['database']['server'],
                                settings['database']['username'],
@@ -444,9 +449,29 @@ class CouncilCog(commands.Cog):
                 counter += 1
             except:
                 self.bot.logger.exception("DM send attempt")
+        # Send same message to TubaKid so he knows what's going on
         member = ctx.guild.get_member(251150854571163648)
         await member.send(f"**The following has been sent to all RCS leaders by {ctx.author}**\n\n{message}")
         await msg.edit(f"Message sent to {counter} RCS leaders.")
+
+    @dm.command(name="ayedj", aliases=["dj", "djs"])
+    async def dm_djs(self, ctx, *, message):
+        """Sends message as a DM to all RCS DJs"""
+        if not message:
+            return await ctx.send("I don't think the DJs will be impressed with a blank message!")
+        msg = await ctx.send("One moment while I spin the turntables...")
+        dj_role = ctx.guild.get_role(settings['rcsRoles']['djs'])
+        counter = 0
+        for member in dj_role.members:
+            try:
+                await member.send(message)
+                counter += 1
+            except:
+                self.bot.logger.exception("DM send attempt")
+        # Send same message to TubaKid so he knows what's going on
+        member = ctx.guild.get_member(251150854571163648)
+        await member.send(f"**The following has been sent to all RCS DJs by {ctx.author}**\n\n{message}")
+        await msg.edit(f"Message sent to {counter} RCS DJs.")
 
     @commands.command(name="find", aliases=["search"], hidden=True)
     async def find(self, ctx, *, arg: str = "help"):
