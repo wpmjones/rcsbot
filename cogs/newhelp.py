@@ -19,7 +19,7 @@ class NewHelp(commands.Cog):
                 "You can type ++help <command> to display only the help for that command.")
 
         command_list = ["all", "cwl", "attacks", "defenses", "donations", "trophies", "besttrophies",
-                        "townhalls", "builderhalls", "warstars", "games", "push",
+                        "townhalls", "builderhalls", "warstars", "games", "push", "season",
                         "top", "reddit", "council", "tasks"]
 
         # respond if help is requested for a command that does not exist
@@ -79,7 +79,7 @@ class NewHelp(commands.Cog):
                          "\n  - <clan name or tag> responds with individual scores for the clan specified."
                          "\n  - <average> responds with the average individual score for all clans in the RCS.")
             embed.add_field(name="++games <category or clan name/tag>", value=help_text)
-        if command in ["all", "push"]:
+        if command in ["push"]:
             help_text = ("Responds with the Trophy Push information for the category specified."
                          "\n  - <all (or no category)> responds with all RCS clans and their current Trophy Push score."
                          "\n  - <diff> responds with the top clan and the difference in points for the other clans."
@@ -91,6 +91,9 @@ class NewHelp(commands.Cog):
         if command in ["all", "reddit"]:
             help_text = "Responds with the subreddit link for the clan specified."
             embed.add_field(name="++reddit <clan name/tag>", value=help_text)
+        if command in ["all", "season"]:
+            help_text = "Responds with the information on the current COC season."
+            embed.add_field(name="++season info", value=help_text)
         if command == "council" and is_council(ctx.author.roles):
             help_text = "Responds with a link to the Council Magic Google Form"
             embed.add_field(name="++magic", value=help_text)
