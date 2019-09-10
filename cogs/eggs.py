@@ -2,6 +2,8 @@ import discord
 import requests
 import traceback
 import pymssql
+import season as coc_season
+from datetime import datetime
 from discord.ext import commands
 from config import settings, emojis
 
@@ -105,6 +107,36 @@ class Eggs(commands.Cog):
                               "This does not include CWL wars.",
                               in_war,
                               discord.Color.dark_red())
+
+    @commands.group(invoke_without_subcommands=True)
+    async def season(self, ctx):
+        """Group of commands to deal with the current COC season"""
+        if ctx.invoked_subcommand is None:
+            return await ctx.send_help(ctx.command)
+
+    @season.command(name="change")
+    @commands.is_owner()
+    async def change(self, ctx, arg: str = ""):
+        """Command to modify the season information"""
+        if datetime.now() < datetime.strptime(coc_season.get_season_end(), "%Y-%m-%d"):
+            return await ctx.send("I would much prefer it if you waited until the season ends to change the dates.")
+        try:
+            coc_season.update_season(arg)
+        except ValueError as ex:
+            return await ctx.send(log_traceback(ex))
+        except Exception as ex:
+            return await ctx.send(log_traceback(ex))
+        await ctx.send(f"File updated.  The new season ends in {coc_season.get_days_left()} days.")
+
+    @season.command(name="info")
+    async def season_info(self, ctx):
+        """Command to display the season information"""
+        embed = discord.Embed(title="Season Information", color=discord.Color.green())
+        embed.add_field(name="Season Start", value=coc_season.get_season_start())
+        embed.add_field(name="Season End", value=coc_season.get_season_end())
+        embed.add_field(name="Days Left", value=coc_season.get_days_left())
+        embed.set_thumbnail(url="http://www.mayodev.com/images/clock.png")
+        return await ctx.send(embed=embed)
 
     async def send_embed(self, channel, header, footer, text, embed_color):
         """ Sends embed to channel, splitting if necessary """
