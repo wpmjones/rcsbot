@@ -31,6 +31,19 @@ if enviro == "LIVE":
                           "cogs.tasks",
                           "cogs.eggs",
                           ]
+elif enviro == "home":
+    token = settings['discord']['testToken']
+    prefix = ">"
+    log_level = "DEBUG"
+    coc_names = "ubuntu"
+    initial_extensions = ["cogs.general",
+                          "cogs.games",
+                          "cogs.newhelp",
+                          "cogs.council",
+                          "cogs.eggs",
+                          "cogs.owner",
+                          "cogs.admin"
+                          ]
 else:
     token = settings['discord']['testToken']
     prefix = ">"
@@ -40,9 +53,8 @@ else:
                           "cogs.games",
                           "cogs.newhelp",
                           "cogs.council",
-                          "cogs.owner",
-                          "cogs.tasks",
                           "cogs.eggs",
+                          "cogs.owner",
                           "cogs.admin"
                           ]
 
