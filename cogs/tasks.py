@@ -24,15 +24,6 @@ class Contact(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="getroles", hidden=True)
-    @commands.is_owner()
-    async def getroles(self, ctx, guild_id):
-        guild = self.bot.get_guild(int(guild_id))
-        role_list = f"**Roles for {guild.name}**\n"
-        for role in guild.roles[1:]:
-            role_list += f"{role.name}: {role.id}\n"
-        await ctx.send(role_list)
-
     @commands.command(name="tasks", aliases=["task", "tasklist", "list"], hidden=True)
     async def task_list(self, ctx, cmd: str = ""):
         if await self.is_council(ctx.author.id):
@@ -168,7 +159,7 @@ class Contact(commands.Cog):
                         embed.add_field(name=f"Verification for {row[1]} {status}.\n{row[7]}\nDated {row[0]}",
                                         value=f"Leader: {row[3]}",
                                         inline=True)
-                embed.set_footer(text="Need fancy command to change status")
+                embed.set_footer(text="To change status, use ++veri <task ID> <new status> (e.g. ++veri V128 3)")
                 if len(embed.fields) > 0:
                     await ctx.send(embed=embed)
             if cmd.lower() in ("other", "oth", "othe"):
