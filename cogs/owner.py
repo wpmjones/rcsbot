@@ -63,6 +63,15 @@ class OwnerCog(commands.Cog):
         for guild in self.bot.guilds:
             await ctx.send(guild.name)
 
+    @commands.command(name="getroles", hidden=True)
+    @commands.is_owner()
+    async def getroles(self, ctx, guild_id):
+        guild = self.bot.get_guild(int(guild_id))
+        role_list = f"**Roles for {guild.name}**\n"
+        for role in guild.roles[1:]:
+            role_list += f"{role.name}: {role.id}\n"
+        await ctx.send(role_list)
+
     @commands.command(name="close_db", aliases=["cdb", "cbd"], hidden=True)
     @commands.is_owner()
     async def close_db(self, ctx):
