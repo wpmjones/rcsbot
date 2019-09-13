@@ -194,7 +194,7 @@ class Push(commands.Cog):
             print(push_clans)
             for clan in push_clans:
                 self.bot.logger.info(f"Starting {clan['clanTag']}")
-                coc_clan = await self.bot.coc_client.get_clan(f"#{clan['clanTag']}")
+                coc_clan = await self.bot.coc.get_clan(f"#{clan['clanTag']}")
                 self.bot.logger.info(f" - {coc_clan.name}")
                 async for player in coc_clan.get_detailed_members():
                     pname = player.name.replace("'", "''")

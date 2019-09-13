@@ -24,7 +24,7 @@ class Games(commands.Cog):
         if not tag_validator.match(clan_tag):
             await ctx.send("Please provide a valid clan tag.")
         try:
-            player = await self.bot.coc_client.get_player(player_tag)
+            player = await self.bot.coc.get_player(player_tag)
         except coc.NotFound:
             raise commands.BadArgument("That looks like a player tag, but I can't find any accounts with that tag. "
                                        "Any chance it's the wrong tag?")

@@ -67,7 +67,7 @@ class DiscordCheck(commands.Cog):
         self.bot.logger.debug("Starting to loop through ban_list")
         for tag in ban_list:
             try:
-                player = await self.bot.coc_client.get_player(tag)
+                player = await self.bot.coc.get_player(tag)
                 if player.clan and player.clan in rcs_clans:
                     cursor.execute(f"SELECT COUNT(timestamp) AS reported, clanTag, memberTag "
                                    f"FROM rcs_notify "

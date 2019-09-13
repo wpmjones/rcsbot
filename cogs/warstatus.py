@@ -135,7 +135,7 @@ class WarStatus(commands.Cog):
             war_type = ""
             icon = ""
         if war.state == "warEnded":
-            clan = await self.bot.coc_client.get_clan(war.clan.tag)
+            clan = await self.bot.coc.get_clan(war.clan.tag)
             if war.status in ["won", "winning"]:
                 embed_color = discord.Color.green()
                 result = "Victory"
@@ -194,7 +194,7 @@ class WarStatus(commands.Cog):
             for clan in clan_list:
                 self.bot.logger.debug(f"Starting {clan}")
                 try:
-                    war = await self.bot.coc_client.get_current_war(clan)
+                    war = await self.bot.coc.get_current_war(clan)
                     if war.state == "preparation":
                         war_id = await self.get_war(war, cursor)
                         if not war_id:

@@ -85,11 +85,11 @@ class Eggs(commands.Cog):
         tags = [clan['tag'] for clan in clans if clan['isWarLogPublic'] == 1]
         in_prep = ""
         in_war = ""
-        # async for war in self.bot.coc_client.get_current_wars(tags):
+        # async for war in self.bot.coc.get_current_wars(tags):
         for tag in tags:
             print(tag)
             try:
-                war = await self.bot.coc_client.get_clan_war(tag)
+                war = await self.bot.coc.get_clan_war(tag)
                 if war.state == "preparation":
                     in_prep += f"{war.clan.name} ({tag}) has {war.start_time.seconds_until // 3600:.0f} hours until war.\n"
                 if war.state == "inWar":
