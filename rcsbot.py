@@ -27,6 +27,7 @@ if enviro == "LIVE":
                           "cogs.newhelp",
                           "cogs.council",
                           "cogs.owner",
+                          "cogs.pfp",
                           "cogs.admin",
                           "cogs.tasks",
                           "cogs.eggs",
