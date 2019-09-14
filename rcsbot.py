@@ -27,6 +27,7 @@ if enviro == "LIVE":
                           "cogs.newhelp",
                           "cogs.council",
                           "cogs.owner",
+                          "cogs.pfp",
                           "cogs.admin",
                           "cogs.tasks",
                           "cogs.eggs",
@@ -42,7 +43,7 @@ elif enviro == "home":
                           "cogs.council",
                           "cogs.eggs",
                           "cogs.owner",
-                          "cogs.admin"
+                          "cogs.admin",
                           ]
 else:
     token = settings['discord']['testToken']
@@ -55,7 +56,7 @@ else:
                           "cogs.council",
                           "cogs.eggs",
                           "cogs.owner",
-                          "cogs.admin"
+                          "cogs.admin",
                           ]
 
 description = """Multi bot to serve the RCS - by TubaKid
@@ -99,7 +100,10 @@ class RcsBot(commands.Bot):
         asyncio.ensure_future(self.send_message(message))
 
     async def send_message(self, message):
-        await self.log_channel.send(f"`{message}`")
+        if len(message) < 2000:
+            await self.log_channel.send(f"`{message}`")
+        else:
+            await self.log_channel.send(f"`{message[:1950]}`")
 
     async def on_message(self, message):
         if message.author.bot:
