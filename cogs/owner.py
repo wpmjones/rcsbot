@@ -71,7 +71,7 @@ class OwnerCog(commands.Cog):
             role_list = f"**Roles for {guild.name}**\n"
             for role in guild.roles[1:]:
                 role_list += f"{role.name}: {role.id}\n"
-            await ctx.send(role_list)
+            await self.send_text(ctx.channel, role_list)
         except:
             self.bot.logger.exception(f"Failed to serve role list")
 
