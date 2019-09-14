@@ -15,7 +15,7 @@ class ProfilePics(commands.Cog):
 
     @tasks.loop(hours=24)
     async def send_request(self):
-        if datetime.today().weekday() == 5:
+        if datetime.today().weekday() == 4:
             guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
             print(guild)
             try:
