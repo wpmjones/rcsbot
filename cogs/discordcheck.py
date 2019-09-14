@@ -142,6 +142,10 @@ class DiscordCheck(commands.Cog):
                 await mods_channel.send(embed=embed)
         conn.close()
 
+    @main.before_loop
+    async def before_main(self):
+        await self.bot.wait_until_ready()
+
     async def send_embed(self, channel, header, text):
         """ Sends embed to channel, splitting if necessary """
         self.bot.logger.debug(f"Content is {len(text)} characters long.")

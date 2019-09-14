@@ -66,11 +66,14 @@ class OwnerCog(commands.Cog):
     @commands.command(name="getroles", hidden=True)
     @commands.is_owner()
     async def getroles(self, ctx, guild_id):
-        guild = self.bot.get_guild(int(guild_id))
-        role_list = f"**Roles for {guild.name}**\n"
-        for role in guild.roles[1:]:
-            role_list += f"{role.name}: {role.id}\n"
-        await ctx.send(role_list)
+        try:
+            guild = self.bot.get_guild(int(guild_id))
+            role_list = f"**Roles for {guild.name}**\n"
+            for role in guild.roles[1:]:
+                role_list += f"{role.name}: {role.id}\n"
+            await ctx.send(role_list)
+        except:
+            self.bot.logger.exception(f"Failed to serve role list")
 
     @commands.command(name="close_db", aliases=["cdb", "cbd"], hidden=True)
     @commands.is_owner()
