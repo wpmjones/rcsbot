@@ -1,6 +1,7 @@
 import pymssql
 import discord
 from cogs.utils.converters import PlayerConverter
+from cogs.utils.constants import cwl_league_names, cwl_league_order
 from loguru import logger
 from discord.ext import commands
 from config import settings, emojis
@@ -374,6 +375,23 @@ class General(commands.Cog):
                                password=settings['database']['password'],
                                database=settings['database']['database'])
         cursor = conn.cursor(as_dict=True)
+        # Respond with list
+        if args[0] in ["all", "list"]:
+            cursor.execute("SELECT clanName, clanTag, cwlLeague FROM rcs_data "
+                           "WHERE cwlLeague IS NOT NULL "
+                           "ORDER BY clanName")
+            clans = cursor.fetchall()
+            content = ""
+            for league in cwl_league_order:
+                header = f"**{league}:**\n"
+                temp = ""
+                for clan in clans:
+                    if clan['cwlLeague'] == league:
+                        temp += f"  {clan['clanName']} (#{clan['clanTag']})\n"
+                if temp:
+                    content += header + temp
+            return await ctx.send(content)
+        # Handle user arguments
         cursor.execute("SELECT clanName, clanTag, discordTag FROM rcs_data ORDER BY clanName")
         fetched = cursor.fetchall()
         clans = []
@@ -381,25 +399,7 @@ class General(commands.Cog):
         for clan in fetched:
             clans.append(clan["clanName"].lower())
             clans_tag.append([clan["clanTag"], clan["clanName"], clan["discordTag"]])
-        leagues = ["bronze iii",
-                   "bronze ii",
-                   "bronze i",
-                   "silver iii",
-                   "silver ii",
-                   "silver i",
-                   "gold iii",
-                   "gold ii",
-                   "gold i",
-                   "crystal iii",
-                   "crystal ii",
-                   "crystal i",
-                   "master iii", "masters iii",
-                   "master ii", "masters ii",
-                   "master i", "masters i",
-                   "champion iii", "champions iii", "champs iii",
-                   "champion ii", "champions ii", "champs ii",
-                   "champion i", "champions i", "champs i"
-                   ]
+        leagues = cwl_league_names
         league_num = "I"
         if args[-1].lower() in ["3", "iii", "three"]:
             league_num = "III"
