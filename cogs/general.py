@@ -417,6 +417,7 @@ class General(commands.Cog):
         else:
             await ctx.send("Please provide a clan name and CWL league in that order. `++cwl Reddit Example Bronze II`")
             return
+        self.bot.logger.debug(f"{ctx.command} for {ctx.author}\n{args}\n{clan}\n{league}")
         if clan.lower() in clans and league.lower() in leagues:
             league_num = "I" * args[-1]
             if args[-2].lower() in ["master", "masters"]:
