@@ -401,9 +401,9 @@ class General(commands.Cog):
                    "champion i", "champions i", "champs i"
                    ]
         league_num = "I"
-        if args[-1] == "3":
+        if args[-1].lower() in ["3", "iii", "three"]:
             league_num = "III"
-        if args[-1] == "2":
+        if args[-1] in ["2", "ii", "two"]:
             league_num = "II"
         if len(args) == 4:
             clan = f"{args[0]} {args[1]}"
@@ -419,7 +419,6 @@ class General(commands.Cog):
             return
         self.bot.logger.debug(f"{ctx.command} for {ctx.author}\n{args}\n{clan}\n{league}")
         if clan.lower() in clans and league.lower() in leagues:
-            league_num = "I" * args[-1]
             if args[-2].lower() in ["master", "masters"]:
                 league = f"Master {league_num}"
             elif args[-2].lower() in ["champ", "champs", "champion", "champions"]:
