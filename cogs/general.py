@@ -389,7 +389,7 @@ class General(commands.Cog):
         fetched = cursor.fetchone()
         logger.info(info_string, ctx.command, arg, ctx.author, ctx.guild)
         if fetched['discordServer'] != "":
-            await ctx.send(fetched['dsicordServer'])
+            await ctx.send(fetched['discordServer'])
         else:
             await ctx.send("This clan does not have a Discord server.")
 
