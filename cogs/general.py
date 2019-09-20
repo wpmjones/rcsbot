@@ -368,6 +368,31 @@ class General(commands.Cog):
         else:
             await ctx.send("This clan does not have a subreddit.")
 
+    @commands.command(name="discord")
+    async def discord(self, ctx, *, arg: str = "x"):
+        """Return link to specified clan's Discord server"""
+        if arg == "x":
+            logger.error(error_string, ctx.command, "clan missing", ctx.author, ctx.guild)
+            await ctx.send("You must provide a clan name or tag.")
+            return
+        clan_tag, clan_name = self.resolve_clan_tag(arg)
+        if clan_tag == "x":
+            logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
+            await ctx.send("You have not provided a valid clan name or clan tag.")
+            return
+        conn = pymssql.connect(settings['database']['server'],
+                               settings['database']['username'],
+                               settings['database']['password'],
+                               settings['database']['database'])
+        cursor = conn.cursor(as_dict=True)
+        cursor.execute(f"SELECT discordServer FROM rcs_data WHERE clanTag = '{clan_tag}'")
+        fetched = cursor.fetchone()
+        logger.info(info_string, ctx.command, arg, ctx.author, ctx.guild)
+        if fetched['discordServer'] != "":
+            await ctx.send(fetched['dsicordServer'])
+        else:
+            await ctx.send("This clan does not have a Discord server.")
+
     @commands.command(name="cwl")
     async def cwl(self, ctx, *args):
         conn = pymssql.connect(server=settings['database']['server'],
