@@ -139,6 +139,34 @@ class General(commands.Cog):
         await self.send_text(ctx.channel, content, 1)
         logger.info(info_string, ctx.command, arg, ctx.author, ctx.guild)
 
+    @commands.command(name="bhtrophies", aliases=["bhtrophy", "bh_trophies"])
+    async def bh_trophies(self, ctx, *, arg: str = "x"):
+        """Trophy count for the whole clan"""
+        conn = pymssql.connect(settings['database']['server'],
+                               settings['database']['username'],
+                               settings['database']['password'],
+                               settings['database']['database'])
+        cursor = conn.cursor(as_dict=True)
+        clan_tag, clan_name = self.resolve_clan_tag(arg)
+        if clan_tag == "x":
+            logger.error(error_string, ctx.command, arg, ctx.author, ctx.guild)
+            await ctx.send("You have not provided a valid clan name or clan tag.")
+            return
+        member_list = []
+        cursor.execute(f"SELECT playerName, vsTrophies, timestamp FROM rcs_members WHERE clanTag = '{clan_tag}' "
+                       f"AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = '{clan_tag}' "
+                       f"ORDER BY timestamp DESC) ORDER BY trophies DESC")
+        fetched = cursor.fetchall()
+        conn.close()
+        for member in fetched:
+            member_list.append({"name": member['playerName'], "trophies": member['vsTrophies']})
+        content = f"{clan_name} (#{clan_tag.upper()})\n{'Name':20}{'BH Trophies':>10}"
+        content += "\n------------------------------"
+        for item in member_list:
+            content += f"\n{item['name']:20}{str(item['trophies']):>10}"
+        await self.send_text(ctx.channel, content, 1)
+        logger.info(info_string, ctx.command, arg, ctx.author, ctx.guild)
+
     @commands.command(name="besttrophies", aliases=["besttrophy", "mosttrophies"])
     async def besttrophies(self, ctx, *, arg: str = "x"):
         """Best trophy count for the whole clan"""
