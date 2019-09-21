@@ -286,13 +286,15 @@ class General(commands.Cog):
     @commands.command(name="top")
     async def top(self, ctx, category: str = "x"):
         """Lists top ten (type "++help top" for more information)
-        (warstars, attacks, defenses, trophies, donations)"""
+        (warstars, attacks, defenses, trophies, bhtrophies, donations, games)"""
         categories = {
             "warstars": "warStars",
             "attacks": "attackWins",
             "defenses": "defenceWins",
             "defences": "defenceWins",
             "trophies": "trophies",
+            "bhtrophies": "vsTrophies",
+            "bh_trophies": "vsTrophies",
             "donations": "donations",
             "games": "games"
         }
@@ -303,7 +305,8 @@ class General(commands.Cog):
         cursor = conn.cursor(as_dict=True)
         if category not in categories:
             logger.error(error_string, ctx.command, category, ctx.author, ctx.guild)
-            await ctx.send("You need to provide a valid category.\n(warstars, attacks, defenses, trophies, donations)")
+            await ctx.send("You need to provide a valid category.\n"
+                           "(warstars, attacks, defenses, trophies, bhtrophies, donations, games)")
             return
         if category != "games":
             field = categories[category]
