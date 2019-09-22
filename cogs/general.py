@@ -155,7 +155,7 @@ class General(commands.Cog):
         member_list = []
         cursor.execute(f"SELECT playerName, vsTrophies, timestamp FROM rcs_members WHERE clanTag = '{clan_tag}' "
                        f"AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = '{clan_tag}' "
-                       f"ORDER BY timestamp DESC) ORDER BY trophies DESC")
+                       f"ORDER BY timestamp DESC) ORDER BY vsTrophies DESC")
         fetched = cursor.fetchall()
         conn.close()
         for member in fetched:
