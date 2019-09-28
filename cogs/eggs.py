@@ -3,6 +3,12 @@ import requests
 import traceback
 import pymssql
 import season as coc_season
+import pathlib
+from PIL import Image
+from PIL import ImageFont
+from PIL import ImageDraw
+from io import BytesIO
+from random import randint
 from datetime import datetime
 from discord.ext import commands
 from config import settings, emojis, color_pick
@@ -68,6 +74,49 @@ class Eggs(commands.Cog):
         data = r.json()
         content = data[0]['url']
         await ctx.send(content)
+
+    @commands.command(name="roll")
+    async def roll(self, ctx, *args):
+        def get_die(num):
+            path = pathlib.Path(f"static/{num}.png")
+            if path.exists() and path.is_file():
+                image = Image.open(f"static/{num}.png")
+            else:
+                image = Image.open("static/die-blank.png")
+                draw = ImageDraw.Draw(image)
+                black = (0, 0, 0)
+                font_size = 54
+                font = ImageFont.truetype("static/sc-magic.ttf", font_size)
+                text_width, text_height = draw.textsize(num, font)
+                while text_width > 57 or text_height > 57:
+                    font_size -= 5
+                    font = ImageFont.truetype("static/sc-magic.ttf", font_size)
+                    text_width, text_height = draw.textsize(num, font)
+                if text_width / text_height > 1.2:
+                    offset = 1
+                else:
+                    offset = 4
+                position = ((64 - text_width) / 2, (64 - text_height) / 2 - offset)
+                draw.text(position, num, black, font=font)
+                image.save(f"static/{num}.png")
+            return image
+
+        dice = []
+        final_width = 0
+        for die in args:
+            answer = str(randint(1, int(die)))
+            dice.append(get_die(answer))
+            final_width += 64 + 4
+        final_image = Image.new("RGBA", (final_width, 64), (255, 0, 0, 0))
+        current_pos = 0
+        for image in dice:
+            final_image.paste(image, (current_pos, 0))
+            current_pos += 64 + 4
+        final_buffer = BytesIO()
+        final_image.save(final_buffer, "png")
+        final_buffer.seek(0)
+        response = await ctx.send(file=discord.File(final_buffer, f"results.png"))
+        self.bot.messages[ctx.message.id] = response
 
     @commands.command(name="in_war", aliases=["inwar"], hidden=True)
     @commands.has_any_role("Admin1", "Leaders", "Council")

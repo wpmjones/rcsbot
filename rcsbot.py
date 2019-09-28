@@ -81,6 +81,7 @@ class RcsBot(commands.Bot):
         self.remove_command("help")
         self.coc = coc_client
         self.color = discord.Color.dark_red()
+        self.messages = {}
 
         coc_client.add_events(self.on_event_error)
 
@@ -109,6 +110,12 @@ class RcsBot(commands.Bot):
         if message.author.bot:
             return
         await self.process_commands(message)
+
+    async def on_message_delete(self, message):
+        if message.id in self.messages:
+            del_message = self.messages[message.id]
+            await del_message.delete()
+            del self.messages[message.id]
 
     async def process_commands(self, message):
         ctx = await self.get_context(message, cls=context.Context)
@@ -164,7 +171,7 @@ class RcsBot(commands.Bot):
             pass
 
     async def on_ready(self):
-        logger.add(self.send_log, level="DEBUG")
+        logger.add(self.send_log, level=log_level)
         logger.info("rcs-bot has started")
         activity = discord.Game("Clash of Clans")
         await self.change_presence(status=discord.Status.online, activity=activity)
