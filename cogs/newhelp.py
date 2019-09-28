@@ -79,6 +79,10 @@ class NewHelp(commands.Cog):
                          "\n  - <clan name or tag> responds with individual scores for the clan specified."
                          "\n  - <average> responds with the average individual score for all clans in the RCS.")
             embed.add_field(name="++games <category or clan name/tag>", value=help_text)
+        if command in ["roll"]:
+            help_text = ("Responds with a roll of the dice based on the number of sides you provide.\n"
+                         "In this example, it will roll 2 dice.  One with 12 sides and one with 20 sides.")
+            embed.add_field(name="++roll 12 20", value=help_text)
         if command in ["push"]:
             help_text = ("Responds with the Trophy Push information for the category specified."
                          "\n  - <all (or no category)> responds with all RCS clans and their current Trophy Push score."
