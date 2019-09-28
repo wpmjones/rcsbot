@@ -116,7 +116,8 @@ class Eggs(commands.Cog):
         final_image.save(final_buffer, "png")
         final_buffer.seek(0)
         response = await ctx.send(file=discord.File(final_buffer, f"results.png"))
-        self.bot.messages[ctx.message.id] = response
+        # Currently DISABLED - Remove comment to auto-delete response with command
+        # self.bot.messages[ctx.message.id] = response
 
     @commands.command(name="in_war", aliases=["inwar"], hidden=True)
     @commands.has_any_role("Admin1", "Leaders", "Council")
