@@ -19,7 +19,7 @@ class NewHelp(commands.Cog):
                 "You can type ++help <command> to display only the help for that command.")
 
         command_list = ["all", "cwl", "attacks", "defenses", "donations", "trophies", "besttrophies",
-                        "townhalls", "builderhalls", "warstars", "games", "push", "season",
+                        "townhalls", "builderhalls", "warstars", "games", "roll", "push", "season",
                         "top", "reddit", "council", "tasks"]
 
         # respond if help is requested for a command that does not exist
