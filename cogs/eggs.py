@@ -31,25 +31,29 @@ class Eggs(commands.Cog):
             embed.set_image(url=user.avatar_url_as(size=128))
             embed.set_footer(text=f"Discord ID: {user.id}",
                              icon_url="https://discordapp.com/assets/2c21aeda16de354ba5334551a883b481.png")
-            await ctx.send(embed=embed)
+            response = await ctx.send(embed=embed)
             self.bot.logger.info(ctx.command, f"avatar for {user.id}", ctx.author)
         else:
-            await ctx.send(emojis['other']['redx'] + """ I don't believe that's a real Discord user. Please 
+            response = await ctx.send(emojis['other']['redx'] + """ I don't believe that's a real Discord user. Please 
                 make sure you are using the '@' prefix or give me an ID or something I can work with.""")
+        self.bot.messages[ctx.message.id] = response
 
     @commands.command(name="zag", aliases=["zag-geek", "zaggeek"], hidden=True)
     async def zag(self, ctx):
-        await ctx.send(file=discord.File("/home/tuba/rcsbot/cogs/zag.jpg"))
+        response = await ctx.send(file=discord.File("/home/tuba/rcsbot/cogs/zag.jpg"))
+        self.bot.messages[ctx.message.id] = response
 
     @commands.command(name="tuba", hidden=True)
     async def tuba(self, ctx):
-        await ctx.send(file=discord.File("/home/tuba/rcsbot/cogs/tuba.jpg"))
+        response = await ctx.send(file=discord.File("/home/tuba/rcsbot/cogs/tuba.jpg"))
+        self.bot.messages[ctx.message.id] = response
 
     @commands.command(name="password", hidden=True)
     async def password(self, ctx):
         content = ("https://www.reddit.com/r/RedditClansHistory/wiki/the_history_of_the_reddit_clans"
                    "#wiki_please_find_the_password")
-        await ctx.send(content)
+        response = await ctx.send(content)
+        self.bot.messages[ctx.message.id] = response
 
     @commands.command(name="cats", aliases=["cat"], hidden=True)
     async def kitty(self, ctx):
@@ -61,7 +65,8 @@ class Eggs(commands.Cog):
         r = requests.get(url, headers=headers)
         data = r.json()
         content = data[0]['url']
-        await ctx.send(content)
+        response = await ctx.send(content)
+        self.bot.messages[ctx.message.id] = response
 
     @commands.command(name="dogs", aliases=["dog"], hidden=True)
     async def puppy(self, ctx):
@@ -73,7 +78,8 @@ class Eggs(commands.Cog):
         r = requests.get(url, headers=headers)
         data = r.json()
         content = data[0]['url']
-        await ctx.send(content)
+        response = await ctx.send(content)
+        self.bot.messages[ctx.message.id] = response
 
     @commands.command(name="roll")
     async def roll(self, ctx, *args):
@@ -169,7 +175,8 @@ class Eggs(commands.Cog):
             embed.add_field(name="++season info", value=help_text)
             embed.set_footer(icon_url="https://openclipart.org/image/300px/svg_to_png/122449/1298569779.png",
                              text="rcs-bot proudly maintained by TubaKid.")
-            return await ctx.send(embed=embed)
+            response = await ctx.send(embed=embed)
+            self.bot.messages[ctx.message.id] = response
 
     @season.command(name="change")
     @commands.is_owner()
@@ -183,7 +190,8 @@ class Eggs(commands.Cog):
             return await ctx.send(log_traceback(ex))
         except Exception as ex:
             return await ctx.send(log_traceback(ex))
-        await ctx.send(f"File updated.  The new season ends in {coc_season.get_days_left()} days.")
+        response = await ctx.send(f"File updated.  The new season ends in {coc_season.get_days_left()} days.")
+        self.bot.messages[ctx.message.id] = response
 
     @season.command(name="info")
     async def season_info(self, ctx):
@@ -193,7 +201,8 @@ class Eggs(commands.Cog):
         embed.add_field(name="Season End", value=coc_season.get_season_end())
         embed.add_field(name="Days Left", value=coc_season.get_days_left())
         embed.set_thumbnail(url="http://www.mayodev.com/images/clock.png")
-        return await ctx.send(embed=embed)
+        response = await ctx.send(embed=embed)
+        self.bot.messages[ctx.message.id] = response
 
     async def send_embed(self, channel, header, footer, text, embed_color):
         """ Sends embed to channel, splitting if necessary """
