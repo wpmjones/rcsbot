@@ -202,7 +202,8 @@ class Contact(commands.Cog):
                 else:
                     await ctx.send("No incomplete action items at this time.")
             if cmd.lower() == "":
-                await ctx.author.send(ctx.author, "Here's your personalized list")
+                await ctx.author.send("In the future, this command will send you a DM with tasks assigned to you. "
+                                      "For now, please use `++tasks all` to see all task items.")
         else:
             await ctx.send("This very special and important command is reserved for #council-chat only!")
 
