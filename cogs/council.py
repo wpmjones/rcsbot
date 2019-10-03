@@ -385,31 +385,26 @@ class CouncilCog(commands.Cog):
                            "Keep up these antics and I'll tell zig on you!")
 
     @commands.command(name="leader", hidden=True)
+    @commands.has_any_role(settings['rcsRoles']['council'], settings['rcsRoles']['chatMods'])
     async def leader(self, ctx, *, arg: str = "x"):
         """Command to find the leader for the selected clan.
         Usage: ++leader Reddit Argon"""
-        if is_authorized(ctx.author.roles):
-            clan_tag, clan_name = resolve_clan_tag(arg)
-            if clan_tag == "x":
-                self.bot.logger.error(f"{arg} did not resolve to a valid clan for the {ctx.command} command. Issued "
-                                      f"by {ctx.author} in {ctx.channel}")
-                await ctx.send("You have not provided a valid clan name or clan tag.")
-                return
-            conn = pymssql.connect(settings['database']['server'], 
-                                   settings['database']['username'], 
-                                   settings['database']['password'], 
-                                   settings['database']['database'])
-            cursor = conn.cursor(as_dict=True)
-            cursor.execute(f"SELECT discordTag FROM rcs_data WHERE clanName = '{clan_name}'")
-            fetched = cursor.fetchone()
-            conn.close()
-            if fetched is not None:
-                await ctx.send(f"The leader of {clan_name} is <@{fetched['discordTag']}>")
-        else:
-            self.bot.logger.error(f"{ctx.author} from {ctx.guild} tried to use the ++leader command "
-                                  f"but shouldn't be doing that.")
-            await ctx.send("This command can only be performed by leaders/council on the RCS Discord server. "
-                           "Keep up these antics and I'll tell zig on you!")
+        clan_tag, clan_name = resolve_clan_tag(arg)
+        if clan_tag == "x":
+            self.bot.logger.error(f"{arg} did not resolve to a valid clan for the {ctx.command} command. Issued "
+                                  f"by {ctx.author} in {ctx.channel}")
+            await ctx.send("You have not provided a valid clan name or clan tag.")
+            return
+        conn = pymssql.connect(settings['database']['server'],
+                               settings['database']['username'],
+                               settings['database']['password'],
+                               settings['database']['database'])
+        cursor = conn.cursor(as_dict=True)
+        cursor.execute(f"SELECT discordTag FROM rcs_data WHERE clanName = '{clan_name}'")
+        fetched = cursor.fetchone()
+        conn.close()
+        if fetched is not None:
+            await ctx.send(f"The leader of {clan_name} is <@{fetched['discordTag']}>")
 
     @commands.group(invoke_without_subcommand=True)
     @commands.has_role(settings['rcsRoles']['council'])
