@@ -385,7 +385,9 @@ class CouncilCog(commands.Cog):
                            "Keep up these antics and I'll tell zig on you!")
 
     @commands.command(name="leader", hidden=True)
-    @commands.has_any_role(settings['rcsRoles']['council'], settings['rcsRoles']['chatMods'])
+    @commands.has_any_role(settings['rcsRoles']['council'],
+                           settings['rcsRoles']['chatMods'],
+                           settings['rcsRoles']['leaders'])
     async def leader(self, ctx, *, arg: str = "x"):
         """Command to find the leader for the selected clan.
         Usage: ++leader Reddit Argon"""
@@ -400,11 +402,26 @@ class CouncilCog(commands.Cog):
                                settings['database']['password'],
                                settings['database']['database'])
         cursor = conn.cursor(as_dict=True)
-        cursor.execute(f"SELECT discordTag FROM rcs_data WHERE clanName = '{clan_name}'")
-        fetched = cursor.fetchone()
+        cursor.execute(f"SELECT discordTag, clanBadge FROM rcs_data WHERE clanName = '{clan_name}'")
+        fetch = cursor.fetchone()
+        discord_id = fetch['discordTag']
+        badge_url = fetch['clanBadge']
+        cursor.execute(f"SELECT altName FROM rcs_alts WHERE clanTag = '{clan_tag}' ORDER BY altName")
+        fetch = cursor.fetchall()
         conn.close()
-        if fetched is not None:
-            await ctx.send(f"The leader of {clan_name} is <@{fetched['discordTag']}>")
+        alt_names = ""
+        for row in fetch:
+            alt_names += f"{row['altName']}\n"
+        embed = discord.Embed(title=f"Leader Information for {clan_name}",
+                              color=color_pick(240, 240, 240))
+        embed.set_thumbnail(url=badge_url)
+        embed.add_field(name="Leader name:",
+                        value=f"<@{discord_id}>",
+                        inline=False)
+        embed.add_field(name="Alt accounts:",
+                        value=alt_names,
+                        inline=False)
+        await ctx.send(embed=embed)
 
     @commands.group(invoke_without_subcommand=True)
     @commands.has_role(settings['rcsRoles']['council'])
