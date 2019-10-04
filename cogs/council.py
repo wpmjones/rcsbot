@@ -409,9 +409,12 @@ class CouncilCog(commands.Cog):
         cursor.execute(f"SELECT altName FROM rcs_alts WHERE clanTag = '{clan_tag}' ORDER BY altName")
         fetch = cursor.fetchall()
         conn.close()
-        alt_names = ""
-        for row in fetch:
-            alt_names += f"{row['altName']}\n"
+        if fetch:
+            alt_names = ""
+            for row in fetch:
+                alt_names += f"{row['altName']}\n"
+        else:
+            alt_names = "No alts for this leader"
         embed = discord.Embed(title=f"Leader Information for {clan_name}",
                               color=color_pick(240, 240, 240))
         embed.set_thumbnail(url=badge_url)
