@@ -10,6 +10,7 @@ class Draft(commands.Cog):
         self.bot = bot
 
     @commands.command(name="draft")
+    @commands.has_role("TDW Leaders")
     async def draft(self, ctx, user: discord.Member):
         print("ok")
         draft_roles = [settings['rcsRoles']['innuendo'],
@@ -44,6 +45,7 @@ class Draft(commands.Cog):
             self.bot.logger.exception("fail")
 
     @commands.command(name="undraft")
+    @commands.has_role("TDW Leaders")
     async def undraft(self, ctx, user: discord.Member):
         draft_roles = [settings['rcsRoles']['innuendo'],
                        settings['rcsRoles']['aardvark'],
