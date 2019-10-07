@@ -103,6 +103,13 @@ class NewHelp(commands.Cog):
             embed.add_field(name="++magic", value=help_text)
             help_text = "Leader command responds with the leader of the requested clan name/tag"
             embed.add_field(name="++leader <clan name/tag>", value=help_text)
+            help_text = ('List, add, or remove alt accounts for RCS leaders\n'
+                         '++alts list Clan Name\n'
+                         '++alts add "Clan Name" alt account (quotes required for clans with a space in their name\n'
+                         '++alts remove #clan_tag alt account\n'
+                         '++alts remove "Clan Name" (if you don\'t provide an alt name, it will remove all alts '
+                         'for the specified clan')
+            embed.add_field(name="++alts list <clan name or tag>", value=help_text)
             help_text = "Find command responds with the Discord names that contain the specified string"
             embed.add_field(name="++find <search string>", value=help_text)
             help_text = "Adds clan to the RCS database, add leader roles"
