@@ -437,8 +437,14 @@ class CouncilCog(commands.Cog):
         if ctx.invoked_subcommand is None:
             return await ctx.send_help(ctx.command)
 
+    @alts.command(name="list")
+    async def alts_list(self, ctx, *, clan: ClanConverter = None):
+        """List alts for the specified clan."""
+        if clan:
+            await ctx.invoke(self.leader, arg=clan[0].name)
+
     @alts.command(name="add")
-    async def alts_add(self, ctx, clan: ClanConverter = None, new_alt: str = None):
+    async def alts_add(self, ctx, clan: ClanConverter = None, *, new_alt: str = None):
         """Adds new leader alt for the specified clan"""
         if not new_alt:
             return await ctx.send("Please provide the name of the new alt account.")
@@ -447,13 +453,14 @@ class CouncilCog(commands.Cog):
                                settings['database']['password'],
                                settings['database']['database'])
         cursor = conn.cursor()
-        sql = f"INSERT INTO rcs_alts (clanTag, altName) VALUES ({clan.tag[1:]}, {new_alt})"
+        sql = f"INSERT INTO rcs_alts (clanTag, altName) VALUES ('{clan[0].tag[1:]}', '{new_alt}')"
         cursor.execute(sql)
+        conn.commit()
         conn.close()
-        await ctx.send(f"{new_alt} has been aded for {clan.name}")
+        await ctx.send(f"{new_alt} has been added as an alt account for the leader of {clan[0].name}.")
 
     @alts.command(name="remove", aliases=["delete", "del", "rem"])
-    async def alts_remove(self, ctx, clan: ClanConverter = None, alt: str = None):
+    async def alts_remove(self, ctx, clan: ClanConverter = None, *, alt: str = None):
         """Remove Leader alt for the specified clan"""
         if not alt:
             return await ctx.send("Please provide the name of the alt account to be removed.")
@@ -463,20 +470,14 @@ class CouncilCog(commands.Cog):
                                settings['database']['database'])
         cursor = conn.cursor()
         if alt == "all":
-            sql = f"DELETE FROM rcs_alts WHERE clanTag = {clan.tag[1:]}"
+            sql = f"DELETE FROM rcs_alts WHERE clanTag = {clan[0].tag[1:]}"
             cursor.execute(sql)
-            await ctx.send(f"All alt accounts for {clan.name} have been removed.")
+            await ctx.send(f"All alt accounts for {clan[0].name} have been removed.")
         else:
-            sql = f"DELETE FROM rcs_alts WHERE clanTag = {clan.tag[1:]} AND altName = {alt}"
+            sql = f"DELETE FROM rcs_alts WHERE clanTag = '{clan[0].tag[1:]}' AND altName = '{alt}'"
             cursor.execute(sql)
-            await ctx.send(f"{alt} has been removed as an alt for {clan.name}.")
+            await ctx.send(f"{alt} has been removed as an alt for the leader of {clan[0].name}.")
         conn.close()
-
-    @alts.command(name="list")
-    async def alts_list(self, ctx, clan: ClanConverter = None):
-        """List alts for the specified clan."""
-        if clan:
-            await ctx.invoke(self.leader, arg=clan.name)
 
     @commands.group(invoke_without_subcommand=True)
     @commands.has_role(settings['rcsRoles']['council'])

@@ -2,6 +2,7 @@ import coc
 import re
 
 from discord.ext import commands
+from loguru import logger
 
 tag_validator = re.compile("^#?[PYLQGRJCUV0289]+$")
 
@@ -62,10 +63,9 @@ class ClanConverter(commands.Converter):
 
             raise commands.BadArgument(f'{tag} is not a valid clan tag.')
 
-        guild_clans = await ctx.get_clans()
-        matches = [n for n in guild_clans if n.name == name or n.tag == tag]
+        clan = await ctx.get_clan(name, tag)
 
-        if not matches:
+        if not clan:
             raise commands.BadArgument(f'Clan name or tag `{argument}` not found')
 
-        return matches
+        return [clan]

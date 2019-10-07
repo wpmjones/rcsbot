@@ -235,3 +235,13 @@ class Context(commands.Context):
             return await self.send(file=discord.File(fp, filename='message_too_long.txt'), **kwargs)
         else:
             return await self.send(content)
+
+    async def get_clan(self, name, tag):
+        sql = "SELECT '#' || clan_tag as tag FROM rcs_clans WHERE clan_name = $1 OR clan_tag = $2"
+        fetch = await self.bot.pool.fetchrow(sql, name, tag)
+        return await self.coc.get_clan(fetch[0])
+
+    async def get_clans(self):
+        sql = "SELECT '#' || clan_tag as tag FROM rcs_clans"
+        fetch = await self.pool.fetch(sql)
+        return await self.coc.get_clans(f"#{n[0].strip()}" for n in fetch).flatten()
