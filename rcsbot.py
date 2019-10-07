@@ -29,6 +29,7 @@ if enviro == "LIVE":
                           "cogs.owner",
                           "cogs.pfp",
                           "cogs.admin",
+                          "cogs.draft",
                           "cogs.tasks",
                           "cogs.eggs",
                           ]
@@ -44,6 +45,7 @@ elif enviro == "home":
                           "cogs.eggs",
                           "cogs.owner",
                           "cogs.admin",
+                          "cogs.draft",
                           ]
 else:
     token = settings['discord']['testToken']
@@ -57,6 +59,7 @@ else:
                           "cogs.eggs",
                           "cogs.owner",
                           "cogs.admin",
+                          "cogs.draft",
                           ]
 
 description = """Multi bot to serve the RCS - by TubaKid
@@ -186,12 +189,11 @@ class RcsBot(commands.Bot):
 
 
 if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
     try:
+        pool = loop.run_until_complete(RcsDB.create_pool())
         bot = RcsBot()
         bot.repo = git.Repo(os.getcwd())
-        bot.db = RcsDB(bot)
-        loop = asyncio.get_event_loop()
-        pool = loop.run_until_complete(bot.db.create_pool())
         bot.pool = pool
         bot.logger = logger
         bot.run(token, reconnect=True)
