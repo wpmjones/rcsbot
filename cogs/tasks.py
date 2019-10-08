@@ -367,6 +367,7 @@ class Contact(commands.Cog):
     async def complete_task(self, ctx, task_id):
         if await self.is_council(ctx.author.id):
             if task_id[:1].lower() == "v":
+                # TODO mark it complete anyway
                 await ctx.send("Tasks in this category should be modifed using `++veri`.")
                 return
             if task_id[:1].lower() not in ("s", "c", "o", "a"):
