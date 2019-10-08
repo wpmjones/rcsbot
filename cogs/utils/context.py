@@ -86,9 +86,9 @@ class Context(commands.Context):
         finally:
             await self.acquire()
 
-    async def prompt(self, message, *, timeout=60.0, delete_after=True, reacquire=True, author_id=None):
+    async def prompt(self, message, *, timeout=60.0, delete_after=True, reacquire=True, author_id=None,
+                     additional_options=0):
         """An interactive reaction confirmation dialog.
-
         Parameters
         -----------
         message: str
@@ -103,7 +103,7 @@ class Context(commands.Context):
         author_id: Optional[int]
             The member who should respond to the prompt. Defaults to the author of the
             Context's message.
-
+        additional_options:
         Returns
         --------
         Optional[bool]
@@ -117,8 +117,12 @@ class Context(commands.Context):
 
         fmt = f'{message}\n\nReact with \N{WHITE HEAVY CHECK MARK} to confirm or \N{CROSS MARK} to deny.'
 
+        if additional_options > 0:
+            fmt = f'{message}\n\nReact with 1\N{combining enclosing keycap} for option 1, ' \
+                  f'2\N{combining enclosing keycap} for option 2, etc. or \N{CROSS MARK} to select none.'
+
         author_id = author_id or self.author.id
-        msg = await self.send(fmt)
+        msg = await self.send(embed=discord.Embed(colour=self.bot.colour, description=fmt))
 
         confirm = None
 
@@ -129,18 +133,25 @@ class Context(commands.Context):
                 return False
 
             codepoint = str(payload.emoji)
-
             if codepoint == '\N{WHITE HEAVY CHECK MARK}':
                 confirm = True
                 return True
             elif codepoint == '\N{CROSS MARK}':
                 confirm = False
                 return True
+            for i in range(additional_options):
+                if codepoint == f'{i + 1}\N{combining enclosing keycap}':
+                    confirm = i
+                    return True
 
             return False
 
-        for emoji in ('\N{WHITE HEAVY CHECK MARK}', '\N{CROSS MARK}'):
-            await msg.add_reaction(emoji)
+        if not additional_options:
+            await msg.add_reaction('\N{WHITE HEAVY CHECK MARK}')
+            await msg.add_reaction('\N{CROSS MARK}')
+        else:
+            for i in range(additional_options):
+                await msg.add_reaction(f'{i+1}\N{combining enclosing keycap}')
 
         if reacquire:
             await self.release()
