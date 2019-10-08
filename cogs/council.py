@@ -435,17 +435,21 @@ class CouncilCog(commands.Cog):
     async def alts(self, ctx):
         """Group command to deal with leader alts"""
         if ctx.invoked_subcommand is None:
-            return await ctx.send_help(ctx.command)
+            return await ctx.show_help(ctx.command)
 
     @alts.command(name="list")
     async def alts_list(self, ctx, *, clan: ClanConverter = None):
-        """List alts for the specified clan."""
+        """List alts for the specified clan.
+            ++alts list Clan Name
+        """
         if clan:
             await ctx.invoke(self.leader, arg=clan[0].name)
 
     @alts.command(name="add")
     async def alts_add(self, ctx, clan: ClanConverter = None, *, new_alt: str = None):
-        """Adds new leader alt for the specified clan"""
+        """Adds new leader alt for the specified clan
+            ++alts add "Clan Name" alt name
+        """
         if not new_alt:
             return await ctx.send("Please provide the name of the new alt account.")
         conn = pymssql.connect(settings['database']['server'],
@@ -453,7 +457,10 @@ class CouncilCog(commands.Cog):
                                settings['database']['password'],
                                settings['database']['database'])
         cursor = conn.cursor()
-        sql = f"INSERT INTO rcs_alts (clanTag, altName) VALUES ('{clan[0].tag[1:]}', '{new_alt}')"
+        sql = (f"INSERT INTO rcs_alts "
+               f"SELECT '{clan[0].tag[1:]}', '{new_alt}' "
+               f"EXCEPT "
+               f"SELECT clanTag, altName FROM rcs_alts WHERE clanTag = '{clan[0].tag[1:]}' AND altName = '{new_alt}'")
         cursor.execute(sql)
         conn.commit()
         conn.close()
@@ -461,7 +468,9 @@ class CouncilCog(commands.Cog):
 
     @alts.command(name="remove", aliases=["delete", "del", "rem"])
     async def alts_remove(self, ctx, clan: ClanConverter = None, *, alt: str = None):
-        """Remove Leader alt for the specified clan"""
+        """Remove Leader alt for the specified clan
+            ++alts remove "Clan Name" alt name
+        """
         if not alt:
             return await ctx.send("Please provide the name of the alt account to be removed.")
         conn = pymssql.connect(settings['database']['server'],
@@ -477,6 +486,7 @@ class CouncilCog(commands.Cog):
             sql = f"DELETE FROM rcs_alts WHERE clanTag = '{clan[0].tag[1:]}' AND altName = '{alt}'"
             cursor.execute(sql)
             await ctx.send(f"{alt} has been removed as an alt for the leader of {clan[0].name}.")
+        conn.commit()
         conn.close()
 
     @commands.group(invoke_without_subcommand=True)

@@ -268,16 +268,12 @@ class Contact(commands.Cog):
 
     @commands.command(name="verification", aliases=["veri", "verifications", "veris"], hidden=True)
     async def veri(self, ctx, task_id, new_status: int = 9):
-
-        def check_reaction(reaction, user):
-            return user == ctx.message.author and str(reaction.emoji) in ["1⃣", "2⃣", "3⃣", "4⃣", "☑",
-                                                                          "<:upvote:295295304859910144>",
-                                                                          "<:downvote:295295520187088906>"]
-
         if await self.is_council(ctx.author.id):
             if task_id[:1].lower() != "v":
                 await ctx.send("This command only works on Verification tasks.")
                 return
+            if len(task_id) == 7:
+                task_id = task_id[:3] + task_id[4:]
             result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Verification!A2:I").execute()
             values = result.get("values", [])
             row_num = 1
@@ -311,8 +307,8 @@ class Contact(commands.Cog):
                                             f":four: Awaiting a decision by Council\n"
                                             f":five: Mark complete",
                                             additional_options=5)
-            if prompt == "5":
-                prompt = await ctx.send("Did this clan get verified?")
+            if prompt == 5:
+                prompt = await ctx.prompt("Did this clan get verified?", delete_after=False)
                 if prompt:
                     new_status = 5
                 else:
@@ -323,7 +319,12 @@ class Contact(commands.Cog):
             r = requests.get(url)
             if r.status_code == requests.codes.ok:
                 if r.text == "1":
-                    await ctx.send(f"Verification for {clan_name} has been changed to {new_status}.")
+                    if new_status <= 4:
+                        await ctx.send(f"Verification for {clan_name} has been changed to {new_status}.")
+                    elif new_status == 5:
+                        await ctx.send(f"Verification for {clan_name} has been changed to Verified.")
+                    else:
+                        await ctx.send(f"Verification for {clan_name} has been changed to 'Heck No!' :wink:")
             else:
                 await ctx.send(f"Whoops! Something went sideways!\nVerification Error: {r.text}")
         else:
@@ -333,10 +334,9 @@ class Contact(commands.Cog):
     async def complete_task(self, ctx, task_id):
         if await self.is_council(ctx.author.id):
             if task_id[:1].lower() not in ("s", "v", "c", "o", "a"):
-                await ctx.send("Please provide a valid task ID (Sug123, Cou123, Oth123, Act123).")
-                return
+                return await ctx.send("Please provide a valid task ID (Sug123, Cou123, Oth123, Act123).")
             if task_id[:1].lower() == "v":
-                ctx.invoke(self.veri, task_id=task_id, new_status=9)
+                return await ctx.invoke(self.veri, task_id=task_id, new_status=9)
             url = f"{settings['google']['commLog']}?call=completetask&task={task_id}"
             r = requests.get(url)
             if r.status_code == requests.codes.ok:
