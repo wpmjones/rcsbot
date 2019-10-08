@@ -304,55 +304,21 @@ class Contact(commands.Cog):
             if cur_status_num == "4": cur_status_text = "is awaiting a decision by Council"
             await ctx.send(f"Verification for {clan_name} {cur_status_text}\nLeader: {leader}")
             if new_status == 9:
-                sent_msg = await ctx.send(f"Please select a new status:\n"
-                                          f":one: Awaiting a scout\n"
-                                          f":two: Being scouted\n"
-                                          f":three: Awaiting the post-scout surveys\n"
-                                          f":four: Awaiting a decision by Council\n"
-                                          f":ballot_box_with_check: Mark complete")
-                await sent_msg.add_reaction("1⃣")
-                await sent_msg.add_reaction("2⃣")
-                await sent_msg.add_reaction("3⃣")
-                await sent_msg.add_reaction("4⃣")
-                await sent_msg.add_reaction("☑")
-                try:
-                    reaction, user = await ctx.bot.wait_for("reaction_add", check=check_reaction, timeout=10)
-                except asyncio.TimeoutError:
-                    await sent_msg.clear_reactions()
-                    return await ctx.send("Time's up slow poke. Try again later!")
-                await sent_msg.clear_reactions()
-                if str(reaction.emoji) == "1⃣":
-                    new_status = 1
-                    await sent_msg.add_reaction("1⃣")
-
-                if str(reaction.emoji) == "2⃣":
-                    new_status = 2
-                    await sent_msg.add_reaction("2⃣")
-                if str(reaction.emoji) == "3⃣":
-                    new_status = 3
-                    await sent_msg.add_reaction("3⃣")
-                if str(reaction.emoji) == "4⃣":
-                    new_status = 4
-                    await sent_msg.add_reaction("4⃣")
-                if str(reaction.emoji) == "☑":
-                    new_status = "x"
-                    await sent_msg.add_reaction("☑")
-            if new_status == "x":
-                sent_msg = await ctx.send("Did this clan get verified?")
-                await sent_msg.add_reaction("upvote:295295304859910144")
-                await sent_msg.add_reaction("downvote:295295520187088906")
-                try:
-                    reaction, user = await ctx.bot.wait_for("reaction_add", check=check_reaction, timeout=10)
-                    await sent_msg.clear_reactions()
-                    if str(reaction.emoji) == "<:downvote:295295520187088906>":
-                        await sent_msg.add_reaction("downvote:295295520187088906")
-                        new_status = "no"
-                    if str(reaction.emoji) == "<:upvote:295295304859910144>":
-                        await sent_msg.add_reaction("upvote:295295304859910144")
-                        new_status = "yes"
-                except asyncio.TimeoutError:
-                    await ctx.send("I'm just going to pat it up, roll it up, and mark it with X. "
-                                   "Feel free to drop by the Comm Log later and change it if you like.")
+                prompt = await ctx.prompt(f"Please select a new status:\n"
+                                            f":one: Awaiting a scout\n"
+                                            f":two: Being scouted\n"
+                                            f":three: Awaiting the post-scout surveys\n"
+                                            f":four: Awaiting a decision by Council\n"
+                                            f":five: Mark complete",
+                                            additional_options=5)
+            if prompt == "5":
+                prompt = await ctx.send("Did this clan get verified?")
+                if prompt:
+                    new_status = 5
+                else:
+                    new_status = 6
+            else:
+                new_status = prompt
             url = f"{settings['google']['commLog']}?call=verification&status={new_status}&row={task_row}"
             r = requests.get(url)
             if r.status_code == requests.codes.ok:
@@ -366,13 +332,11 @@ class Contact(commands.Cog):
     @commands.command(name="complete", aliases=["done", "finished", "x"], hidden=True)
     async def complete_task(self, ctx, task_id):
         if await self.is_council(ctx.author.id):
-            if task_id[:1].lower() == "v":
-                # TODO mark it complete anyway
-                await ctx.send("Tasks in this category should be modifed using `++veri`.")
-                return
-            if task_id[:1].lower() not in ("s", "c", "o", "a"):
+            if task_id[:1].lower() not in ("s", "v", "c", "o", "a"):
                 await ctx.send("Please provide a valid task ID (Sug123, Cou123, Oth123, Act123).")
                 return
+            if task_id[:1].lower() == "v":
+                ctx.invoke(self.veri, task_id=task_id, new_status=9)
             url = f"{settings['google']['commLog']}?call=completetask&task={task_id}"
             r = requests.get(url)
             if r.status_code == requests.codes.ok:
