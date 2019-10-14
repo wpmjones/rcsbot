@@ -151,6 +151,44 @@ class DiscordCheck(commands.Cog):
     async def before_main(self):
         await self.bot.wait_until_ready()
 
+    @commands.command(name="noclan")
+    async def noclan(self, ctx):
+        guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
+        mods_channel = guild.get_channel(settings['rcsChannels']['mods'])
+        member_role = guild.get_role(settings['rcsRoles']['members'])
+        conn = pymssql.connect(settings['database']['server'],
+                               settings['database']['username'],
+                               settings['database']['password'],
+                               settings['database']['database'])
+        cursor = conn.cursor()
+        cursor.execute("SELECT shortName, clanName FROM rcs_data ORDER BY clanName")
+        fetch = cursor.fetchall()
+        clan_list = []
+        for row in fetch:
+            if "/" in row[0]:
+                for clan in row[0].split("/"):
+                    clan_list.append(clan)
+            else:
+                clan_list.append(row[0])
+        errors = []
+        for member in guild.members:
+            if member_role in member.roles:
+                test = 0
+                for short_name in clan_list:
+                    if short_name in member.display_name.lower():
+                        test = 1
+                        continue
+                if test == 0:
+                    errors.append(f"{member.mention} did not identify with any clan.")
+                    self.bot.logger.info(f"{member.mention} did not identify with any clan.")
+        self.bot.logger.debug(errors)
+        if errors:
+            embed = discord.Embed(color=color_pick(181, 0, 0))
+            embed.add_field(name="We found some Members without a clan:",
+                            value="\n  ".join(errors))
+            await self.send_embed(mods_channel, "We found some Members without a clan:", "\n  ".join(errors))
+
+
     async def send_embed(self, channel, header, text):
         """ Sends embed to channel, splitting if necessary """
         self.bot.logger.debug(f"Content is {len(text)} characters long.")
