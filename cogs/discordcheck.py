@@ -152,46 +152,63 @@ class DiscordCheck(commands.Cog):
         await self.bot.wait_until_ready()
 
     @commands.command(name="noclan")
+    @commands.has_any_role(settings['rcsRoles']['council'],
+                           settings['rcsRoles']['chatMods'])
     async def noclan(self, ctx):
-        guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
-        mods_channel = guild.get_channel(settings['rcsChannels']['mods'])
-        member_role = guild.get_role(settings['rcsRoles']['members'])
-        conn = pymssql.connect(settings['database']['server'],
-                               settings['database']['username'],
-                               settings['database']['password'],
-                               settings['database']['database'])
-        cursor = conn.cursor()
-        cursor.execute("SELECT shortName, clanName FROM rcs_data ORDER BY clanName")
-        fetch = cursor.fetchall()
-        clan_list = []
-        for row in fetch:
-            if "/" in row[0]:
-                for clan in row[0].split("/"):
-                    clan_list.append(clan)
+        async with ctx.typing():
+            guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
+            member_role = guild.get_role(settings['rcsRoles']['members'])
+            conn = pymssql.connect(settings['database']['server'],
+                                   settings['database']['username'],
+                                   settings['database']['password'],
+                                   settings['database']['database'])
+            cursor = conn.cursor()
+            cursor.execute("SELECT shortName, clanName FROM rcs_data ORDER BY clanName")
+            fetch = cursor.fetchall()
+            clan_list = []
+            for row in fetch:
+                if "/" in row[0]:
+                    for clan in row[0].split("/"):
+                        clan_list.append(clan)
+                else:
+                    clan_list.append(row[0])
+            errors = []
+            for member in guild.members:
+                if member_role in member.roles:
+                    test = 0
+                    for short_name in clan_list:
+                        if short_name in member.display_name.lower():
+                            test = 1
+                            continue
+                    if test == 0:
+                        errors.append(f"{member.mention} did not identify with any clan.")
+            if errors:
+                await self.send_text(ctx.channel, "We found some Members without a clan:\n" + "\n  ".join(errors))
+
+    @staticmethod
+    async def send_text(channel, text, block=None):
+        """ Sends text to channel, splitting if necessary """
+        if len(text) < 2000:
+            if block:
+                await channel.send(f"```{text}```")
             else:
-                clan_list.append(row[0])
-        errors = []
-        for member in guild.members:
-            if member_role in member.roles:
-                test = 0
-                for short_name in clan_list:
-                    if short_name in member.display_name.lower():
-                        test = 1
-                        continue
-                if test == 0:
-                    errors.append(f"{member.mention} did not identify with any clan.")
-                    self.bot.logger.info(f"{member.mention} did not identify with any clan.")
-        self.bot.logger.debug(errors)
-        if errors:
-            embed = discord.Embed(color=color_pick(181, 0, 0))
-            embed.add_field(name="We found some Members without a clan:",
-                            value="\n  ".join(errors))
-            await self.send_embed(mods_channel, "We found some Members without a clan:", "\n  ".join(errors))
+                await channel.send(text)
+        else:
+            coll = ""
+            for line in text.splitlines(keepends=True):
+                if len(coll) + len(line) > 1994:
+                    # if collecting is going to be too long, send  what you have so far
+                    if block:
+                        await channel.send(f"```{coll}```")
+                    else:
+                        await channel.send(coll)
+                    coll = ""
+                coll += line
+            await channel.send(coll)
 
-
-    async def send_embed(self, channel, header, text):
+    @staticmethod
+    async def send_embed(channel, header, text):
         """ Sends embed to channel, splitting if necessary """
-        self.bot.logger.debug(f"Content is {len(text)} characters long.")
         if len(text) < 1000:
             embed = discord.Embed(color=color_pick(181, 0, 0))
             embed.add_field(name=header, value=text, inline=False)
