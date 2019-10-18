@@ -2,7 +2,8 @@ import coc
 import re
 
 from discord.ext import commands
-from loguru import logger
+from cogs.utils.db import conn_sql
+from cogs.utils.helper import rcs_clans, get_clan
 
 tag_validator = re.compile("^#?[PYLQGRJCUV0289]+$")
 
@@ -44,28 +45,41 @@ class PlayerConverter(commands.Converter):
 
 class ClanConverter(commands.Converter):
     async def convert(self, ctx, argument):
-        if argument in ['all', 'guild', 'server'] or not argument:
-            return await ctx.get_clans()
         if isinstance(argument, coc.BasicClan):
             return argument
 
         tag = coc.utils.correct_tag(argument)
         name = argument.strip()
+        clans = rcs_clans()
 
+        # If tag is valid, use the tag
         if tag_validator.match(tag):
             try:
-                clan = await ctx.coc.get_clan(tag)
+                if tag[1:] in clans.values():
+                    clan = await ctx.coc.get_clan(tag)
+                else:
+                    raise commands.BadArgument(f"{tag} is not a valid RCS clan.")
             except coc.NotFound:
-                raise commands.BadArgument(f'{tag} is not a valid clan tag.')
+                raise commands.BadArgument(f"{tag} is not a valid clan tag.")
 
             if clan:
-                return [clan]
+                return clan
 
             raise commands.BadArgument(f'{tag} is not a valid clan tag.')
 
-        clan = await ctx.get_clan(name, tag)
+        # If no valid tag, try working with the name
+        if name in clans.keys():
+            tag = "#" + clans[name]
+        else:
+            raise commands.BadArgument(f"{name} is not a valid RCS clan.")
 
-        if not clan:
-            raise commands.BadArgument(f'Clan name or tag `{argument}` not found')
+        try:
+            clan = await ctx.coc.get_clan(tag)
+        except coc.NotFound:
+            raise commands.BadArgument(f"{tag} is not a valid clan tag.")
 
-        return [clan]
+        if clan:
+            return clan
+
+        raise commands.BadArgument(f'Clan name or tag `{argument}` not found')
+

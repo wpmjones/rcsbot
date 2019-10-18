@@ -18,9 +18,14 @@ class NewHelp(commands.Cog):
                 "(with or without the #).\n\n"
                 "You can type ++help <command> to display only the help for that command.")
 
+        eggs = self.bot.get_cog('General')
+        list_commands = eggs.get_commands()
+        for comm in list_commands:
+            print(comm.name)
+
         command_list = ["all", "cwl", "attacks", "defenses", "donations", "trophies", "besttrophies",
                         "townhalls", "builderhalls", "warstars", "games", "roll", "push", "season",
-                        "top", "reddit", "council", "tasks"]
+                        "top", "reddit", "council", "tasks", "alts"]
 
         # respond if help is requested for a command that does not exist
         if command not in command_list:

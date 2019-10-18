@@ -1,9 +1,9 @@
 import discord
 import requests
 import traceback
-import pymssql
 import season as coc_season
 import pathlib
+
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -11,6 +11,7 @@ from io import BytesIO
 from random import randint
 from datetime import datetime
 from discord.ext import commands
+from cogs.utils.db import conn_sql
 from config import settings, emojis, color_pick
 
 
@@ -129,10 +130,7 @@ class Eggs(commands.Cog):
     @commands.has_any_role("Admin1", "Leaders", "Council")
     async def in_war(self, ctx):
         sent_msg = await ctx.send("Retrieving clan war status...")
-        conn = pymssql.connect(settings['database']['server'],
-                               settings['database']['username'],
-                               settings['database']['password'],
-                               settings['database']['database'])
+        conn = await conn_sql()
         cursor = conn.cursor(as_dict=True)
         cursor.execute("SELECT '#' + clanTag AS tag, isWarLogPublic FROM rcs_data "
                        "WHERE classification <> 'feeder' ORDER BY clanName")
@@ -141,15 +139,12 @@ class Eggs(commands.Cog):
         tags = [clan['tag'] for clan in clans if clan['isWarLogPublic'] == 1]
         in_prep = ""
         in_war = ""
-        # async for war in self.bot.coc.get_current_wars(tags):
-        for tag in tags:
-            print(tag)
+        async for war in self.bot.coc.get_current_wars(tags):
             try:
-                war = await self.bot.coc.get_clan_war(tag)
                 if war.state == "preparation":
-                    in_prep += f"{war.clan.name} ({tag}) has {war.start_time.seconds_until // 3600:.0f} hours until war.\n"
+                    in_prep += f"{war.clan.name} ({war.clan.tag}) has {war.start_time.seconds_until // 3600:.0f} hours until war.\n"
                 if war.state == "inWar":
-                    in_war += f"{war.clan.name} ({tag}) has {war.end_time.seconds_until // 3600:.0f} hours left in war.\n"
+                    in_war += f"{war.clan.name} ({war.clan.tag}) has {war.end_time.seconds_until // 3600:.0f} hours left in war.\n"
             except Exception as e:
                 self.bot.logger.exception("get war state")
         await sent_msg.delete()
@@ -168,13 +163,11 @@ class Eggs(commands.Cog):
     async def season(self, ctx):
         """Group of commands to deal with the current COC season"""
         if ctx.invoked_subcommand is None:
-            desc = "All commands must begin with a ++"
-            embed = discord.Embed(title="rcs-bot Help File", description=desc, color=color_pick(15, 250, 15))
-            embed.add_field(name="Commands:", value="-----------", inline=False)
-            help_text = "Responds with the information on the current COC season."
-            embed.add_field(name="++season info", value=help_text)
-            embed.set_footer(icon_url="https://openclipart.org/image/300px/svg_to_png/122449/1298569779.png",
-                             text="rcs-bot proudly maintained by TubaKid.")
+            embed = discord.Embed(title="Season Information", color=discord.Color.green())
+            embed.add_field(name="Season Start", value=coc_season.get_season_start())
+            embed.add_field(name="Season End", value=coc_season.get_season_end())
+            embed.add_field(name="Days Left", value=coc_season.get_days_left())
+            embed.set_thumbnail(url="http://www.mayodev.com/images/clock.png")
             response = await ctx.send(embed=embed)
             self.bot.messages[ctx.message.id] = response
 

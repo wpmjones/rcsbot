@@ -1,12 +1,29 @@
-import re
+from cogs.utils.db import conn_sql
+from functools import lru_cache
 
 
-def correct_tag(tag, prefix='#'):
-    """Attempts to correct malformed Clash of Clans tags
-    to match how they are formatted in game
+@lru_cache(maxsize=4)
+def rcs_clans():
+    """Retrieve and cache all RCS clan names and tags"""
+    conn = conn_sql()
+    cursor = conn.cursor(as_dict=True)
+    sql = "SELECT clanName, clanTag FROM rcs_data ORDER BY clanName"
+    cursor.execute(sql)
+    fetch = cursor.fetchall()
+    conn.close()
+    clans = {}
+    for clan in fetch:
+        clans[clan['clanName']] = clan['clanTag']
+    return clans
 
-    Example
-    ---------
-        ' 123aBc O' -> '#123ABC0'
-    """
-    return prefix + re.sub(r'[^A-Z0-9]+', '', tag.upper()).replace('O', '0')
+
+@lru_cache(maxsize=64)
+def get_clan(tag):
+    """Retrieve the details of a specific clan"""
+    conn = conn_sql()
+    cursor = conn.cursor(as_dict=True)
+    sql = "SELECT clanName, subReddit, clanLeader, cwlLeague, discordServer FROM rcs_data WHERE clanTag = %s"
+    cursor.execute(sql, tag)
+    clan = cursor.fetchone()
+    conn.close()
+    return clan

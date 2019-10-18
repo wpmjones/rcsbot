@@ -1,10 +1,13 @@
 import discord
-import season
 import traceback
 import pymssql
+import time
+
 from config import settings
 from datetime import datetime
 from discord.ext import commands
+from cogs.utils.converters import ClanConverter
+from cogs.utils.helper import rcs_clans
 
 
 def log_traceback(ex):
@@ -38,6 +41,17 @@ class OwnerCog(commands.Cog):
             print(f"ERROR: {type(e).__name__} - {e}")
             await ctx.send(f"**`ERROR:`** {type(e).__name__} - {e}")
 
+    @commands.command(name="presence", hidden=True)
+    @commands.is_owner()
+    async def presence(self, ctx, *, msg: str = "default"):
+        """Command to modify bot presence"""
+        if msg.lower() == "default":
+            activity = discord.Game("Clash of Clans")
+        else:
+            activity = discord.Activity(type=discord.ActivityType.watching, name=msg)
+        await self.bot.change_presence(status=discord.Status.online, activity=activity)
+        print(f"{datetime.now()} - {ctx.author} changed the bot presence to {msg}")
+
     @commands.command(name="emojis")
     @commands.is_owner()
     async def emoji_list(self, ctx):
@@ -48,7 +62,8 @@ class OwnerCog(commands.Cog):
         server_list = [self.bot.get_guild(506645671009583105),
                        self.bot.get_guild(506645764512940032),
                        self.bot.get_guild(531660501709750282),
-                       self.bot.get_guild(602130772098416678)]
+                       self.bot.get_guild(602130772098416678),
+                       self.bot.get_guild(629145390687584260)]
         for guild in server_list:
             content = f"\n**{guild.name}**"
             for emoji in sorted(guild.emojis, key=get_key):
@@ -58,10 +73,10 @@ class OwnerCog(commands.Cog):
     @commands.command(name="server")
     @commands.is_owner()
     async def server_list(self, ctx):
-        # guild_count = len(self.bot.guilds)
-        # TODO create embed with guild.name and guild.owner
+        guild_list = []
         for guild in self.bot.guilds:
-            await ctx.send(guild.name)
+            guild_list.extend(f"{guild.name} - {guild.id}")
+        await ctx.send("\n".join(guild_list))
 
     @commands.command(name="getroles", hidden=True)
     @commands.is_owner()
@@ -107,10 +122,25 @@ class OwnerCog(commands.Cog):
 
     @commands.command()
     @commands.is_owner()
-    async def log(self, ctx, num_lines: int = 10):
-        with open("rcsbot.log", "r") as f:
-            list_start = -1 * num_lines
-            await self.send_text(ctx.channel, "\n".join([line for line in f.read().splitlines()[list_start:]]))
+    async def speed(self, ctx, arg):
+        start = time.perf_counter()
+        print("Starting...")
+        clans = rcs_clans()
+        end = time.perf_counter()
+        await ctx.send(f'Get Clans: {(end - start) * 1000:.2f}ms')
+        start = time.perf_counter()
+        if arg in clans.keys():
+            print("Found name")
+        elif arg in clans.values():
+            print("Found tag")
+        else:
+            print("Not Found")
+        end = time.perf_counter()
+        await ctx.send(f'Search: {(end - start) * 1000:.2f}ms')
+        start = time.perf_counter()
+        clan = await ClanConverter().convert(ctx, arg)
+        end = time.perf_counter()
+        await ctx.send(f'Get Clan: {(end - start) * 1000:.2f}ms')
 
     @staticmethod
     async def send_text(channel, text, block=None):

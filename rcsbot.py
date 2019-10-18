@@ -5,6 +5,7 @@ import coc
 import sys
 import asyncio
 import discord
+
 from cogs.utils import context
 from cogs.utils.db import RcsDB
 from discord.ext import commands
@@ -54,6 +55,7 @@ else:
     coc_names = "dev"
     initial_extensions = ["cogs.general",
                           "cogs.games",
+                          "cogs.discordcheck",
                           "cogs.newhelp",
                           "cogs.council",
                           "cogs.eggs",

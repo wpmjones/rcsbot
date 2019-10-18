@@ -2,8 +2,10 @@ import pymssql
 import re
 import discord
 import requests
+
 from datetime import datetime, date
 from discord.ext import commands, tasks
+from cogs.utils.db import conn_sql
 from config import settings, color_pick
 
 
@@ -28,10 +30,7 @@ class DiscordCheck(commands.Cog):
             notes_channel = guild.get_channel(settings['rcsChannels']['leaderNotes'])
             mods_channel = guild.get_channel(settings['rcsChannels']['mods'])
             member_role = guild.get_role(settings['rcsRoles']['members'])
-            conn = pymssql.connect(settings['database']['server'],
-                                   settings['database']['username'],
-                                   settings['database']['password'],
-                                   settings['database']['database'])
+            conn = conn_sql()
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM rcs_vwDiscordClans ORDER BY clanName")
             fetch = cursor.fetchall()

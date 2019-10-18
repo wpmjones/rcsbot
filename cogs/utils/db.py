@@ -1,5 +1,16 @@
 import asyncpg
+import pymssql
+
 from config import settings
+
+
+def conn_sql():
+    conn = pymssql.connect(settings['database']['server'],
+                           settings['database']['username'],
+                           settings['database']['password'],
+                           settings['database']['database'],
+                           autocommit=True)
+    return conn
 
 
 class RcsDB:
