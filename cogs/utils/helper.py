@@ -22,7 +22,9 @@ def get_clan(tag):
     """Retrieve the details of a specific clan"""
     conn = conn_sql()
     cursor = conn.cursor(as_dict=True)
-    sql = "SELECT clanName, subReddit, clanLeader, cwlLeague, discordServer FROM rcs_data WHERE clanTag = %s"
+    sql = ("SELECT clanName, subReddit, clanLeader, cwlLeague, discordServer, feeder, classification "
+           "FROM rcs_data "
+           "WHERE clanTag = %s")
     cursor.execute(sql, tag)
     clan = cursor.fetchone()
     conn.close()
