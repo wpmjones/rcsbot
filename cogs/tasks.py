@@ -1,6 +1,5 @@
 import discord
 import requests
-import asyncio
 from discord.ext import commands
 from config import settings
 from googleapiclient.discovery import build
@@ -9,7 +8,7 @@ from oauth2client import file, client, tools
 
 # Connect to Google Sheets
 scope = "https://www.googleapis.com/auth/spreadsheets.readonly"
-spreadsheet_id = settings['google']['commLogId']
+spreadsheet_id = settings['google']['comm_log_id']
 store = file.Storage("token.json")
 creds = store.get()
 if not creds or creds.invalid:
@@ -27,9 +26,9 @@ class Contact(commands.Cog):
     @commands.command(name="tasks", aliases=["task", "tasklist", "list"], hidden=True)
     async def task_list(self, ctx, cmd: str = ""):
         if await self.is_council(ctx.author.id):
-            guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
+            guild = self.bot.get_guild(settings['discord']['rcs_guild_id'])
             if cmd.lower() == "all":
-                if ctx.channel.id == settings['rcsChannels']['council']:
+                if ctx.channel.id == settings['rcs_channels']['council']:
                     await ctx.send("This is a long list. I'm going to send it to your DM. To view items "
                                    "in the Council Chat, please request them individually (`++tasks suggestions`).")
                 # Suggestions
@@ -211,7 +210,7 @@ class Contact(commands.Cog):
     async def add_task(self, ctx, user: discord.Member, *task):
         if await self.is_council(ctx.author.id):
             if await self.is_council(user.id):
-                url = (f"{settings['google']['commLog']}?call=addtask&task={' '.join(task)}&"
+                url = (f"{settings['google']['comm_log']}?call=addtask&task={' '.join(task)}&"
                        f"discord={user.id}")
                 r = requests.get(url)
                 if r.status_code == requests.codes.ok:
@@ -233,7 +232,7 @@ class Contact(commands.Cog):
             if task_id[:1].lower() in ("c", "v"):
                 await ctx.send("Tasks in this category cannot be assigned to an individual.")
                 return
-            url = f"{settings['google']['commLog']}?call=assigntask&task={task_id}&discord={user.id}"
+            url = f"{settings['google']['comm_log']}?call=assigntask&task={task_id}&discord={user.id}"
             r = requests.get(url)
             if r.status_code == requests.codes.ok and r.text != "-1":
                 if r.text == "1":
@@ -253,7 +252,7 @@ class Contact(commands.Cog):
             if task_id[:1].lower() != "a":
                 await ctx.send("Only action items can be modified. Please try again with the proper Task ID.")
                 return
-            url = f"{settings['google']['commLog']}?call=changetask&task={task_id}&newtask={'%20'.join(new_task)}"
+            url = f"{settings['google']['comm_log']}?call=changetask&task={task_id}&newtask={'%20'.join(new_task)}"
             r = requests.get(url)
             if r.status_code == requests.codes.ok and r.text != "-1":
                 if r.text == "1":
@@ -315,7 +314,7 @@ class Contact(commands.Cog):
                     new_status = 6
             else:
                 new_status = prompt
-            url = f"{settings['google']['commLog']}?call=verification&status={new_status}&row={task_row}"
+            url = f"{settings['google']['comm_log']}?call=verification&status={new_status}&row={task_row}"
             r = requests.get(url)
             if r.status_code == requests.codes.ok:
                 if r.text == "1":
@@ -337,7 +336,7 @@ class Contact(commands.Cog):
                 return await ctx.send("Please provide a valid task ID (Sug123, Cou123, Oth123, Act123).")
             if task_id[:1].lower() == "v":
                 return await ctx.invoke(self.veri, task_id=task_id, new_status=9)
-            url = f"{settings['google']['commLog']}?call=completetask&task={task_id}"
+            url = f"{settings['google']['comm_log']}?call=completetask&task={task_id}"
             r = requests.get(url)
             if r.status_code == requests.codes.ok:
                 if r.text == "1":
@@ -373,8 +372,8 @@ class Contact(commands.Cog):
             await channel.send(coll)
 
     async def is_council(self, user_id):
-        rcs_guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
-        council_role = rcs_guild.get_role(settings['rcsRoles']['council'])
+        rcs_guild = self.bot.get_guild(settings['discord']['rcs_guild_id'])
+        council_role = rcs_guild.get_role(settings['rcs_roles']['council'])
         council_members = [member.id for member in council_role.members]
         if user_id in council_members:
             return True

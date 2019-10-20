@@ -7,17 +7,17 @@ import asyncio
 import discord
 
 from cogs.utils import context
-from cogs.utils.db import RcsDB
+from cogs.utils.db import Psql
 from cogs.utils.helper import rcs_clans
 from discord.ext import commands
 from datetime import datetime
 from config import settings
 from loguru import logger
 
-enviro = "LIVE"
+enviro = "home"
 
 if enviro == "LIVE":
-    token = settings['discord']['rcsbotToken']
+    token = settings['discord']['rcsbot_token']
     prefix = "++"
     log_level = "INFO"
     coc_names = "vps"
@@ -36,7 +36,7 @@ if enviro == "LIVE":
                           "cogs.eggs",
                           ]
 elif enviro == "home":
-    token = settings['discord']['testToken']
+    token = settings['discord']['test_token']
     prefix = ">"
     log_level = "DEBUG"
     coc_names = "ubuntu"
@@ -47,10 +47,11 @@ elif enviro == "home":
                           "cogs.eggs",
                           "cogs.owner",
                           "cogs.admin",
+                          "cogs.tasks",
                           "cogs.draft",
                           ]
 else:
-    token = settings['discord']['testToken']
+    token = settings['discord']['test_token']
     prefix = ">"
     log_level = "DEBUG"
     coc_names = "dev"
@@ -62,6 +63,7 @@ else:
                           "cogs.eggs",
                           "cogs.owner",
                           "cogs.admin",
+                          "cogs.tasks",
                           "cogs.draft",
                           ]
 
@@ -102,7 +104,7 @@ class RcsBot(commands.Bot):
 
     @property
     def log_channel(self):
-        return self.get_channel(settings['logChannels']['rcs'])
+        return self.get_channel(settings['log_channels']['rcs'])
 
     def send_log(self, message):
         asyncio.ensure_future(self.send_message(message))
@@ -178,7 +180,6 @@ class RcsBot(commands.Bot):
             pass
 
     async def on_ready(self):
-        logger.add(self.send_log, level=log_level)
         logger.info("rcs-bot has started")
         activity = discord.Game("Clash of Clans")
         await self.change_presence(status=discord.Status.online, activity=activity)
@@ -191,15 +192,29 @@ class RcsBot(commands.Bot):
         await super().close()
         await self.coc.close()
 
+    def send_log(self, message):
+        asyncio.ensure_future(self.send_message(message))
+
+    async def send_message(self, message):
+        if len(message) < 2000:
+            await self.log_channel.send(f"`{message}`")
+        else:
+            await self.log_channel.send(f"`{message[:1950]}`")
+
+    async def after_ready(self):
+        await bot.wait_until_ready()
+        logger.add(self.send_log, level=log_level)
+
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     try:
-        pool = loop.run_until_complete(RcsDB.create_pool())
+        pool = loop.run_until_complete(Psql.create_pool())
         bot = RcsBot()
         bot.repo = git.Repo(os.getcwd())
         bot.pool = pool
         bot.logger = logger
+        bot.loop = loop
         bot.run(token, reconnect=True)
     except:
         traceback.print_exc()

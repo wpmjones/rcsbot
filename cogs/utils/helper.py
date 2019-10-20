@@ -1,16 +1,14 @@
-from cogs.utils.db import conn_sql
+from cogs.utils.db import Sql
 from functools import lru_cache
 
 
 @lru_cache(maxsize=4)
 def rcs_clans():
     """Retrieve and cache all RCS clan names and tags"""
-    conn = conn_sql()
-    cursor = conn.cursor(as_dict=True)
-    sql = "SELECT clanName, clanTag FROM rcs_data ORDER BY clanName"
-    cursor.execute(sql)
-    fetch = cursor.fetchall()
-    conn.close()
+    with Sql(as_dict=True) as cursor:
+        sql = "SELECT clanName, clanTag FROM rcs_data ORDER BY clanName"
+        cursor.execute(sql)
+        fetch = cursor.fetchall()
     clans = {}
     for clan in fetch:
         clans[clan['clanName']] = clan['clanTag']
@@ -20,12 +18,10 @@ def rcs_clans():
 @lru_cache(maxsize=64)
 def get_clan(tag):
     """Retrieve the details of a specific clan"""
-    conn = conn_sql()
-    cursor = conn.cursor(as_dict=True)
-    sql = ("SELECT clanName, subReddit, clanLeader, cwlLeague, discordServer, feeder, classification "
-           "FROM rcs_data "
-           "WHERE clanTag = %s")
-    cursor.execute(sql, tag)
-    clan = cursor.fetchone()
-    conn.close()
+    with Sql(as_dict=True) as cursor:
+        sql = ("SELECT clanName, subReddit, clanLeader, cwlLeague, discordServer, feeder, classification "
+               "FROM rcs_data "
+               "WHERE clanTag = %s")
+        cursor.execute(sql, tag)
+        clan = cursor.fetchone()
     return clan

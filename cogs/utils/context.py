@@ -173,11 +173,11 @@ class Context(commands.Context):
 
     def tick(self, opt, label=None):
         lookup = {
-            True: '<:greenTick:330090705336664065>',
-            False: '<:redTick:330090723011592193>',
-            None: '<:greyTick:563231201280917524>',
+            True: '<:greenTick:596576670815879169>',
+            False: '<:redTick:596576672149667840>',
+            None: '<:greyTick:596576672900186113>',
         }
-        emoji = lookup.get(opt, '<:redTick:330090723011592193>')
+        emoji = lookup.get(opt, '<:redTick:596576672149667840>')
         if label is not None:
             return f'{emoji}: {label}'
         return emoji
@@ -247,3 +247,25 @@ class Context(commands.Context):
             return await self.send(file=discord.File(fp, filename='message_too_long.txt'), **kwargs)
         else:
             return await self.send(content)
+
+    async def send_text(self, channel, text, block=None):
+        """ Sends text to channel, splitting if necessary
+        Discord has a 2000 character limit
+        """
+        if len(text) < 1994:
+            if block:
+                await channel.send(f"```{text}```")
+            else:
+                await channel.send(text)
+        else:
+            coll = ""
+            for line in text.splitlines(keepends=True):
+                if len(coll) + len(line) > 1994:
+                    # if collecting is going to be too long, send  what you have so far
+                    if block:
+                        await channel.send(f"```{coll}```")
+                    else:
+                        await channel.send(coll)
+                    coll = ""
+                coll += line
+            await channel.send(coll)

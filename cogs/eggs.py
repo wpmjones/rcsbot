@@ -11,7 +11,7 @@ from io import BytesIO
 from random import randint
 from datetime import datetime
 from discord.ext import commands
-from cogs.utils.db import conn_sql
+from cogs.utils.db import Sql
 from config import settings, emojis, color_pick
 
 
@@ -130,12 +130,10 @@ class Eggs(commands.Cog):
     @commands.has_any_role("Admin1", "Leaders", "Council")
     async def in_war(self, ctx):
         sent_msg = await ctx.send("Retrieving clan war status...")
-        conn = await conn_sql()
-        cursor = conn.cursor(as_dict=True)
-        cursor.execute("SELECT '#' + clanTag AS tag, isWarLogPublic FROM rcs_data "
-                       "WHERE classification <> 'feeder' ORDER BY clanName")
-        clans = cursor.fetchall()
-        conn.close()
+        with Sql(as_dict=True) as cursor:
+            cursor.execute("SELECT '#' + clanTag AS tag, isWarLogPublic FROM rcs_data "
+                           "WHERE classification <> 'feeder' ORDER BY clanName")
+            clans = cursor.fetchall()
         tags = [clan['tag'] for clan in clans if clan['isWarLogPublic'] == 1]
         in_prep = ""
         in_war = ""

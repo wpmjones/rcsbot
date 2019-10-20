@@ -1,5 +1,4 @@
 import requests
-import pymssql
 import re
 import coc
 import discord
@@ -7,8 +6,8 @@ import asyncio
 
 from discord.ext import commands
 from cogs.utils.converters import ClanConverter
-from cogs.utils.helper import get_clan
-from cogs.utils.db import conn_sql
+from cogs.utils.db import Sql
+from cogs.utils.helper import rcs_clans
 from config import settings, color_pick
 from datetime import datetime
 
@@ -212,12 +211,11 @@ class CouncilCog(commands.Cog):
                            f"{classification}\n**Subreddit:** {subreddit}\n**Leader's Reddit name:** "
                            f"{leader_reddit}\n**Leader's Discord Tag:** {discord_tag}")
         # Add info to database
-        conn = conn_sql()
-        cursor = conn.cursor(as_dict=True)
-        cursor.execute(f"INSERT INTO rcs_data (clanName, clanTag, clanLeader, shortName, socMedia, "
-                       f"notes, classification, subReddit, leaderReddit, discordTag)"
-                       f"VALUES ('{clan.name}', '{clan_tag}', '{leader}', '{short_name}', '{soc_media}', "
-                       f"'{desc}', '{classification}', '{subreddit}', '{leader_reddit}', {discord_tag})")
+        with Sql(as_dict=True) as cursor:
+            cursor.execute(f"INSERT INTO rcs_data (clanName, clanTag, clanLeader, shortName, socMedia, "
+                           f"notes, classification, subReddit, leaderReddit, discordTag)"
+                           f"VALUES ('{clan.name}', '{clan_tag}', '{leader}', '{short_name}', '{soc_media}', "
+                           f"'{desc}', '{classification}', '{subreddit}', '{leader_reddit}', {discord_tag})")
         await ctx.send(f"{clan.name} has been added.  Please allow 3 hours for the clan to appear in wiki.")
         # force wiki and cache update
         await ctx.send(f"**Next Steps:**\nSend mod invite for META\nUpdate clan directory in META\n"
@@ -231,7 +229,7 @@ class CouncilCog(commands.Cog):
         else:
             role_obj = guild.get_role(int(settings['rcs_roles']['leaders']))
             await user.add_roles(role_obj, reason=f"Leaders role added by ++addClan command of rcs-bot.")
-            role_obj = guild.get_role(int(settings['rcs_roles']['rcsLeaders']))
+            role_obj = guild.get_role(int(settings['rcs_roles']['rcs_leaders']))
             await user.add_roles(role_obj, reason=f"RCS Leaders role added by ++addClan command of rcs-bot.")
             role_obj = guild.get_role(int(settings['rcs_roles']['recruiters']))
             await user.add_roles(role_obj, reason=f"Clan Recruiters role added by ++addClan command of rcs-bot.")
@@ -255,41 +253,35 @@ class CouncilCog(commands.Cog):
 
     @commands.command(name="removeClan", aliases=["clanRemove", "remove_clan"], hidden=True)
     @commands.has_role(settings['rcs_roles']['council'])
-    async def remove_clan(self, ctx, *, arg: str = "x"):
+    async def remove_clan(self, ctx, *, clan: ClanConverter = None):
         """Command to remove a verified clan from the RCS database."""
-        clan_tag, clan_name = resolve_clan_tag(arg)
-        if clan_tag == "x":
-            self.bot.logger.error(f"{arg} did not resolve to a valid clan for the {ctx.command} command. Issued "
-                                  f"by {ctx.author} in {ctx.channel}")
+        if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
-
-        conn = conn_sql()
-        cursor = conn.cursor(as_dict=True)
-        cursor.execute(f"SELECT clanName, clanTag FROM rcs_data WHERE feeder = '{clan_name}'")
-        fetched = cursor.fetchone()
-        if fetched is not None:
-            self.bot.logger.info(f"Removing family clan for {clan_name}. Issued by {ctx.author} in {ctx.channel}")
-            cursor.execute(f"DELETE FROM rcs_data WHERE clanTag = '{fetched['clanTag']}'")
-            await ctx.send(f"{fetched['clanName']} (feeder for {clan_name}) has been removed.")
-        self.bot.logger.info(f"Removing {clan_name}. Issued by {ctx.author} in {ctx.channel}")
-        cursor.execute(f"SELECT leaderReddit, discordTag FROM rcs_data WHERE clanTag = '{clan_tag}'")
-        fetched = cursor.fetchone()
-        cursor.execute(f"DELETE FROM rcs_data WHERE clanTag = '{clan_tag}'")
-        conn.close()
+        with Sql(as_dict=True) as cursor:
+            cursor.execute(f"SELECT clanName, clanTag FROM rcs_data WHERE feeder = '{clan.name}'")
+            fetched = cursor.fetchone()
+            if fetched is not None:
+                self.bot.logger.info(f"Removing family clan for {clan.name}. Issued by {ctx.author} in {ctx.channel}")
+                cursor.execute(f"DELETE FROM rcs_data WHERE clanTag = '{fetched['clanTag']}'")
+                await ctx.send(f"{fetched['clanName']} (feeder for {clan.name}) has been removed.")
+            self.bot.logger.info(f"Removing {clan.name}. Issued by {ctx.author} in {ctx.channel}")
+            cursor.execute(f"SELECT leaderReddit, discordTag FROM rcs_data WHERE clanTag = '{clan.tag}'")
+            fetched = cursor.fetchone()
+            cursor.execute(f"DELETE FROM rcs_data WHERE clanTag = '{clan.tag}'")
         # remove leader's roles
         guild = ctx.bot.get_guild(settings['discord']['rcsGuildId'])
         is_user, user = is_discord_user(guild, int(fetched['discordTag']))
         if is_user:
-            role_obj = guild.get_role(int(settings['rcsRoles']['leaders']))
+            role_obj = guild.get_role(int(settings['rcs_roles']['leaders']))
             await user.remove_roles(role_obj,
                                     reason=f"Leaders role removed by ++removeClan command of rcs-bot.")
-            role_obj = guild.get_role(int(settings['rcsRoles']['rcsLeaders']))
+            role_obj = guild.get_role(int(settings['rcs_roles']['rcs_leaders']))
             await user.remove_roles(role_obj,
                                     reason=f"RCS Leaders role removed by ++removeClan command of rcs-bot.")
-            role_obj = guild.get_role(int(settings['rcsRoles']['recruiters']))
+            role_obj = guild.get_role(int(settings['rcs_roles']['recruiters']))
             await user.remove_roles(role_obj,
                                     reason=f"Clan Recruiters role removed by ++removeClan command of rcs-bot.")
-        await ctx.send(f"{clan_name} has been removed from the database.  The change will appear on the wiki "
+        await ctx.send(f"{clan.name} has been removed from the database.  The change will appear on the wiki "
                        "in the next 3 hours.")
         # TODO invalidate the cache and update the wiki
         await ctx.send("<@251150854571163648> Please recycle the bot so we aren't embarassed with old data!")
@@ -299,34 +291,28 @@ class CouncilCog(commands.Cog):
                        f"you will need to remove them manually.")
 
     @commands.command(name="leader", hidden=True)
-    @commands.has_any_role(settings['rcsRoles']['council'],
-                           settings['rcsRoles']['chatMods'],
-                           settings['rcsRoles']['leaders'])
-    async def leader(self, ctx, *, arg: str = "x"):
+    @commands.has_any_role(settings['rcs_roles']['council'],
+                           settings['rcs_roles']['chat_mods'],
+                           settings['rcs_roles']['leaders'])
+    async def leader(self, ctx, *, clan: ClanConverter = None):
         """Command to find the leader for the selected clan.
         Usage: ++leader Reddit Argon"""
-        clan_tag, clan_name = resolve_clan_tag(arg)
-        if clan_tag == "x":
-            self.bot.logger.error(f"{arg} did not resolve to a valid clan for the {ctx.command} command. Issued "
-                                  f"by {ctx.author} in {ctx.channel}")
-            await ctx.send("You have not provided a valid clan name or clan tag.")
-            return
-        conn = conn_sql()
-        cursor = conn.cursor(as_dict=True)
-        cursor.execute(f"SELECT discordTag, clanBadge FROM rcs_data WHERE clanName = '{clan_name}'")
-        fetch = cursor.fetchone()
-        discord_id = fetch['discordTag']
-        badge_url = fetch['clanBadge']
-        cursor.execute(f"SELECT altName FROM rcs_alts WHERE clanTag = '{clan_tag}' ORDER BY altName")
-        fetch = cursor.fetchall()
-        conn.close()
+        if not clan:
+            return await ctx.send("You have not provided a valid clan name or clan tag.")
+        with Sql(as_dict=True) as cursor:
+            cursor.execute(f"SELECT discordTag, clanBadge FROM rcs_data WHERE clanName = '{clan.name}'")
+            fetch = cursor.fetchone()
+            discord_id = fetch['discordTag']
+            badge_url = fetch['clanBadge']
+            cursor.execute(f"SELECT altName FROM rcs_alts WHERE clanTag = '{clan.tag[1:]}' ORDER BY altName")
+            fetch = cursor.fetchall()
         if fetch:
             alt_names = ""
             for row in fetch:
                 alt_names += f"{row['altName']}\n"
         else:
             alt_names = "No alts for this leader"
-        embed = discord.Embed(title=f"Leader Information for {clan_name}",
+        embed = discord.Embed(title=f"Leader Information for {clan.name}",
                               color=color_pick(240, 240, 240))
         embed.set_thumbnail(url=badge_url)
         embed.add_field(name="Leader name:",
@@ -338,9 +324,9 @@ class CouncilCog(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.group(invoke_without_command=True)
-    @commands.has_any_role(settings['rcsRoles']['council'],
-                           settings['rcsRoles']['chatMods'],
-                           settings['rcsRoles']['leaders'])
+    @commands.has_any_role(settings['rcs_roles']['council'],
+                           settings['rcs_roles']['chat_mods'],
+                           settings['rcs_roles']['leaders'])
     async def alts(self, ctx):
         """Group command to deal with leader alts"""
         if ctx.invoked_subcommand is None:
@@ -352,7 +338,7 @@ class CouncilCog(commands.Cog):
             ++alts list Clan Name
         """
         if clan:
-            await ctx.invoke(self.leader, arg=clan.name)
+            await ctx.invoke(self.leader, clan=clan)
         else:
             await ctx.send(f"Terribly sorry, but I can't find that clan!")
 
@@ -363,14 +349,12 @@ class CouncilCog(commands.Cog):
         """
         if not new_alt:
             return await ctx.send("Please provide the name of the new alt account.")
-        conn = conn_sql()
-        cursor = conn.cursor()
-        sql = (f"INSERT INTO rcs_alts "
-               f"SELECT '{clan[0].tag[1:]}', '{new_alt}' "
-               f"EXCEPT "
-               f"SELECT clanTag, altName FROM rcs_alts WHERE clanTag = '{clan[0].tag[1:]}' AND altName = '{new_alt}'")
-        cursor.execute(sql)
-        conn.close()
+        with Sql() as cursor:
+            sql = (f"INSERT INTO rcs_alts "
+                   f"SELECT {clan[0].tag[1:]}, {new_alt} "
+                   f"EXCEPT "
+                   f"SELECT clanTag, altName FROM rcs_alts WHERE clanTag = {clan[0].tag[1:]} AND altName = {new_alt}")
+            cursor.execute(sql)
         await ctx.send(f"{new_alt} has been added as an alt account for the leader of {clan[0].name}.")
 
     @alts.command(name="remove", aliases=["delete", "del", "rem"])
@@ -380,20 +364,18 @@ class CouncilCog(commands.Cog):
         """
         if not alt:
             return await ctx.send("Please provide the name of the alt account to be removed.")
-        conn = conn_sql()
-        cursor = conn.cursor()
-        if alt == "all":
-            sql = f"DELETE FROM rcs_alts WHERE clanTag = {clan[0].tag[1:]}"
-            cursor.execute(sql)
-            await ctx.send(f"All alt accounts for {clan[0].name} have been removed.")
-        else:
-            sql = f"DELETE FROM rcs_alts WHERE clanTag = '{clan[0].tag[1:]}' AND altName = '{alt}'"
-            cursor.execute(sql)
-            await ctx.send(f"{alt} has been removed as an alt for the leader of {clan[0].name}.")
-        conn.close()
+        with Sql() as cursor:
+            if alt == "all":
+                sql = f"DELETE FROM rcs_alts WHERE clanTag = {clan[0].tag[1:]}"
+                cursor.execute(sql)
+                await ctx.send(f"All alt accounts for {clan[0].name} have been removed.")
+            else:
+                sql = f"DELETE FROM rcs_alts WHERE clanTag = {clan[0].tag[1:]} AND altName = {alt}"
+                cursor.execute(sql)
+                await ctx.send(f"{alt} has been removed as an alt for the leader of {clan[0].name}.")
 
     @commands.group(invoke_without_subcommand=True)
-    @commands.has_role(settings['rcsRoles']['council'])
+    @commands.has_role(settings['rcs_roles']['council'])
     async def dm(self, ctx):
         """Group command to send DMs to various roles in the RCS Discord Server"""
         if ctx.invoked_subcommand is None:
@@ -405,11 +387,9 @@ class CouncilCog(commands.Cog):
         if not message:
             return await ctx.send("I'm not going to send a blank message you goofball!")
         msg = await ctx.send("One moment while I track down these leaders...")
-        conn = conn_sql()
-        cursor = conn.cursor(as_dict=True)
-        cursor.execute("SELECT DISTINCT discordTag FROM rcs_data")
-        rows = cursor.fetchall()
-        conn.close()
+        with Sql(as_dict=True) as cursor:
+            cursor.execute("SELECT DISTINCT discordTag FROM rcs_data")
+            rows = cursor.fetchall()
         counter = 0
         for row in rows:
             try:
@@ -429,7 +409,7 @@ class CouncilCog(commands.Cog):
         if not message:
             return await ctx.send("I don't think the DJs will be impressed with a blank message!")
         msg = await ctx.send("One moment while I spin the turntables...")
-        dj_role = ctx.guild.get_role(settings['rcsRoles']['djs'])
+        dj_role = ctx.guild.get_role(settings['rcs_roles']['djs'])
         counter = 0
         for member in dj_role.members:
             try:
@@ -497,28 +477,6 @@ class CouncilCog(commands.Cog):
             await ctx.send(f"You have found the secret command!  Unfortunately, you are not an RCS "
                            "Leader/Council member.  Climb the ladder, then try again!")
 
-    async def send_text(self, channel, text, block=None):
-        """ Sends text to channel, splitting if necessary
-        Discord has a 2000 character limit
-        """
-        if len(text) < 2000:
-            if block:
-                await channel.send(f"```{text}```")
-            else:
-                await channel.send(text)
-        else:
-            coll = ""
-            for line in text.splitlines(keepends=True):
-                if len(coll) + len(line) > 1994:
-                    # if collecting is going to be too long, send  what you have so far
-                    if block:
-                        await channel.send(f"```{coll}```")
-                    else:
-                        await channel.send(coll)
-                    coll = ""
-                coll += line
-            await channel.send(coll)
-
 
 def get_discord_name(item):
     try:
@@ -530,37 +488,11 @@ def get_discord_name(item):
         print(item)
 
 
-def get_clan_name(clan_tag):
-    if clan_tag.startswith("#"):
-        clan_tag = clan_tag[1:]
-    for clan in clans:
-        if clan['clanTag'].lower() == clan_tag.lower():
-            return clan['clanName']
-    return "x"
-
-
-def get_clan_tag(clan_name):
-    for clan in clans:
-        if clan['clanName'].lower() == clan_name.lower():
-            return clan['clanTag']
-    return "x"
-
-
-def resolve_clan_tag(clan_input):
-    tag_validator = re.compile("^#?[PYLQGRJCUV0289]+$")
-    tag = coc.utils.correct_tag(clan_input)
-    name = clan_input.strip()
-    if tag_validator.match(tag):
-        return tag, get_clan_name(tag)
-    else:
-        return get_clan_tag(name), name
-
-
 def is_authorized(user_roles):
     for role in user_roles:
-        if role.id in [settings['rcsRoles']['leaders'],
-                       settings['rcsRoles']['rcsLeaders'],
-                       settings['rcsRoles']['council'],
+        if role.id in [settings['rcs_roles']['leaders'],
+                       settings['rcs_roles']['rcs_leaders'],
+                       settings['rcs_roles']['council'],
                        ]:
             return True
     return False
@@ -568,14 +500,14 @@ def is_authorized(user_roles):
 
 def is_council(user_roles):
     for role in user_roles:
-        if role.id == settings['rcsRoles']['council']:
+        if role.id == settings['rcs_roles']['council']:
             return True
     return False
 
 
 def is_chat_mod(user_roles):
     for role in user_roles:
-        if role.id == settings['rcsRoles']['chatMods']:
+        if role.id == settings['rcs_roles']['chat_mods']:
             return True
     return False
 
@@ -589,16 +521,6 @@ def is_discord_user(guild, discord_id):
             return True, user
     except:
         return False, None
-
-
-mainConn = pymssql.connect(settings['database']['server'], 
-                           settings['database']['username'], 
-                           settings['database']['password'], 
-                           settings['database']['database'])
-mainCursor = mainConn.cursor(as_dict=True)
-mainCursor.execute("SELECT clanName, clanTag FROM rcs_data ORDER BY clanName")
-clans = mainCursor.fetchall()
-mainConn.close()
 
 
 def setup(bot):

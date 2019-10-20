@@ -1,21 +1,8 @@
 import discord
-import traceback
-import pymssql
-import time
 
-from config import settings
-from datetime import datetime
 from discord.ext import commands
-from cogs.utils.converters import ClanConverter
-from cogs.utils.helper import rcs_clans
-
-
-def log_traceback(ex):
-    tb_lines = traceback.format_exception(ex.__class__, ex, ex.__traceback__)
-    tb_text = ''.join(tb_lines)
-    # I'll let you implement the ExceptionLogger class,
-    # and the timestamping.
-    return tb_text
+from cogs.utils.db import Sql
+from datetime import datetime
 
 
 class OwnerCog(commands.Cog):
@@ -55,7 +42,6 @@ class OwnerCog(commands.Cog):
     @commands.command(name="emojis")
     @commands.is_owner()
     async def emoji_list(self, ctx):
-
         def get_key(item):
             return item.name
 
@@ -65,10 +51,11 @@ class OwnerCog(commands.Cog):
                        self.bot.get_guild(602130772098416678),
                        self.bot.get_guild(629145390687584260)]
         for guild in server_list:
-            content = f"\n**{guild.name}**"
-            for emoji in sorted(guild.emojis, key=get_key):
+            content = ""
+            for index, emoji in enumerate(sorted(guild.emojis, key=get_key)):
                 content += f"\n{emoji} - {emoji.name}:{emoji.id}"
-            await self.send_text(ctx.channel, content)
+            content = f"**{guild.name}** {index} emoji" + content
+            await ctx.send_text(ctx.channel, content)
 
     @commands.command(name="server")
     @commands.is_owner()
@@ -86,82 +73,25 @@ class OwnerCog(commands.Cog):
             role_list = f"**Roles for {guild.name}**\n"
             for role in guild.roles[1:]:
                 role_list += f"{role.name}: {role.id}\n"
-            await self.send_text(ctx.channel, role_list)
+            await ctx.send_text(ctx.channel, role_list)
         except:
             self.bot.logger.exception(f"Failed to serve role list")
-
-    @commands.command(name="close_db", aliases=["cdb", "cbd"], hidden=True)
-    @commands.is_owner()
-    async def close_db(self, ctx):
-        """Command to close db connection before shutting down bot"""
-        if self.bot.db.pool is not None:
-            await self.bot.db.pool.close()
-            await ctx.send("Database connection closed.")
 
     @commands.command(name="new_games", hidden=True)
     @commands.is_owner()
     async def new_games(self, ctx, start_date, games_length: int = 6, ind_points: int = 4000, clan_points: int = 50000):
         """Command to add new Clan Games dates to SQL database"""
-        conn = pymssql.connect(settings['database']['server'],
-                               settings['database']['username'],
-                               settings['database']['password'],
-                               settings['database']['database'])
-        cursor = conn.cursor(as_dict=True)
-        start_day = int(start_date[8:9])
-        end_day = str(start_day+games_length)
-        end_date = start_date[:9] + end_day
-        cursor.execute("SELECT MAX(eventId) as eventId FROM rcs_events WHERE eventType = 5")
-        row = cursor.fetchone()
-        event_id = row['eventId'] + 1
-        sql = (f"INSERT INTO rcs_events (eventId, eventType, startTime, endTime, playerPoints, clanPoints) "
-               f"VALUES ({event_id}, 5, '{start_date}', '{end_date}', {ind_points}, {clan_points})")
-        cursor.execute(sql)
-        conn.commit()
-        conn.close()
+        with Sql(as_dict=True) as cursor:
+            start_day = int(start_date[8:9])
+            end_day = str(start_day+games_length)
+            end_date = start_date[:9] + end_day
+            cursor.execute("SELECT MAX(eventId) as eventId FROM rcs_events WHERE eventType = 5")
+            row = cursor.fetchone()
+            event_id = row['eventId'] + 1
+            sql = (f"INSERT INTO rcs_events (eventId, eventType, startTime, endTime, playerPoints, clanPoints) "
+                   f"VALUES ({event_id}, 5, '{start_date}', '{end_date}', {ind_points}, {clan_points})")
+            cursor.execute(sql)
         await ctx.send(f"New games info added to database.")
-
-    @commands.command()
-    @commands.is_owner()
-    async def speed(self, ctx, arg):
-        start = time.perf_counter()
-        print("Starting...")
-        clans = rcs_clans()
-        end = time.perf_counter()
-        await ctx.send(f'Get Clans: {(end - start) * 1000:.2f}ms')
-        start = time.perf_counter()
-        if arg in clans.keys():
-            print("Found name")
-        elif arg in clans.values():
-            print("Found tag")
-        else:
-            print("Not Found")
-        end = time.perf_counter()
-        await ctx.send(f'Search: {(end - start) * 1000:.2f}ms')
-        start = time.perf_counter()
-        clan = await ClanConverter().convert(ctx, arg)
-        end = time.perf_counter()
-        await ctx.send(f'Get Clan: {(end - start) * 1000:.2f}ms')
-
-    @staticmethod
-    async def send_text(channel, text, block=None):
-        """ Sends text ot channel, splitting if necessary """
-        if len(text) < 2000:
-            if block:
-                await channel.send(f"```{text}```")
-            else:
-                await channel.send(text)
-        else:
-            coll = ""
-            for line in text.splitlines(keepends=True):
-                if len(coll) + len(line) > 1994:
-                    # if collecting is going to be too long, send  what you have so far
-                    if block:
-                        await channel.send(f"```{coll}```")
-                    else:
-                        await channel.send(coll)
-                    coll = ""
-                coll += line
-            await channel.send(coll)
 
 
 def setup(bot):

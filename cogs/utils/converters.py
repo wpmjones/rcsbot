@@ -2,8 +2,7 @@ import coc
 import re
 
 from discord.ext import commands
-from cogs.utils.db import conn_sql
-from cogs.utils.helper import rcs_clans, get_clan
+from cogs.utils.helper import rcs_clans
 
 tag_validator = re.compile("^#?[PYLQGRJCUV0289]+$")
 
