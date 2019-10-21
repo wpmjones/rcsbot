@@ -20,17 +20,15 @@ class General(commands.Cog):
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         async with ctx.typing():
-            # with Sql() as cursor:
-            #     cursor.execute("SELECT attackWins, playerName FROM rcs_members WHERE clanTag = %s "
-            #                    "AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = %s "
-            #                    "ORDER BY timestamp DESC) ORDER BY attackWins DESC", (clan.tag[1:], clan.tag[1:]))
-            #     fetch = cursor.fetchall()
-            sql = "SELECT attack_wins, player_name FROM rcs_members WHERE player_name = 'Royal' LIMIT 25"
-            fetch = await ctx.db.fetch(sql)
-            page_count = math.ceil(len(fetch) / 20)
+            with Sql() as cursor:
+                cursor.execute("SELECT attackWins, playerName FROM rcs_members WHERE clanTag = %s "
+                               "AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = %s "
+                               "ORDER BY timestamp DESC) ORDER BY attackWins DESC", (clan.tag[1:], clan.tag[1:]))
+                fetch = cursor.fetchall()
+            page_count = math.ceil(len(fetch) / 25)
             title = f"{clan.name} ({clan.tag})"
-            ctx.config.render = 1
-            p = formats.BoardPaginator(ctx, data=fetch, title=title, page_count=page_count)
+            ctx.icon = "https://cdn.discordapp.com/emojis/635642869750824980.png"
+            p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
         await p.paginate()
 
     @commands.command(name="defenses", aliases=["defences", "def", "defense", "defence", "defends",
@@ -39,27 +37,24 @@ class General(commands.Cog):
         """Defense wins for the whole clan"""
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
-        with Sql(as_dict=True) as cursor:
-            member_list = []
-            cursor.execute(f"SELECT playerName, defenceWins, timestamp FROM rcs_members WHERE clanTag = '{clan.tag[1:]}' "
-                           f"AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = '{clan.tag[1:]}' "
-                           f"ORDER BY timestamp DESC) ORDER BY defenceWins DESC")
-            fetched = cursor.fetchall()
-        for member in fetched:
-            member_list.append({"name": member['playerName'], "defenses": member['defenceWins']})
-        content = f"{clan.name} ({clan.tag})\n{'Name':20}{'Defense Wins':>12}"
-        content += "\n--------------------------------"
-        for item in member_list:
-            content += f"\n{item['name']:20}{item['defenses']:12}"
-        await ctx.send_text(ctx.channel, content, 1)
+        async with ctx.typing():
+            with Sql() as cursor:
+                cursor.execute("SELECT defenceWins, playerName FROM rcs_members WHERE clanTag = %s "
+                               "AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = %s "
+                               "ORDER BY timestamp DESC) ORDER BY defenceWins DESC", (clan.tag[1:], clan.tag[1:]))
+                fetch = cursor.fetchall()
+            page_count = math.ceil(len(fetch) / 25)
+            title = f"{clan.name} ({clan.tag})"
+            ctx.icon = "https://cdn.discordapp.com/emojis/635642869373468704.png"
+            p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
+        await p.paginate()
 
     @commands.command(name="donations", aliases=["donate", "donates", "donation"])
     async def donations(self, ctx, *, clan: ClanConverter = None):
         """Donations for the whole clan"""
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
-        with Sql(as_dict=True) as cursor:
-            member_list = []
+        with Sql() as cursor:
             cursor.execute(f"SELECT playerName, donations, donationsReceived, timestamp FROM rcs_members "
                            f"WHERE clanTag = '{clan.tag[1:]}' AND timestamp = (SELECT TOP 1 timestamp from rcs_members "
                            f"WHERE clanTag = '{clan.tag[1:]}' ORDER BY timestamp DESC) ORDER BY donations DESC")
@@ -78,45 +73,41 @@ class General(commands.Cog):
         """Trophy count for the whole clan"""
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
-        with Sql(as_dict=True) as cursor:
-            member_list = []
-            cursor.execute(f"SELECT playerName, trophies, timestamp FROM rcs_members WHERE clanTag = '{clan.tag[1:]}' "
-                           f"AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = '{clan.tag[1:]}' "
-                           f"ORDER BY timestamp DESC) ORDER BY trophies DESC")
-            fetched = cursor.fetchall()
-        for member in fetched:
-            member_list.append({"name": member['playerName'], "trophies": member['trophies']})
-        content = f"{clan.name} ({clan.tag})\n{'Name':20}{'Trophies':>10}"
-        content += "\n------------------------------"
-        for item in member_list:
-            content += f"\n{item['name']:20}{str(item['trophies']):>10}"
-        await ctx.send_text(ctx.channel, content, 1)
+        async with ctx.typing():
+            with Sql() as cursor:
+                cursor.execute("SELECT trophies, playerName FROM rcs_members WHERE clanTag = %s "
+                               "AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = %s "
+                               "ORDER BY timestamp DESC) ORDER BY trophies DESC", (clan.tag[1:], clan.tag[1:]))
+                fetch = cursor.fetchall()
+            page_count = math.ceil(len(fetch) / 25)
+            title = f"{clan.name} ({clan.tag})"
+            ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
+            p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
+        await p.paginate()
 
     @commands.command(name="bhtrophies", aliases=["bhtrophy", "bh_trophies"])
     async def bh_trophies(self, ctx, *, clan: ClanConverter = None):
         """Trophy count for the whole clan"""
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
-        with Sql(as_dict=True) as cursor:
-            member_list = []
-            cursor.execute(f"SELECT playerName, vsTrophies, timestamp FROM rcs_members WHERE clanTag = '{clan.tag[1:]}' "
-                           f"AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = '{clan.tag[1:]}' "
-                           f"ORDER BY timestamp DESC) ORDER BY vsTrophies DESC")
-            fetched = cursor.fetchall()
-        for member in fetched:
-            member_list.append({"name": member['playerName'], "trophies": member['vsTrophies']})
-        content = f"{clan.name} ({clan.tag})\n{'Name':20}{'BH Trophies':>10}"
-        content += "\n------------------------------"
-        for item in member_list:
-            content += f"\n{item['name']:20}{str(item['trophies']):>10}"
-        await ctx.send_text(ctx.channel, content, 1)
+        async with ctx.typing():
+            with Sql() as cursor:
+                cursor.execute("SELECT vsTrophies, playerName FROM rcs_members WHERE clanTag = %s "
+                               "AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = %s "
+                               "ORDER BY timestamp DESC) ORDER BY trophies DESC", (clan.tag[1:], clan.tag[1:]))
+                fetch = cursor.fetchall()
+            page_count = math.ceil(len(fetch) / 25)
+            title = f"{clan.name} ({clan.tag})"
+            ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
+            p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
+        await p.paginate()
 
     @commands.command(name="besttrophies", aliases=["besttrophy", "mosttrophies"])
     async def besttrophies(self, ctx, *, clan: ClanConverter = None):
         """Best trophy count for the whole clan"""
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
-        with Sql(as_dict=True) as cursor:
+        with Sql() as cursor:
             member_list = []
             cursor.execute(f"SELECT playerName, bestTrophies, timestamp FROM rcs_members WHERE clanTag = '{clan.tag[1:]}' "
                            f"AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = '{clan.tag[1:]}' "
@@ -135,7 +126,7 @@ class General(commands.Cog):
         """List of clan members by town hall level"""
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
-        with Sql(as_dict=True) as cursor:
+        with Sql() as cursor:
             member_list = []
             cursor.execute(f"SELECT playerName, thLevel, timestamp FROM rcs_members WHERE clanTag = '{clan.tag[1:]}' "
                            f"AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = '{clan.tag[1:]}' "
@@ -156,7 +147,7 @@ class General(commands.Cog):
         """List of clan members by builder hall level"""
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
-        with Sql(as_dict=True) as cursor:
+        with Sql() as cursor:
             member_list = []
             cursor.execute(f"SELECT playerName, builderHallLevel, timestamp FROM rcs_members WHERE clanTag = '{clan.tag[1:]}' "
                            f"AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = '{clan.tag[1:]}' "
@@ -177,19 +168,17 @@ class General(commands.Cog):
         """List of clan members by war stars earned"""
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
-        with Sql(as_dict=True) as cursor:
-            member_list = []
-            cursor.execute(f"SELECT playerName, warStars, timestamp FROM rcs_members WHERE clanTag = '{clan.tag[1:]}' "
-                           f"AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = '{clan.tag[1:]}' "
-                           f"ORDER BY timestamp DESC) ORDER BY warStars DESC")
-            fetched = cursor.fetchall()
-        for member in fetched:
-            member_list.append({"name": member['playerName'], "warStars": member['warStars']})
-        content = f"{clan.name} ({clan.tag})\n{'Name':10}{'War Stars':>20}"
-        content += "\n------------------------------"
-        for item in member_list:
-            content += f"\n{item['name']:20}{str(item['warStars']):>10}"
-        await ctx.send_text(ctx.channel, content, 1)
+        async with ctx.typing():
+            with Sql() as cursor:
+                cursor.execute(f"SELECT warStars, playerName FROM rcs_members WHERE clanTag = %s "
+                               f"AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = %s "
+                               f"ORDER BY timestamp DESC) ORDER BY warStars DESC", (clan.tag[1:], clan.tag[1:]))
+                fetch = cursor.fetchall()
+            page_count = math.ceil(len(fetch) / 25)
+            title = f"{clan.name} ({clan.tag})"
+            ctx.icon = "https://cdn.discordapp.com/emojis/635642870350741514.png"
+            p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
+        await p.paginate()
 
     @commands.command(name="top")
     async def top(self, ctx, category: str = "x"):

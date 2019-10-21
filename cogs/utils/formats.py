@@ -4,12 +4,12 @@ from cogs.utils.paginator import Pages
 from config import emojis
 
 
-def get_render_type(config, table):
-    if config.render == 1:
+def get_render_type(type_, table):
+    if type_ == "attacks":
         render = table.board_1("Att")
-    elif type == 2:
+    elif type_ == "defenses":
         render = table.board_1("Def")
-    elif config.render == 3:
+    elif type_ == "donations":
         render = table.board_2("Don/Rec")
     else:
         render = table.board_1
@@ -114,9 +114,8 @@ class CLYTable:
         self._rows = []
 
     def board_1(self, category):
-        fmt = f"{emojis['other']['number']}`⠀{category:\u00A0>6.6}⠀` `⠀{'Name':\u00A0<16.16}⠀`\n"
+        fmt = f"{emojis['other']['number']}`⠀{category:\u00A0>6.6}⠀` `⠀{'Name':\u00A0>16.16}⠀`\n"
         for v in self._rows:
-            print(v)
             index = int(v[0]) + 1
             index = emojis['numbers'][index]  # if index <= 100 else misc['idle']
             fmt += f"{index}`⠀{str(v[1]):\u00A0>6.6}⠀` `⠀{str(v[2]):\u00A0>16.16}⠀`\n"
@@ -124,16 +123,16 @@ class CLYTable:
 
 
 class TablePaginator(Pages):
-    def __init__(self, ctx, data, title=None, page_count=1, rows_per_table=20):
+    def __init__(self, ctx, data, title=None, page_count=1, rows_per_table=25):
         super().__init__(ctx, entries=[i for i in range(page_count)], per_page=1)
         self.table = CLYTable()
         self.data = [(i, v) for (i, v) in enumerate(data)]
         self.entries = [None for _ in range(page_count)]
         self.rows_per_table = rows_per_table
         self.title = title
-        self.page_type = page_type
         self.message = None
         self.ctx = ctx
+        self.type_ = ctx.command.name
 
     async def get_page(self, page):
         entry = self.entries[page - 1]
@@ -149,15 +148,36 @@ class TablePaginator(Pages):
         self.entries[page - 1] = entry
         return self.entries[page - 1]
 
+    def create_row(self, data):
+        if self.type_ in ("attacks",
+                          "defenses",
+                          "donations",
+                          "trophies",
+                          "bh_trophies",
+                          "besttrophies",
+                          "warstars",
+                          ):
+            row = [data[0], data[1][0], data[1][1]]
+        elif self.type_ in ("townhalls",
+                            "builderhalls",
+                            "builderhalls",
+                            ):
+            row = [data[1][0], data[1][1]]
+        else:
+            # TODO placeholder for top command
+            row = [data[1][0], data[1][1]]
+
+        self.table.add_row(row)
+
     async def prepare_entry(self, page):
         self.table.clear_rows()
         base = (page - 1) * self.rows_per_table
         data = self.data[base:base + self.rows_per_table]
         for n in data:
-            self.table.add_row(n)
+            self.create_row(n)
 
-        render = get_render_type(self.page_type, self.table)
-        return render()
+        render = get_render_type(self.type_, self.table)
+        return render
 
     async def get_embed(self, entries, page, *, first=False):
         if self.maximum_pages > 1:
@@ -170,9 +190,8 @@ class TablePaginator(Pages):
 
         self.embed.description = entries
 
-        self.embed.set_author(name=textwrap.shorten(self.title or self.ctx.config.title, width=240, placeholder='...'),
-                              icon_url=self.ctx.config.icon_url
-                                        or 'https://cdn.discordapp.com/emojis/592028799768592405.png?v=1')
+        self.embed.set_author(name=textwrap.shorten(self.title, width=240, placeholder="..."),
+                              icon_url=self.ctx.icon)
 
         return self.embed
 
@@ -197,38 +216,3 @@ class TablePaginator(Pages):
                 continue
 
             await self.message.add_reaction(reaction)
-
-
-class BoardPaginator(TablePaginator):
-    def __init__(self, ctx, data, title, page_count=1, rows_per_table=20):
-        super().__init__(ctx, data, title=title, page_count=page_count,
-                         rows_per_table=rows_per_table)
-
-    def create_row(self, player, data):
-        player_data = data[player.tag]
-
-        if self.ctx.config.type == 'donation':
-            if self.ctx.config.render == 1:
-                row = [player_data[0], player_data[1]['donations'], player_data[1]['received'], player.name]
-            else:
-                row = [player_data[0], player_data[1]['donations'], player.name]
-        else:
-            if self.ctx.config.render == 1:
-                row = [player_data[0], player_data[1]['trophies'], player_data[1][2], player.name]
-            else:
-                row = [player_data[0], player_data[1]['trophies'], player.name]
-
-        self.table.add_row(row)
-
-    async def prepare_entry(self, page):
-        self.table.clear_rows()
-        base = (page - 1) * self.rows_per_table
-        data = self.data[base:base + self.rows_per_table]
-        data_by_tag = {n[1]['player_tag']: n for n in data}
-
-        tags = [n[1]['player_tag'] for n in data]
-        async for player in self.bot.coc.get_players(tags):
-            self.create_row(player, data_by_tag)
-
-        render = get_render_type(self.ctx.config, self.table)
-        return render()
