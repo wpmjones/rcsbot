@@ -7,7 +7,7 @@ import asyncio
 
 from discord.ext import commands
 from cogs.utils.converters import ClanConverter
-from cogs.utils.db import conn_sql
+from cogs.utils.db import conn_sql, Sql
 from config import settings, color_pick
 from datetime import datetime
 
@@ -414,15 +414,14 @@ class CouncilCog(commands.Cog):
         """
         if not new_alt:
             return await ctx.send("Please provide the name of the new alt account.")
-        conn = conn_sql()
-        cursor = conn.cursor()
-        sql = (f"INSERT INTO rcs_alts "
-               f"SELECT '{clan[0].tag[1:]}', '{new_alt}' "
-               f"EXCEPT "
-               f"SELECT clanTag, altName FROM rcs_alts WHERE clanTag = '{clan[0].tag[1:]}' AND altName = '{new_alt}'")
-        cursor.execute(sql)
-        conn.close()
-        await ctx.send(f"{new_alt} has been added as an alt account for the leader of {clan[0].name}.")
+        with Sql() as cursor:
+            sql = (f"INSERT INTO rcs_alts "
+                   f"SELECT '{clan.tag[1:]}', '{new_alt}' "
+                   f"EXCEPT "
+                   f"SELECT clanTag, altName FROM rcs_alts "
+                   f"WHERE clanTag = '{clan.tag[1:]}' AND altName = '{new_alt}'")
+            cursor.execute(sql)
+        await ctx.send(f"{new_alt} has been added as an alt account for the leader of {clan.name}.")
 
     @alts.command(name="remove", aliases=["delete", "del", "rem"])
     async def alts_remove(self, ctx, clan: ClanConverter = None, *, alt: str = None):
