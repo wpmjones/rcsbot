@@ -9,6 +9,7 @@ from datetime import datetime
 class Halloween(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.color = discord.Color.dark_orange()
 
     @property
     def invite_link(self):
@@ -38,7 +39,7 @@ class Halloween(commands.Cog):
             cursor.execute(sql)
             fetch = cursor.fetchall()
         for clan in fetch:
-            guild = self.bot.get_guild(clan['discord_id'])
+            guild = ctx.bot.get_guild(clan['discord_id'])
             found = False
             for channel in guild.channels:
                 if channel.name == "trick-or-treat":
@@ -48,33 +49,33 @@ class Halloween(commands.Cog):
                     if not perms.manage_channels:
                         await ctx.send(f"I found #trick-or-treat on the {guild.name} server, but I don't have "
                                        f"perms to manage the channel.")
-                        continue
+                        break
                     break
-            if not found:
-                try:
-                    overwrites = {
-                        ctx.me: discord.PermissionOverwrite(read_messages=True, send_messages=True,
-                                                            read_message_history=True, embed_links=True,
-                                                            manage_messages=True, add_reactions=True,
-                                                            external_emojis=True),
-                        guild.default_role: discord.PermissionOverwrite(read_messages=False,
-                                                                        send_messages=False,
-                                                                        read_message_history=False)
-                    }
-                    reason = "Channel created by RCS-Bot"
-                    channel = await guild.create_text_channel(name="trick-or-treat",
-                                                              overwrites=overwrites,
-                                                              reason=reason)
-                    await ctx.send(f"{channel.name} created on the {guild.name} server.")
-                except discord.Forbidden:
-                    await ctx.send(f"No perms to create a channel in {guild.name}.")
-                    break
-            with Sql(as_dict=True) as cursor:
-                sql = "UPDATE rcs_halloween_clans SET channel_id = %d WHERE discord_id = %d"
-                cursor.execute(sql, (channel.id, guild.id))
-            await channel.send("🎃 **Halloween is coming** 🎃\n\n"
-                               "The RCS has something mysterious planned for you.  If you would like to participate, "
-                               "type `++halloween join` and we will send you a message when the fun begins!")
+            # if not found:
+            #     try:
+            #         overwrites = {
+            #             ctx.me: discord.PermissionOverwrite(read_messages=True, send_messages=True,
+            #                                                 read_message_history=True, embed_links=True,
+            #                                                 manage_messages=True, add_reactions=True,
+            #                                                 external_emojis=True),
+            #             guild.default_role: discord.PermissionOverwrite(read_messages=False,
+            #                                                             send_messages=False,
+            #                                                             read_message_history=False)
+            #         }
+            #         reason = "Channel created by RCS-Bot"
+            #         channel = await guild.create_text_channel(name="trick-or-treat",
+            #                                                   overwrites=overwrites,
+            #                                                   reason=reason)
+            #         await ctx.send(f"{channel.name} created on the {guild.name} server.")
+            #     except discord.Forbidden:
+            #         await ctx.send(f"No perms to create a channel in {guild.name}.")
+            #         break
+            # with Sql(as_dict=True) as cursor:
+            #     sql = "UPDATE rcs_halloween_clans SET channel_id = %d WHERE discord_id = %d"
+            #     cursor.execute(sql, (channel.id, guild.id))
+            # await channel.send("🎃 **Halloween is coming** 🎃\n\n"
+            #                    "The RCS has something mysterious planned for you.  If you would like to participate, "
+            #                    "type `++halloween join` and we will send you a message when the fun begins!")
 
     @halloween.command(name="join", aliases=["register"])
     async def halloween_join(self, ctx):
@@ -113,12 +114,18 @@ class Halloween(commands.Cog):
                 cursor.execute(sql)
                 fetch = cursor.fetchone()
                 num_players = fetch[0]
+                sql = "SELECT channel_ID, invite_link FROM rcs_halloween_clans WHERE discord_id = %d"
+                cursor.execute(sql, 437848948204634113)
+                fetch = cursor.fetchone()
+                electrum_channel = fetch[0]
+                electrum_invite = fetch[1]
         desc = ("Congratulations! Your time has started and you have officially begun the RCS Trick or Treat "
                 "Adventure! You will now be offered 15 challenges to accomplish. You will have 3 skips that you "
                 "can use strategically throughout the event. Use them wisely! The member completing the challenges "
                 "in the shortest amount of time wins!")
-        challenge = "TBD"
-        embed = discord.Embed(description=desc, title="🎃 RCS Trick or Treat 🎃", color=discord.Color.dark_orange())
+        challenge = (f"Head over to the Reddit Electrum Discord server ({electrum_invite}), "
+                     f"find the <#{electrum_channel}> channel, and type `++challenge` to begin your first challenge.")
+        embed = discord.Embed(description=desc, title="🎃 RCS Trick or Treat 🎃", color=self.color)
         embed.add_field(name="Prize Info:",
                         value="Sexy role color, maybe a t-shirt, maybe some Clash swag",
                         inline=False)
