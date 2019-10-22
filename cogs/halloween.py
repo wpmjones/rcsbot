@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 from cogs.utils.db import Sql
 from cogs.utils.helper import get_emoji_url
+from cogs.utils.constants import answers, responses
 from cogs.utils import challenges
 from datetime import datetime
 
@@ -12,21 +13,37 @@ class Halloween(commands.Cog):
         self.bot = bot
         self.title = "🎃 RCS Trick or Treat Adventure 🎃"
         self.color = discord.Color.dark_orange()
+        self.event_end = "2019-10-31 23:00:00"
 
     def build_embed(self, data):
         embed = discord.Embed(title=self.title, description=data['challenge'], color=self.color)
         embed.add_field(name="Players:", value=data['num_players'], inline=True)
         embed.add_field(name="Players Finished:", value=data['num_finished'], inline=True)
-        embed.add_field(name="Your progress:", value=f"{data['cur_challenge'] - 1}/15", inline=True)
+        embed.add_field(name="Current Challenge:", value=f"Challenge #{data['cur_challenge']}", inline=True)
         embed.add_field(name="Skips:", value=data['skips'], inline=True)
         embed.set_footer(text=f"{data['elapsed']} elapsed in your adventure",
                          icon_url="https://cdn.discordapp.com/emojis/629481616091119617.png")
         return embed
 
+    def completion_msg(self, data):
+        time_to_end = self.get_elapsed(datetime.utcnow(), self.event_end)
+        desc = (f"Fantastic job {data['player_name']}!  You have completed the first ever "
+                f"RCS Trick or Treat Adventure! We hope that there were some treats to go along with "
+                f"the tricks we threw at you.  And most of all, we hope you had "
+                f"fun!  Once everyone is done (or time runs out), we'll take a look and see who was the fastest "
+                f"and announce things in <#298622700849463297>.")
+        embed = discord.Embed(title=self.title, description=desc, color=self.color)
+        embed.add_field(name="Players:", value=data['num_players'], inline=True)
+        embed.add_field(name="Players Finished:", value=data['num_finished'], inline=True)
+        embed.add_field(name="Your progress:", value="Finished!", inline=True)
+        embed.add_field(name="Completion Time:", value=data['elapsed'], inline=True)
+        embed.set_footer(text=f"The event ends in {hours_to_end} hours and {mins_to_end} minutes.",
+                         icon_url="https://cdn.discordapp.com/emojis/629481616091119617.png")
+        return embed
+
     @staticmethod
-    def get_elapsed(start_time):
-        date_fmt = "%Y-%m-%d %H:%M:%S.%f"
-        elapsed = datetime.utcnow() - start_time   # datetime.strptime(start_time, date_fmt)
+    def get_elapsed(start_time, _now):
+        elapsed = _now - start_time
         hours, rem = divmod(elapsed.seconds, 3600)
         mins, secs = divmod(rem, 60)
         return f"{hours:2.0f}:{mins:2.0f}:{secs:2.0f}"
@@ -176,7 +193,7 @@ class Halloween(commands.Cog):
                 "num_finished": fetch[1],
                 "cur_challenge": stats["last_completed"] + 1,
                 "skips": f"{stats['skip_count']}/3",
-                "elapsed": self.get_elapsed(stats["start_time"])
+                "elapsed": self.get_elapsed(stats["start_time"], datetime.now())
             }
             if embed_data['cur_challenge'] != 2:
                 func_call = getattr(challenges, f"challenge_{embed_data['cur_challenge']}")
@@ -198,6 +215,42 @@ class Halloween(commands.Cog):
                 await ctx.message.delete(delay=29)
             except discord.Forbidden:
                 self.bot.logger.error(f"Couldn't remove command message on {ctx.message.guild}. Darned perms!")
+
+    @commands.command()
+    async def answer(self, ctx):
+        with Sql() as cursor:
+            sql = "SELECT last_completed FROM rcs_halloween_players WHERE discord_id = %s"
+            cursor.execute(sql, ctx.author.id)
+            fetch = cursor.fetchone()
+            cur_challenge = int(fetch[0]) + 1
+            if cur_challenge in (1, 4, 6, 7, 9, 11, 13, 14, 15):
+                answer = answers[cur_challenge]
+                if ctx.message.content == answer and cur_challenge != 15:
+                    await ctx.send(responses[cur_challenge])
+                    sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"
+                    cursor.execute(sql, (cur_challenge, ctx.author.id))
+                elif ctx.message.content == answer and cur_challenge == 15:
+                    now = datetime.utcnow()
+                    sql = ("UPDATE rcs_halloween_players "
+                           "SET finish_time = %s "
+                           "OUTPUT inserted.start_time "
+                           "WHERE discord_id = %d")
+                    cursor.execute(sql, (now, ctx.author.id))
+                    fetch = cursor.fetchone()
+                    start_time = fetch[0]
+                    sql = ("SELECT count(discord_id) as num_players, "
+                           "(SELECT count(discord_id) FROM rcs_halloween_players WHERE finish_time IS NOT NULL) as done "
+                           "FROM rcs_halloween_players")
+                    cursor.execute(sql)
+                    fetch = cursor.fetchone()
+                    embed_data = {
+                        "player_name": ctx.author.display_name,
+                        "num_players": fetch[0],
+                        "num_finished": fetch[1],
+                        "elapsed": self.get_elapsed(start_time, now)
+                    }
+                    embed = self.completion_msg(embed_data)
+                    await ctx.send()
 
 
 def setup(bot):

@@ -46,7 +46,7 @@ elif enviro == "home":
                           "cogs.eggs",
                           "cogs.owner",
                           "cogs.admin",
-                          "cogs.draft",
+                          "cogs.halloween",
                           ]
 else:
     token = settings['discord']['testToken']
@@ -124,6 +124,12 @@ class RcsBot(commands.Bot):
 
     async def process_commands(self, message):
         ctx = await self.get_context(message, cls=context.Context)
+        # Halloween Helper
+        if not isinstance(ctx.channel, discord.TextChannel) and not message.content.startswith(prefix):
+            try:
+                await ctx.invoke(self.get_cog('Halloween').answer)
+            except:
+                logger.exception("fail")
         if ctx.command is None:
             return
         async with ctx.acquire():

@@ -120,28 +120,6 @@ class OwnerCog(commands.Cog):
         conn.close()
         await ctx.send(f"New games info added to database.")
 
-    @commands.command()
-    @commands.is_owner()
-    async def speed(self, ctx, arg):
-        start = time.perf_counter()
-        print("Starting...")
-        clans = rcs_clans()
-        end = time.perf_counter()
-        await ctx.send(f'Get Clans: {(end - start) * 1000:.2f}ms')
-        start = time.perf_counter()
-        if arg in clans.keys():
-            print("Found name")
-        elif arg in clans.values():
-            print("Found tag")
-        else:
-            print("Not Found")
-        end = time.perf_counter()
-        await ctx.send(f'Search: {(end - start) * 1000:.2f}ms')
-        start = time.perf_counter()
-        clan = await ClanConverter().convert(ctx, arg)
-        end = time.perf_counter()
-        await ctx.send(f'Get Clan: {(end - start) * 1000:.2f}ms')
-
     @staticmethod
     async def send_text(channel, text, block=None):
         """ Sends text ot channel, splitting if necessary """
