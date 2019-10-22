@@ -77,9 +77,8 @@ class Halloween(commands.Cog):
             cursor.execute(sql)
             fetch = cursor.fetchall()
         for clan in fetch:
-            try:
-                guild = ctx.bot.get_guild(clan['discord_id'])
-            except discord.Forbidden:
+            guild = ctx.bot.get_guild(clan['discord_id'])
+            if not guild:
                 await ctx.send(f"rcs-bot has not been installed on {clan['discord_id']}")
                 continue
             found = False
