@@ -119,6 +119,7 @@ class Halloween(commands.Cog):
             await channel.send(f"{guild.owner.mention} This channel is currently invisible to `@everyone`. "
                                f"It will be up to you to open it up to your members when you want to. After that, "
                                f"you can delete this message!  ;)  Thanks!")
+            self.bot.logger.info(f"Messages sent to {guild}")
 
     @halloween.command(name="join", aliases=["register"])
     async def halloween_join(self, ctx):
