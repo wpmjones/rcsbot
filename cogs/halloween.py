@@ -83,7 +83,7 @@ class Halloween(commands.Cog):
                 continue
             found = False
             for channel in guild.channels:
-                if channel.name == "trick-or-treat":
+                if channel.name == "trick-or-treat" and isinstance(channel, discord.TextChannel):
                     found = True
                     await ctx.send(f"#trick-or-treat already exists on the {guild.name} server.")
                     perms = channel.permissions_for(guild.me)
