@@ -73,7 +73,7 @@ class Halloween(commands.Cog):
     @commands.is_owner()
     async def halloween_install(self, ctx):
         with Sql(as_dict=True) as cursor:
-            sql = "SELECT discord_id FROM rcs_halloween_clans"
+            sql = "SELECT discord_id FROM rcs_halloween_clans WHERE channel_id IS NULL"
             cursor.execute(sql)
             fetch = cursor.fetchall()
         for clan in fetch:
