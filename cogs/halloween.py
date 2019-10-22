@@ -87,11 +87,10 @@ class Halloween(commands.Cog):
                     found = True
                     await ctx.send(f"#trick-or-treat already exists on the {guild.name} server.")
                     perms = channel.permissions_for(guild.me)
-                    if not perms.manage_channels:
+                    if not perms.send_messages:
                         await ctx.send(f"I found #trick-or-treat on the {guild.name} server, but I don't have "
-                                       f"perms to manage the channel.")
+                                       f"perms to send messages to the channel.")
                         break
-                    break
             if not found:
                 try:
                     overwrites = {
