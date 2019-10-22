@@ -1,9 +1,10 @@
 import discord
+import random
 
 from discord.ext import commands
 from cogs.utils.db import Sql
 from cogs.utils.helper import get_emoji_url
-from cogs.utils.constants import answers, responses
+from cogs.utils.constants import answers, responses, wrong_answers_resp
 from cogs.utils import challenges
 from datetime import datetime
 
@@ -13,7 +14,7 @@ class Halloween(commands.Cog):
         self.bot = bot
         self.title = "🎃 RCS Trick or Treat Adventure 🎃"
         self.color = discord.Color.dark_orange()
-        self.event_end = "2019-10-31 23:00:00"
+        self.event_end = datetime(2019, 11, 1, 3, 00, 00)
 
     def build_embed(self, data):
         embed = discord.Embed(title=self.title, description=data['challenge'], color=self.color)
@@ -26,7 +27,7 @@ class Halloween(commands.Cog):
         return embed
 
     def completion_msg(self, data):
-        time_to_end = self.get_elapsed(datetime.utcnow(), self.event_end)
+        hours_to_end, mins_to_end, _ = self.get_elapsed(datetime.utcnow(), self.event_end)
         desc = (f"Fantastic job {data['player_name']}!  You have completed the first ever "
                 f"RCS Trick or Treat Adventure! We hope that there were some treats to go along with "
                 f"the tricks we threw at you.  And most of all, we hope you had "
@@ -46,7 +47,7 @@ class Halloween(commands.Cog):
         elapsed = _now - start_time
         hours, rem = divmod(elapsed.seconds, 3600)
         mins, secs = divmod(rem, 60)
-        return f"{hours:2.0f}:{mins:2.0f}:{secs:2.0f}"
+        return hours, mins, secs
 
     @property
     def invite_link(self):
@@ -76,7 +77,11 @@ class Halloween(commands.Cog):
             cursor.execute(sql)
             fetch = cursor.fetchall()
         for clan in fetch:
-            guild = ctx.bot.get_guild(clan['discord_id'])
+            try:
+                guild = ctx.bot.get_guild(clan['discord_id'])
+            except discord.Forbidden:
+                await ctx.send(f"rcs-bot has not been installed on {clan['discord_id']}")
+                continue
             found = False
             for channel in guild.channels:
                 if channel.name == "trick-or-treat":
@@ -88,31 +93,31 @@ class Halloween(commands.Cog):
                                        f"perms to manage the channel.")
                         break
                     break
-            # if not found:
-            #     try:
-            #         overwrites = {
-            #             ctx.me: discord.PermissionOverwrite(read_messages=True, send_messages=True,
-            #                                                 read_message_history=True, embed_links=True,
-            #                                                 manage_messages=True, add_reactions=True,
-            #                                                 external_emojis=True),
-            #             guild.default_role: discord.PermissionOverwrite(read_messages=False,
-            #                                                             send_messages=False,
-            #                                                             read_message_history=False)
-            #         }
-            #         reason = "Channel created by RCS-Bot"
-            #         channel = await guild.create_text_channel(name="trick-or-treat",
-            #                                                   overwrites=overwrites,
-            #                                                   reason=reason)
-            #         await ctx.send(f"{channel.name} created on the {guild.name} server.")
-            #     except discord.Forbidden:
-            #         await ctx.send(f"No perms to create a channel in {guild.name}.")
-            #         break
-            # with Sql(as_dict=True) as cursor:
-            #     sql = "UPDATE rcs_halloween_clans SET channel_id = %d WHERE discord_id = %d"
-            #     cursor.execute(sql, (channel.id, guild.id))
-            # await channel.send("🎃 **Halloween is coming** 🎃\n\n"
-            #                    "The RCS has something mysterious planned for you.  If you would like to participate, "
-            #                    "type `++halloween join` and we will send you a message when the fun begins!")
+            if not found:
+                try:
+                    overwrites = {
+                        ctx.me: discord.PermissionOverwrite(read_messages=True, send_messages=True,
+                                                            read_message_history=True, embed_links=True,
+                                                            manage_messages=True, add_reactions=True,
+                                                            external_emojis=True),
+                        guild.default_role: discord.PermissionOverwrite(read_messages=False,
+                                                                        send_messages=False,
+                                                                        read_message_history=False)
+                    }
+                    reason = "Channel created by RCS-Bot"
+                    channel = await guild.create_text_channel(name="trick-or-treat",
+                                                              overwrites=overwrites,
+                                                              reason=reason)
+                    await ctx.send(f"{channel.name} created on the {guild.name} server.")
+                except discord.Forbidden:
+                    await ctx.send(f"No perms to create a channel in {guild.name}.")
+                    break
+            with Sql(as_dict=True) as cursor:
+                sql = "UPDATE rcs_halloween_clans SET channel_id = %d WHERE discord_id = %d"
+                cursor.execute(sql, (channel.id, guild.id))
+            await channel.send("🎃 **Halloween is coming** 🎃\n\n"
+                               "The RCS has something mysterious planned for you.  If you would like to participate, "
+                               "type `++halloween join` and we will send you a message when the fun begins!")
 
     @halloween.command(name="join", aliases=["register"])
     async def halloween_join(self, ctx):
@@ -188,12 +193,13 @@ class Halloween(commands.Cog):
                        "FROM rcs_halloween_players")
                 cursor.execute(sql)
                 fetch = cursor.fetchone()
+            hours, mins, secs = self.get_elapsed(stats["start_time"], datetime.now())
             embed_data = {
                 "num_players": fetch[0],
                 "num_finished": fetch[1],
                 "cur_challenge": stats["last_completed"] + 1,
                 "skips": f"{stats['skip_count']}/3",
-                "elapsed": self.get_elapsed(stats["start_time"], datetime.now())
+                "elapsed": f"{hours}:{mins}:{secs}"
             }
             if embed_data['cur_challenge'] != 2:
                 func_call = getattr(challenges, f"challenge_{embed_data['cur_challenge']}")
@@ -225,11 +231,11 @@ class Halloween(commands.Cog):
             cur_challenge = int(fetch[0]) + 1
             if cur_challenge in (1, 4, 6, 7, 9, 11, 13, 14, 15):
                 answer = answers[cur_challenge]
-                if ctx.message.content == answer and cur_challenge != 15:
+                if ctx.message.content.lower() == answer and cur_challenge != 15:
                     await ctx.send(responses[cur_challenge])
                     sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"
                     cursor.execute(sql, (cur_challenge, ctx.author.id))
-                elif ctx.message.content == answer and cur_challenge == 15:
+                elif ctx.message.content.lower() == answer and cur_challenge == 15:
                     now = datetime.utcnow()
                     sql = ("UPDATE rcs_halloween_players "
                            "SET finish_time = %s "
@@ -250,7 +256,54 @@ class Halloween(commands.Cog):
                         "elapsed": self.get_elapsed(start_time, now)
                     }
                     embed = self.completion_msg(embed_data)
-                    await ctx.send()
+                    await ctx.send(embed=embed)
+                else:
+                    await ctx.send(random.choice(wrong_answers_resp))
+
+    @commands.command(name="skip", aliases=["next"])
+    async def skip(self, ctx):
+        async with ctx.typing():
+            with Sql() as cursor:
+                sql = ("UPDATE rcs_halloween_players "
+                       "SET last_completed = last_completed + 1, skip_count = skip_count + 1 "
+                       "OUTPUT inserted.last_completed, inserted.skip_count "
+                       "WHERE discord_id = %s and skip_count < 3")
+                cursor.execute(sql, ctx.author.id)
+                fetch = cursor.fetchone()
+                if not fetch:
+                    return await ctx.send("I'm sorry, but you've already used all 3 skips. Gotta finish this one!")
+                last_completed = fetch[0]
+                skips_left = 3 - fetch[1]
+                self.bot.logger.info(f"{ctx.author} skipped Challenge #{last_completed}.")
+                if last_completed != 15:
+                    await ctx.send(f"Challenge #{last_completed} skipped. You have {skips_left} skips left.")
+                    if last_completed != 2:
+                        await ctx.send(responses[last_completed])
+                    else:
+                        await ctx.send(responses["2c"])
+                else:
+                    # Final challenge skipped
+                    now = datetime.utcnow()
+                    sql = ("UPDATE rcs_halloween_players "
+                           "SET finish_time = %s "
+                           "OUTPUT inserted.start_time "
+                           "WHERE discord_id = %d")
+                    cursor.execute(sql, (now, ctx.author.id))
+                    fetch = cursor.fetchone()
+                    start_time = fetch[0]
+                    sql = ("SELECT count(discord_id) as num_players, "
+                           "(SELECT count(discord_id) FROM rcs_halloween_players WHERE finish_time IS NOT NULL) as done "
+                           "FROM rcs_halloween_players")
+                    cursor.execute(sql)
+                    fetch = cursor.fetchone()
+                    embed_data = {
+                        "player_name": ctx.author.display_name,
+                        "num_players": fetch[0],
+                        "num_finished": fetch[1],
+                        "elapsed": self.get_elapsed(start_time, now)
+                    }
+                    embed = self.completion_msg(embed_data)
+                    await ctx.send(embed=embed)
 
 
 def setup(bot):

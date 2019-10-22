@@ -71,8 +71,9 @@ answers = {
 }
 
 responses = {
-    1: ("Well done!  That’s one challenge down, 14 to go!  Next step: head to Reddit Eclipse (invite) for a "
-        "few mysterious riddles.  Remember to look for the #trick-or-treat channel and type `++challenge`."),
+    1: ("Well done!  That’s one challenge down, 14 to go!  Next step: head to Reddit Eclipse "
+        "(https://discord.gg/FzUNupJ) for a few mysterious riddles.  Remember to look for the #trick-or-treat "
+        "channel and type `++challenge`."),
     "2a": "That's right. The lions would have died from starvation and you can hang out in there as long as you like!",
     "2b": "You must be smart! Mail isn't delivered on Sundays!'",
     "2c": ("You are one sharp cookie!  Nicely done.  Your new mission is to zoom over to Reddit Zero (invite), "
@@ -111,3 +112,15 @@ responses = {
     14: ("Good job Pirate Hunter!  You are almost there.  One more quiz for you over at Reddit Zulu "
          "and you’ll be done!  Sneak into their server (invite) and find the #trick-or-treat channel!"),
 }
+
+wrong_answers_resp = [
+    "That is not the answer you are looking for. Keep trying!",
+    "Was that supposed to be an answer? Cause... uh... well, try again, champ!",
+    "You're usually so good at these things, but that is not correct.",
+    "Nope.  Guess again amigo!",
+    "I know this one is tough. You can always `++skip` it if you want.",
+    "I knew I would stump you on that one. Think about it and try again.",
+    ("Congratulations!  You're the first person to get this one wrong! Just kidding, you are the first and you "
+     "won't be the last."),
+    "You know which challenge you're on, right? If not, try `++remind`.",
+]
