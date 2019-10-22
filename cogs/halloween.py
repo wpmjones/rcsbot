@@ -109,7 +109,7 @@ class Halloween(commands.Cog):
                     await ctx.send(f"{channel.name} created on the {guild.name} server.")
                 except discord.Forbidden:
                     await ctx.send(f"No perms to create a channel in {guild.name}.")
-                    break
+                    continue
             with Sql(as_dict=True) as cursor:
                 sql = "UPDATE rcs_halloween_clans SET channel_id = %d WHERE discord_id = %d"
                 cursor.execute(sql, (channel.id, guild.id))
