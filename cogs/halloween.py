@@ -117,6 +117,9 @@ class Halloween(commands.Cog):
             await channel.send("🎃 **Halloween is coming** 🎃\n\n"
                                "The RCS has something mysterious planned for you.  If you would like to participate, "
                                "type `++halloween join` and we will send you a message when the fun begins!")
+            await channel.send(f"{guild.owner.mention} This channel is currently invisible to `@everyone`. "
+                               f"It will be up to you to open it up to your members when you want to. After that, "
+                               f"you can delete this message!  ;)  Thanks!")
 
     @halloween.command(name="join", aliases=["register"])
     async def halloween_join(self, ctx):
