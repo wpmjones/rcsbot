@@ -82,17 +82,18 @@ class Halloween(commands.Cog):
                 await ctx.send(f"rcs-bot has not been installed on {clan['discord_id']}")
                 continue
             found = False
+            bypass = False
             for channel in guild.channels:
                 if isinstance(channel, discord.TextChannel) and channel.name == "trick-or-treat":
                     found = True
-                    await ctx.send(f"#trick-or-treat already exists on the {guild.name} server.")
                     perms = channel.permissions_for(guild.me)
-                    if not perms.send_messages:
+                    if perms.send_messages:
+                        await ctx.send(f"#trick-or-treat already exists on the {guild.name} server.")
+                    else:
                         await ctx.send(f"I found #trick-or-treat on the {guild.name} server, but I don't have "
                                        f"perms to send messages to the channel.")
-                        break
-            self.bot.logger.info(f"{channel.name}")
-            self.bot.logger.info(f"{found}")
+                        bypass = True
+                    break
             if not found:
                 try:
                     overwrites = {
@@ -115,16 +116,17 @@ class Halloween(commands.Cog):
                 except:
                     await ctx.send(f"Something else went wrong with {guild}")
                     continue
-            with Sql(as_dict=True) as cursor:
-                sql = "UPDATE rcs_halloween_clans SET channel_id = %d WHERE discord_id = %d"
-                cursor.execute(sql, (channel.id, guild.id))
-            await channel.send("🎃 **Halloween is coming** 🎃\n\n"
-                               "The RCS has something mysterious planned for you.  If you would like to participate, "
-                               "type `++halloween join` and we will send you a message when the fun begins!")
-            await channel.send(f"{guild.owner.mention} This channel is currently invisible to `@everyone`. "
-                               f"It will be up to you to open it up to your members when you want to. After that, "
-                               f"you can delete this message!  ;)  Thanks!")
-            self.bot.logger.info(f"Messages sent to {guild}")
+            if not bypass:
+                with Sql(as_dict=True) as cursor:
+                    sql = "UPDATE rcs_halloween_clans SET channel_id = %d WHERE discord_id = %d"
+                    cursor.execute(sql, (channel.id, guild.id))
+                await channel.send("🎃 **Halloween is coming** 🎃\n\n"
+                                   "The RCS has something mysterious planned for you.  If you would like to participate, "
+                                   "type `++halloween join` and we will send you a message when the fun begins!")
+                await channel.send(f"{guild.owner.mention} This channel is currently invisible to `@everyone`. "
+                                   f"It will be up to you to open it up to your members when you want to. After that, "
+                                   f"you can delete this message!  ;)  Thanks!")
+                self.bot.logger.info(f"Messages sent to {guild}")
 
     @halloween.command(name="join", aliases=["register"])
     async def halloween_join(self, ctx):
