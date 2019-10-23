@@ -289,6 +289,7 @@ class Halloween(commands.Cog):
 
     @commands.command(name="clean_up", hidden=True)
     async def clean_up(self, ctx):
+        self.bot.logger.info("reached clean_up")
         content = ctx.message.content
         await ctx.message.delete()
         if content in answers:

@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands
 from cogs.utils import context
 from cogs.utils.db import RcsDB
-from cogs.utils.constants import halloween_servers
+from cogs.utils.constants import halloween_channels
 from datetime import datetime
 from config import settings
 from loguru import logger
@@ -127,7 +127,7 @@ class RcsBot(commands.Bot):
         # Halloween Helper
         if not isinstance(ctx.channel, discord.TextChannel) and not message.content.startswith(prefix):
             await ctx.invoke(self.get_cog('Halloween').answer)
-        if message.guild.id in halloween_servers and not message.content.startswith(prefix):
+        if message.guild.id in halloween_channels and not message.content.startswith(prefix):
             await ctx.invoke(self.get_cog('Halloween').clean_up)
         if ctx.command is None:
             return
