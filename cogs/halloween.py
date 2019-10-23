@@ -128,6 +128,10 @@ class Halloween(commands.Cog):
                                    f"you can delete this message!  ;)  Thanks!")
                 self.bot.logger.info(f"Messages sent to {guild}")
 
+    @halloween.command(hidden=True)
+    async def bot(self, ctx):
+        await ctx.send(self.invite_link)
+
     @halloween.command(name="join", aliases=["register"])
     async def halloween_join(self, ctx):
         """ - Issue this command to register for the event"""
@@ -197,6 +201,42 @@ class Halloween(commands.Cog):
         await ctx.message.delete(delay=15)
         await ctx.author.send(embed=embed)
 
+    @commands.command(name="challenge")
+    async def challenge(self, ctx):
+        """Issued to receive the challenge for that server"""
+        async with ctx.typing():
+            with Sql(as_dict=True) as cursor:
+                sql = ("SELECT last_completed + 1 as cur_challenge, finish_time FROM rcs_halloween_players "
+                       "WHERE discord_id = %d")
+                cursor.execute(sql, ctx.author.id)
+                player_info = cursor.fetchone()
+                sql = "SELECT challenge FROM rcs_halloween_clans WHERE discord_id = %d"
+                cursor.execute(sql, ctx.message.guild.id)
+                clan = cursor.fetchone()
+                if player_info['finish_time']:
+                    await ctx.message.delete(delay=60)
+                    return await ctx.send("There are no more challenges for you!  You have completed the event.",
+                                          delete_after=60)
+                if player_info['cur_challenge'] != clan['challenge']:
+                    sql = "SELECT invite_link FROM rcs_halloween_clans WHERE challenge = %d"
+                    cursor.execute(sql, player_info['cur_challenge'])
+                    clan = cursor.fetchone()
+                    return await ctx.send(f"Looks like you're on the wrong server for this challenge.  Head over to "
+                                          f"{clan['clan_name']} (<{clan['invite_link']}>) and try `++challenge` again.",
+                                          delete_after=60)
+            # Assume player is on the correct server for the current challenge
+            if player_info['cur_challenge'] != 2:
+                func_call = getattr(challenges, f"challenge_{player_info['cur_challenge']}")
+            else:
+                func_call = getattr(challenges, f"challenge_{player_info['cur_challenge']}a")
+            if player_info['cur_challenge'] in (1, 4, 11, 13):
+                challenge, image = func_call()
+            else:
+                challenge = func_call()
+                image = None
+            await ctx.author.send(challenge)
+
+
     @commands.command(name="remind", aliases=["reminder"])
     async def remind(self, ctx):
         # REMOVE THIS BEFORE EVENT STARTS!!!
@@ -245,12 +285,14 @@ class Halloween(commands.Cog):
             except discord.Forbidden:
                 self.bot.logger.error(f"Couldn't remove command message on {ctx.message.guild}. Darned perms!")
 
-    @commands.command(hidden=True)
+    @commands.command(name="answer", hidden=True)
     async def answer(self, ctx):
         # REMOVE THIS BEFORE EVENT STARTS!!!
         if ctx.author.id not in testers:
             self.bot.logger.info(f"{ctx.author} just tried to start Halloween!")
             return await ctx.send("We haven't started just yet. We'll let you know when it's time to go!")
+        print("Starting answer")
+        print(ctx.message.content)
         with Sql() as cursor:
             sql = "SELECT last_completed FROM rcs_halloween_players WHERE discord_id = %s"
             cursor.execute(sql, ctx.author.id)
@@ -259,7 +301,7 @@ class Halloween(commands.Cog):
             if cur_challenge in (1, 4, 6, 7, 9, 11, 13, 14, 15):
                 answer = answers[cur_challenge]
                 if ctx.message.content.lower() == answer and cur_challenge != 15:
-                    await ctx.send(responses[cur_challenge])
+                    await ctx.author.send(responses[cur_challenge])
                     sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"
                     cursor.execute(sql, (cur_challenge, ctx.author.id))
                 elif ctx.message.content.lower() == answer and cur_challenge == 15:
@@ -283,25 +325,24 @@ class Halloween(commands.Cog):
                         "elapsed": self.get_elapsed(start_time, now)
                     }
                     embed = self.completion_msg(embed_data)
-                    await ctx.send(embed=embed)
+                    await ctx.author.send(embed=embed)
                 else:
-                    await ctx.send(random.choice(wrong_answers_resp))
+                    await ctx.author.send(random.choice(wrong_answers_resp))
 
     @commands.command(name="clean_up", hidden=True)
     async def clean_up(self, ctx):
-        self.bot.logger.info("reached clean_up")
         content = ctx.message.content
         await ctx.message.delete()
-        if content in answers:
-            content = f"**{ctx.author.display_name} said:**" + content
-            ctx.invoke(self.answer, ctx=ctx)
+        if content.lower() in answers.values():
+            content = f"**{ctx.author.display_name} said:\n**" + content
+            await ctx.author.send(content)
+            await ctx.invoke(self.answer)
         else:
-            content = f"**{ctx.author.display_name} said:**" + content
+            content = f"**{ctx.author.display_name} said:\n**" + content
             content += ("\n\nWe don't want to clutter up the trick or treat channels. Let's keep the conversation "
                         "here. If you were attempting to answer a question, that wasn't the right answer. "
                         "Maybe give it another shot?")
-        await ctx.author.send(content)
-
+            await ctx.author.send(content)
 
     @commands.command(name="skip", aliases=["next"])
     async def skip(self, ctx):
