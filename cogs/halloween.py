@@ -141,9 +141,11 @@ class Halloween(commands.Cog):
                 fetch = cursor.fetchone()
         if not fetch:
             await ctx.send("You're already registered for the event. I'll send you a DM when the event is "
-                           "ready to begin!")
+                           "ready to begin!", delete_after=30)
         else:
-            await ctx.send("I've registered you for the event.  I'll send you a DM when the event is ready to begin!")
+            await ctx.send("I've registered you for the event.  I'll send you a DM when the event is ready to begin!",
+                           delete_after=30)
+        await ctx.message.delete(delay=30)
 
     @halloween.command(name="start")
     async def halloween_start(self, ctx):
@@ -189,7 +191,9 @@ class Halloween(commands.Cog):
                         inline=False)
         embed.set_footer(text=f"{num_players} currently participating",
                          icon_url=get_emoji_url(301032036779425812))
-        await ctx.send(embed=embed)
+        await ctx.send("I'ma slide into your DMs and get you started.  Have fun!", delete_after=15)
+        await ctx.message.delete(delay=15)
+        await ctx.author.send(embed=embed)
 
     @commands.command(name="remind", aliases=["reminder"])
     async def remind(self, ctx):
