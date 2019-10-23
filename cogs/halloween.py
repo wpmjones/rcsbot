@@ -91,6 +91,8 @@ class Halloween(commands.Cog):
                         await ctx.send(f"I found #trick-or-treat on the {guild.name} server, but I don't have "
                                        f"perms to send messages to the channel.")
                         break
+            self.bot.logger.info(f"{channel.name}")
+            self.bot.logger.info(f"{found}")
             if not found:
                 try:
                     overwrites = {
@@ -109,6 +111,9 @@ class Halloween(commands.Cog):
                     await ctx.send(f"{channel.name} created on the {guild.name} server.")
                 except discord.Forbidden:
                     await ctx.send(f"No perms to create a channel in {guild.name}.")
+                    continue
+                except:
+                    await ctx.send(f"Something else went wrong with {guild}")
                     continue
             with Sql(as_dict=True) as cursor:
                 sql = "UPDATE rcs_halloween_clans SET channel_id = %d WHERE discord_id = %d"
