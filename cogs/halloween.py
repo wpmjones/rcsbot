@@ -143,7 +143,8 @@ class Halloween(commands.Cog):
             await ctx.send("You're already registered for the event. I'll send you a DM when the event is "
                            "ready to begin!", delete_after=30)
         else:
-            await ctx.send("I've registered you for the event.  I'll send you a DM when the event is ready to begin!",
+            await ctx.send("I've registered you for the event.  I'll send you a DM when the event is ready to begin! "
+                           "This message will disappear shortly.",
                            delete_after=30)
         await ctx.message.delete(delay=30)
 
