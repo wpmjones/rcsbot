@@ -1,6 +1,5 @@
 import discord
-import requests
-from datetime import datetime
+
 from discord.ext import commands
 from config import settings, color_pick, bot_log
 

@@ -6,9 +6,10 @@ import sys
 import asyncio
 import discord
 
+from discord.ext import commands
 from cogs.utils import context
 from cogs.utils.db import RcsDB
-from discord.ext import commands
+from cogs.utils.constants import halloween_servers
 from datetime import datetime
 from config import settings
 from loguru import logger
@@ -55,13 +56,12 @@ else:
     coc_names = "dev"
     initial_extensions = ["cogs.general",
                           "cogs.games",
-                          "cogs.discordcheck",
                           "cogs.newhelp",
                           "cogs.council",
                           "cogs.eggs",
                           "cogs.owner",
                           "cogs.admin",
-                          "cogs.draft",
+                          "cogs.halloween",
                           ]
 
 description = """Multi bot to serve the RCS - by TubaKid
@@ -126,10 +126,9 @@ class RcsBot(commands.Bot):
         ctx = await self.get_context(message, cls=context.Context)
         # Halloween Helper
         if not isinstance(ctx.channel, discord.TextChannel) and not message.content.startswith(prefix):
-            try:
-                await ctx.invoke(self.get_cog('Halloween').answer)
-            except:
-                logger.exception("fail")
+            await ctx.invoke(self.get_cog('Halloween').answer)
+        if message.guild.id in halloween_servers and not message.content.startswith(prefix):
+            await ctx.invoke(self.get_cog('Halloween').clean_up)
         if ctx.command is None:
             return
         async with ctx.acquire():

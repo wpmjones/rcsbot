@@ -164,7 +164,8 @@ class Halloween(commands.Cog):
                 if fetch[0]:
                     start_time = fetch[0]
                     return await ctx.send(f"You started the event at {start_time} UTC. If you need a reminder "
-                                          f"about your next challenge, just type `++halloween remind`.")
+                                          f"about your next challenge, just type `++halloween remind`.",
+                                          delete_after=30)
                 # Initiate time and issue the first clue
                 start_time = datetime.utcnow()
                 cursor.callproc("rcs_halloween_start", (ctx.author.id, start_time))
@@ -244,7 +245,7 @@ class Halloween(commands.Cog):
             except discord.Forbidden:
                 self.bot.logger.error(f"Couldn't remove command message on {ctx.message.guild}. Darned perms!")
 
-    @commands.command()
+    @commands.command(hidden=True)
     async def answer(self, ctx):
         # REMOVE THIS BEFORE EVENT STARTS!!!
         if ctx.author.id not in testers:
@@ -285,6 +286,21 @@ class Halloween(commands.Cog):
                     await ctx.send(embed=embed)
                 else:
                     await ctx.send(random.choice(wrong_answers_resp))
+
+    @commands.command(name="clean_up", hidden=True)
+    async def clean_up(self, ctx):
+        content = ctx.message.content
+        await ctx.message.delete()
+        if content in answers:
+            content = f"**{ctx.author.display_name} said:**" + content
+            ctx.invoke(self.answer, ctx=ctx)
+        else:
+            content = f"**{ctx.author.display_name} said:**" + content
+            content += ("\n\nWe don't want to clutter up the trick or treat channels. Let's keep the conversation "
+                        "here. If you were attempting to answer a question, that wasn't the right answer. "
+                        "Maybe give it another shot?")
+        await ctx.author.send(content)
+
 
     @commands.command(name="skip", aliases=["next"])
     async def skip(self, ctx):

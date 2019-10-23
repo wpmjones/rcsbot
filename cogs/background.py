@@ -12,10 +12,8 @@ class Background(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        # if isinstance(message.channel, discord.DMChannel) and message.author != self.bot.user:
-        #     await message.channel.send("Thanks for chatting, but I'm really not set up for that. Perhaps try a "
-        #                                "command like `++help`.")
-        #     return
+        if isinstance(message.channel, discord.DMChannel):
+            return
         if message.author.bot or message.guild.id != settings['discord']['rcsGuildId']:
             return
         if settings['rcsRoles']['members'] not in [role.id for role in message.author.roles]:
