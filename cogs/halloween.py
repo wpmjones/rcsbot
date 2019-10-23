@@ -4,7 +4,7 @@ import random
 from discord.ext import commands
 from cogs.utils.db import Sql
 from cogs.utils.helper import get_emoji_url
-from cogs.utils.constants import answers, responses, wrong_answers_resp
+from cogs.utils.constants import answers, responses, wrong_answers_resp, testers
 from cogs.utils import challenges
 from datetime import datetime
 
@@ -148,6 +148,10 @@ class Halloween(commands.Cog):
     @halloween.command(name="start")
     async def halloween_start(self, ctx):
         """ - Issue this command to start the event."""
+        # REMOVE THIS BEFORE EVENT STARTS!!!
+        if ctx.author.id not in testers:
+            self.bot.logger.info(f"{ctx.author} just tried to start Halloween!")
+            return await ctx.send("We haven't started just yet. We'll let you know when it's time to go!")
         async with ctx.typing():
             with Sql() as cursor:
                 # Check to see if they've already started
@@ -175,7 +179,7 @@ class Halloween(commands.Cog):
                 "can use strategically throughout the event. Use them wisely! The member completing the challenges "
                 "in the shortest amount of time wins!")
         clue = (f"Head over to the Reddit Electrum Discord server ({electrum_invite}), "
-                     f"find the <#{electrum_channel}> channel, and type `++challenge` to begin your first challenge.")
+                f"find the <#{electrum_channel}> channel, and type `++challenge` to begin your first challenge.")
         embed = discord.Embed(description=desc, title=self.title, color=self.color)
         embed.add_field(name="Prize Info:",
                         value="Sexy role color, maybe a t-shirt, maybe some Clash swag",
@@ -189,6 +193,10 @@ class Halloween(commands.Cog):
 
     @commands.command(name="remind", aliases=["reminder"])
     async def remind(self, ctx):
+        # REMOVE THIS BEFORE EVENT STARTS!!!
+        if ctx.author.id not in testers:
+            self.bot.logger.info(f"{ctx.author} just tried to start Halloween!")
+            return await ctx.send("We haven't started just yet. We'll let you know when it's time to go!")
         async with ctx.typing():
             with Sql() as cursor:
                 sql = ("SELECT last_completed, skip_count, start_time "
@@ -233,6 +241,10 @@ class Halloween(commands.Cog):
 
     @commands.command()
     async def answer(self, ctx):
+        # REMOVE THIS BEFORE EVENT STARTS!!!
+        if ctx.author.id not in testers:
+            self.bot.logger.info(f"{ctx.author} just tried to start Halloween!")
+            return await ctx.send("We haven't started just yet. We'll let you know when it's time to go!")
         with Sql() as cursor:
             sql = "SELECT last_completed FROM rcs_halloween_players WHERE discord_id = %s"
             cursor.execute(sql, ctx.author.id)
@@ -271,6 +283,10 @@ class Halloween(commands.Cog):
 
     @commands.command(name="skip", aliases=["next"])
     async def skip(self, ctx):
+        # REMOVE THIS BEFORE EVENT STARTS!!!
+        if ctx.author.id not in testers:
+            self.bot.logger.info(f"{ctx.author} just tried to start Halloween!")
+            return await ctx.send("We haven't started just yet. We'll let you know when it's time to go!")
         async with ctx.typing():
             with Sql() as cursor:
                 sql = ("UPDATE rcs_halloween_players "
