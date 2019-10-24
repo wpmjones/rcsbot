@@ -74,11 +74,9 @@ responses = {
     1: ("Well done!  That’s one challenge down, 14 to go!  Next step: head to Reddit Eclipse "
         "(<https://discord.gg/FzUNupJ>) for a few mysterious riddles.  Remember to look for the #trick-or-treat "
         "channel and type `++challenge`."),
-    "2a": "That's right. The lions would have died from starvation and you can hang out in there as long as you like!",
-    "2b": "You must be smart! Mail isn't delivered on Sundays!'",
-    "2c": ("You are one sharp cookie!  Nicely done.  Your new mission is to zoom over to Reddit Zero "
-           "(<https://discord.gg/UQFpaH2>), find the #trick-or-treat channel, and post an image of your "
-           "favorite Halloween treat or candy. "),
+    2: ("You are one sharp cookie!  Nicely done.  Your new mission is to zoom over to Reddit Zero "
+        "(<https://discord.gg/UQFpaH2>), find the #trick-or-treat channel, and post an image of your "
+        "favorite Halloween treat or candy. "),
     3: ("I love candy and I love treats!  I also like pie!  And Reddit Pi!  Head over to their server "
         "(<https://discord.gg/jpkeyvt>) and find a new challenge.  Just type `++challenge` in the "
         "<#636660392071921683> channel for next steps."),
