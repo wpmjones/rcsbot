@@ -419,7 +419,7 @@ class CouncilCog(commands.Cog):
                    f"SELECT '{clan.tag[1:]}', '{new_alt}' "
                    f"EXCEPT "
                    f"SELECT clanTag, altName FROM rcs_alts "
-                   f"WHERE clanTag = '{clan.tag[1:]}' AND altName = '{new_alt}'")
+                   f"WHERE clanTag = '{clan.tag[1:]}' AND altName = N'{new_alt}'")
             cursor.execute(sql)
         await ctx.send(f"{new_alt} has been added as an alt account for the leader of {clan.name}.")
 
