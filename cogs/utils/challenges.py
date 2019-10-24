@@ -202,14 +202,14 @@ async def send_challenge(ctx, cur_challenge, challenge, image):
                 return
 
             if str(reaction.emoji) != reactions_1[2]:
-                await ctx.author.send(random.choice[
+                await ctx.author.send(random.choice([
                                           "I'm afraid that was the wrong door.  You're dead.  But a magical "
                                           "fairy has come and brought you back to life.  Try again!",
                                           "Do you have a death wish?! You're lucky that you have 9 lives! Try again.",
                                           "Are you nuts? There was practically a sign on that door that said 'Die "
                                           "here' and you went and opened it!  Fortunately, the Healer was nearby "
                                           "and you live to try another door.  One more time..."
-                                      ])
+                                      ]))
             else:
                 break
         else:
@@ -233,13 +233,13 @@ async def send_challenge(ctx, cur_challenge, challenge, image):
                 return
 
             if str(reaction.emoji) != reactions_2[3]:
-                await ctx.author.send(random.choice[
+                await ctx.author.send(random.choice([
                                           "False arrest. They did nothing wrong! Try again!",
                                           "Innocent, I say! Innocent! Try again!",
                                           "There is no way you can prove that! Pick someone else!",
                                           "And you would be wrong. Check the clues and guess again!",
                                           "They didn't do it. Try one more time!"
-                                      ])
+                                      ]))
             else:
                 break
         else:
