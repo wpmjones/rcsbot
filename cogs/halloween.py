@@ -246,7 +246,7 @@ class Halloween(commands.Cog):
             else:
                 challenge = func_call()
                 image = None
-            await ctx.author.send(challenge)
+            await challenges.send_challenge(ctx, player_info['cur_challenge'], challenge, image)
 
     @commands.command(name="remind", aliases=["reminder"])
     async def remind(self, ctx):
