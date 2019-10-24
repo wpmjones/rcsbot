@@ -165,7 +165,8 @@ class Halloween(commands.Cog):
         async with ctx.typing():
             guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
             tot_role = guild.get_role(636646591880626177)
-            await ctx.author.add_roles(tot_role)
+            member = guild.get_member(ctx.author.id)
+            await member.add_roles(tot_role)
             with Sql() as cursor:
                 # Check to see if they've already started
                 sql = "SELECT start_time FROM rcs_halloween_players WHERE discord_id = %d"
