@@ -169,9 +169,9 @@ def challenge_15():
 
 
 async def send_challenge(ctx, cur_challenge, challenge, image):
-    if cur_challenge in (1, 3, 5, 6, 7, 8, 9, 10, 12, 15):
+    if cur_challenge in (3, 5, 6, 7, 8, 9, 10, 12, 15):
         await ctx.author.send(challenge)
-    if cur_challenge in (4, 11, 13, 14):
+    if cur_challenge in (1, 4, 11, 13, 14):
         await ctx.author.send(challenge)
         await ctx.author.send(file=image)
     if cur_challenge == 2:

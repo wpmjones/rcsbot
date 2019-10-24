@@ -238,6 +238,7 @@ class Halloween(commands.Cog):
                                           f"{clan['clan_name']} (<{clan['invite_link']}>) and try `++challenge` again.",
                                           delete_after=60)
             # Assume player is on the correct server for the current challenge
+            await ctx.message.delete()
             if player_info['cur_challenge'] != 2:
                 func_call = getattr(challenges, f"challenge_{player_info['cur_challenge']}")
             else:
