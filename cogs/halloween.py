@@ -383,6 +383,8 @@ class Halloween(commands.Cog):
                        "FROM rcs_halloween_players")
                 cursor.execute(sql)
                 fetch = cursor.fetchone()
+            if stats["last_completed"] == 1:
+                await self.send_challenge(ctx, 2, "", "")
             hours, mins, secs = self.get_elapsed(stats["start_time"], datetime.now())
             embed_data = {
                 "num_players": fetch[0],
