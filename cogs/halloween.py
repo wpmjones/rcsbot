@@ -1,5 +1,6 @@
 import discord
 import random
+import asyncio
 
 from discord.ext import commands
 from cogs.utils.db import Sql
@@ -248,7 +249,119 @@ class Halloween(commands.Cog):
             else:
                 challenge = func_call()
                 image = None
-            await challenges.send_challenge(ctx, player_info['cur_challenge'], challenge, image)
+            await self.send_challenge(ctx, player_info['cur_challenge'], challenge, image)
+
+    async def send_challenge(self, ctx, cur_challenge, challenge, image):
+        if cur_challenge in (3, 5, 6, 7, 8, 9, 10, 12, 15):
+            await ctx.author.send(challenge)
+        if cur_challenge in (1, 4, 11, 13, 14):
+            await ctx.author.send(challenge)
+            await ctx.author.send(file=image)
+        if cur_challenge == 2:
+            reactions_1 = ("🔥", "🕵", "🦁")
+            reactions_2 = ("🇼", "🇨", "🇧", "🇲", "🇬")
+            reactions_3 = (
+                "🐾", "💤", "👯", "💼", "🐦", "📞", "🗑", "🌡", "🐍", "🌳", "🗞", "📸", "💳", "🗡", "🔋", "🖊",
+                "🔫", "📎", "⏱", "🏀"
+            )
+
+            def check_1(reaction, user):
+                return user == ctx.message.author and str(reaction.emoji) in reactions_1
+
+            def check_2(reaction, user):
+                return user == ctx.message.author and str(reaction.emoji) in reactions_2
+
+            def check_3(reaction, user):
+                return user == ctx.message.author and str(reaction.emoji) in reactions_3
+
+            msg = await ctx.author.send(challenges.challenge_2a())
+            for r in reactions_1:
+                await msg.add_reaction(r)
+
+            for i in range(4):
+                try:
+                    reaction, user = await ctx.bot.wait_for("reaction_add", timeout=60, check=check_1)
+                except asyncio.TimeoutError:
+                    await msg.clear_reactions()
+                    await msg.edit("You have run out of time. When you're ready, just type `++challenge`.")
+                    return
+
+                if str(reaction.emoji) != reactions_1[2]:
+                    await ctx.author.send(random.choice([
+                        "I'm afraid that was the wrong door.  You're dead.  But a magical "
+                        "fairy has come and brought you back to life.  Try again!",
+                        "Do you have a death wish?! You're lucky that you have 9 lives! Try again.",
+                        "Are you nuts? There was practically a sign on that door that said 'Die "
+                        "here' and you went and opened it!  Fortunately, the Healer was nearby "
+                        "and you live to try another door.  One more time..."
+                    ]))
+                else:
+                    break
+            else:
+                await msg.clear_reactions()
+                await msg.edit("You have run out of time. When you're ready, just type `++challenge`.")
+                return
+
+            await ctx.author.send(
+                "**That's right!  Wise choice.  Those lions all died of starvation and you are safe!**")
+
+            # 2a complete, start 2b
+            msg = await ctx.author.send(challenges.challenge_2b())
+            for r in reactions_2:
+                await msg.add_reaction(r)
+
+            for i in range(5):
+                try:
+                    reaction, user = await ctx.bot.wait_for("reaction_add", timeout=60, check=check_2)
+                except asyncio.TimeoutError:
+                    await msg.clear_reactions()
+                    await msg.edit("You have run out of time. When you're ready, just type `++challenge`.")
+                    return
+
+                if str(reaction.emoji) != reactions_2[3]:
+                    await ctx.author.send(random.choice([
+                        "False arrest. They did nothing wrong! Try again!",
+                        "Innocent, I say! Innocent! Try again!",
+                        "There is no way you can prove that! Pick someone else!",
+                        "And you would be wrong. Check the clues and guess again!",
+                        "They didn't do it. Try one more time!"
+                    ]))
+                else:
+                    break
+            else:
+                await msg.clear_reactions()
+                await msg.edit("You have run out of time. When you're ready, just type `++challenge`.")
+                return
+
+            await ctx.author.send("**The maid lied about getting the mail. There is no mail delivery on Sunday!**")
+
+            # 2b complete, start 2c
+            msg = await ctx.author.send(challenges.challenge_2c())
+            for r in reactions_3:
+                await msg.add_reaction(r)
+
+            for i in range(12):
+                try:
+                    reaction, user = await ctx.bot.wait_for("reaction_add", timeout=90, check=check_3)
+                except asyncio.TimeoutError:
+                    await msg.clear_reactions()
+                    await msg.edit("You have run out of time. When you're ready, just type `++challenge`.")
+                    return
+
+                if str(reaction.emoji) != reactions_3[11]:
+                    await ctx.author.send("That's an interesting choice.  Also wrong.  Please try again.")
+                else:
+                    break
+            else:
+                await msg.clear_reactions()
+                await msg.edit("You have run out of time. When you're ready, just type `++challenge`.")
+                return
+
+            await ctx.author.send("**He's a photographer of course!  Well done!**")
+            await ctx.author.send(responses[2])
+            with Sql() as cursor:
+                sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"
+                cursor.execute(sql, (cur_challenge, ctx.author.id))
 
     @commands.command(name="remind", aliases=["reminder"])
     async def remind(self, ctx):
