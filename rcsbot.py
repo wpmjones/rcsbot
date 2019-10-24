@@ -25,6 +25,7 @@ if enviro == "LIVE":
                           "cogs.push",
                           "cogs.background",
                           "cogs.discordcheck",
+                          "cogs.halloween",
                           "cogs.games",
                           "cogs.newhelp",
                           "cogs.council",
@@ -86,6 +87,7 @@ class RcsBot(commands.Bot):
         self.remove_command("help")
         self.coc = coc_client
         self.color = discord.Color.dark_red()
+        self.client_id = settings['discord']['rcs_client_id']
         self.messages = {}
 
         coc_client.add_events(self.on_event_error)
@@ -127,7 +129,7 @@ class RcsBot(commands.Bot):
         # Halloween Helper
         if not isinstance(ctx.channel, discord.TextChannel) and not message.content.startswith(prefix):
             await ctx.invoke(self.get_cog('Halloween').answer)
-        if message.guild.id in halloween_channels and not message.content.startswith(prefix):
+        if message.channel.id in halloween_channels and not message.content.startswith(prefix):
             await ctx.invoke(self.get_cog('Halloween').clean_up)
         if ctx.command is None:
             return

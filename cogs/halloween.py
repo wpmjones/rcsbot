@@ -7,6 +7,7 @@ from cogs.utils.helper import get_emoji_url
 from cogs.utils.constants import answers, responses, wrong_answers_resp, testers
 from cogs.utils import challenges
 from datetime import datetime
+from config import settings
 
 
 class Halloween(commands.Cog):
@@ -158,8 +159,13 @@ class Halloween(commands.Cog):
         # REMOVE THIS BEFORE EVENT STARTS!!!
         if ctx.author.id not in testers:
             self.bot.logger.info(f"{ctx.author} just tried to start Halloween!")
-            return await ctx.send("We haven't started just yet. We'll let you know when it's time to go!")
+            await ctx.message.delete(delay=30)
+            return await ctx.send("We haven't started just yet. We'll let you know when it's time to go!",
+                                  delete_after=30)
         async with ctx.typing():
+            guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
+            tot_role = guild.get_role(636646591880626177)
+            await ctx.author.add_roles(tot_role)
             with Sql() as cursor:
                 # Check to see if they've already started
                 sql = "SELECT start_time FROM rcs_halloween_players WHERE discord_id = %d"
@@ -204,6 +210,12 @@ class Halloween(commands.Cog):
     @commands.command(name="challenge")
     async def challenge(self, ctx):
         """Issued to receive the challenge for that server"""
+        # REMOVE THIS BEFORE EVENT STARTS!!!
+        if ctx.author.id not in testers:
+            self.bot.logger.info(f"{ctx.author} just tried to get a challenge!")
+            await ctx.message.delete(delay=30)
+            return await ctx.send("We haven't started just yet. We'll let you know when it's time to go!",
+                                  delete_after=30)
         async with ctx.typing():
             with Sql(as_dict=True) as cursor:
                 sql = ("SELECT last_completed + 1 as cur_challenge, finish_time FROM rcs_halloween_players "
@@ -236,13 +248,13 @@ class Halloween(commands.Cog):
                 image = None
             await ctx.author.send(challenge)
 
-
     @commands.command(name="remind", aliases=["reminder"])
     async def remind(self, ctx):
         # REMOVE THIS BEFORE EVENT STARTS!!!
         if ctx.author.id not in testers:
-            self.bot.logger.info(f"{ctx.author} just tried to start Halloween!")
-            return await ctx.send("We haven't started just yet. We'll let you know when it's time to go!")
+            await ctx.message.delete(delay=30)
+            return await ctx.send("We haven't started just yet. We'll let you know when it's time to go!",
+                                  delete_after=30)
         async with ctx.typing():
             with Sql() as cursor:
                 sql = ("SELECT last_completed, skip_count, start_time "
@@ -289,8 +301,9 @@ class Halloween(commands.Cog):
     async def answer(self, ctx):
         # REMOVE THIS BEFORE EVENT STARTS!!!
         if ctx.author.id not in testers:
-            self.bot.logger.info(f"{ctx.author} just tried to start Halloween!")
-            return await ctx.send("We haven't started just yet. We'll let you know when it's time to go!")
+            await ctx.message.delete(delay=30)
+            return await ctx.send("We haven't started just yet. We'll let you know when it's time to go!",
+                                  delete_after=30)
         print("Starting answer")
         print(ctx.message.content)
         with Sql() as cursor:
@@ -348,8 +361,9 @@ class Halloween(commands.Cog):
     async def skip(self, ctx):
         # REMOVE THIS BEFORE EVENT STARTS!!!
         if ctx.author.id not in testers:
-            self.bot.logger.info(f"{ctx.author} just tried to start Halloween!")
-            return await ctx.send("We haven't started just yet. We'll let you know when it's time to go!")
+            await ctx.message.delete(delay=30)
+            return await ctx.send("We haven't started just yet. We'll let you know when it's time to go!",
+                                  delete_after=30)
         async with ctx.typing():
             with Sql() as cursor:
                 sql = ("UPDATE rcs_halloween_players "
