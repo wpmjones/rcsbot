@@ -278,11 +278,11 @@ class Halloween(commands.Cog):
                     return await ctx.send("There are no more challenges for you!  You have completed the event.",
                                           delete_after=60)
                 if player_info['cur_challenge'] != clan['challenge']:
-                    sql = "SELECT invite_link FROM rcs_halloween_clans WHERE challenge = %d"
+                    sql = "SELECT clanName, invite_link FROM rcs_halloween_clans WHERE challenge = %d"
                     cursor.execute(sql, player_info['cur_challenge'])
                     clan = cursor.fetchone()
                     return await ctx.send(f"Looks like you're on the wrong server for this challenge.  Head over to "
-                                          f"{clan['clan_name']} (<{clan['invite_link']}>) and try `++challenge` again.",
+                                          f"{clan['clanName']} (<{clan['invite_link']}>) and try `++challenge` again.",
                                           delete_after=60)
             # Assume player is on the correct server for the current challenge
             await ctx.message.delete()
@@ -570,11 +570,11 @@ class Halloween(commands.Cog):
         guild = ctx.message.guild
         start = content.find("!") + 1
         end = content.find(">", start)
-        player_id = content[start:end]
+        player_id = int(content[start:end])
         if player_id == ctx.author.id:
             return await ctx.send(f"Nice try but you can't do this one on your own. Recruit someone else to issue "
                                   f"the `++pumpkin {ctx.author.mention}` command for you.")
-        player = guild.get_member(int(player_id))
+        player = guild.get_member(player_id)
         with Sql() as cursor:
             sql = "SELECT last_completed + 1 FROM rcs_halloween_players WHERE discord_id = %d"
             cursor.execute(sql, player_id)
@@ -593,6 +593,10 @@ class Halloween(commands.Cog):
                          icon_url="https://discordapp.com/assets/2c21aeda16de354ba5334551a883b481.png")
         await ctx.send(embed=embed)
         await player.send(responses[8])
+        await ctx.author.send(responses[cur_challenge])
+        with Sql() as cursor:
+            sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"
+            cursor.execute(sql, (cur_challenge, player.id))
 
     @commands.command(name="clean_up", hidden=True)
     async def clean_up(self, ctx):
