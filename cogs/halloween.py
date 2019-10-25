@@ -438,7 +438,7 @@ class Halloween(commands.Cog):
             cursor.execute(sql, ctx.author.id)
             fetch = cursor.fetchone()
             cur_challenge = int(fetch[0]) + 1
-            print(cur_challenge)
+            self.bot.logger.info(cur_challenge)
             if cur_challenge in (1, 4, 6, 7, 9, 11, 13, 14, 15):
                 answer = answers[cur_challenge]
                 if ctx.message.content.lower() == answer and cur_challenge != 15:
