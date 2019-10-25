@@ -524,16 +524,16 @@ class Halloween(commands.Cog):
         if ctx.channel.id not in safe_channels:
             content = ctx.message.content
             await ctx.message.delete()
-            if content.lower() in answers.values():
-                content = f"**{ctx.author.display_name} said:\n**" + content
-                await ctx.author.send(content)
-                await ctx.invoke(self.answer)
-            else:
+            if content.lower() not in answers.values():
                 content = f"**{ctx.author.display_name} said:\n**" + content
                 content += ("\n\nWe don't want to clutter up the trick or treat channels. Let's keep the conversation "
                             "here. If you were attempting to answer a question, that wasn't the right answer. "
                             "Maybe give it another shot?")
+                return await ctx.author.send(content)
+            else:
+                content = f"**{ctx.author.display_name} said:\n**" + content
                 await ctx.author.send(content)
+            await ctx.invoke(self.answer)
 
     @commands.command(name="skip", aliases=["next"])
     async def skip(self, ctx):
