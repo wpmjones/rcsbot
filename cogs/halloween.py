@@ -19,11 +19,13 @@ class Halloween(commands.Cog):
         self.event_end = datetime(2019, 11, 1, 3, 00, 00)
 
     def build_embed(self, data):
-        embed = discord.Embed(title=self.title, description=data['challenge'], color=self.color)
+        embed = discord.Embed(title=data['title'], description=data['challenge'], color=self.color)
+        embed.set_author(name=self.title)
         embed.add_field(name="Players:", value=data['num_players'], inline=True)
         embed.add_field(name="Players Finished:", value=data['num_finished'], inline=True)
-        embed.add_field(name="Current Challenge:", value=f"Challenge #{data['cur_challenge']}", inline=True)
         embed.add_field(name="Skips:", value=data['skips'], inline=True)
+        if data['image_url']:
+            embed.set_image(url=data['image_url'])
         embed.set_footer(text=f"{data['elapsed']} elapsed in your adventure",
                          icon_url="https://cdn.discordapp.com/emojis/629481616091119617.png")
         return embed
@@ -49,6 +51,12 @@ class Halloween(commands.Cog):
         elapsed = _now - start_time
         hours, rem = divmod(elapsed.seconds, 3600)
         mins, secs = divmod(rem, 60)
+        if hours < 10:
+            hours = f"0{hours}"
+        if mins < 10:
+            mins = f"0{mins}"
+        if secs < 10:
+            secs = f"0{secs}"
         return hours, mins, secs
 
     @property
@@ -155,19 +163,24 @@ class Halloween(commands.Cog):
         prep_msg = ("Greetings! This is just a prep message to let you know that I'm looking to start testing either "
                     "Friday night or Saturday morning, US time.  Talk to you soon!")
         init_msg = ("**TESTING!!!**\n"
-                    "The time has come, the Walrus said,\n"
-                    "  To talk of many things:\n"
-                    "Of shoes — and ships — and sealing-wax —\n"
-                    "  Of cabbages — and kings —\n"
-                    "And why the sea is boiling hot —\n"
-                    "  And whether pigs have wings.\n\n"
+                    # "The time has come, the Walrus said,\n"
+                    # "  To talk of many things:\n"
+                    # "Of shoes — and ships — and sealing-wax —\n"
+                    # "  Of cabbages — and kings —\n"
+                    # "And why the sea is boiling hot —\n"
+                    # "  And whether pigs have wings.\n\n"
+                    "OK, time for you folks to break this thing for me (tuba). I've been through once already and "
+                    "successfully completed it.  But I want you to provide some wrong answers. Break some rules. See "
+                    "what happens if...  If you see something that doesn't look right, let me know in our group DM. "
+                    "Screenshots and the time when it happened will be helpful. I'll line that up with logs and see "
+                    "what went wrong.\n\n"
                     "So let's do this thing!  Welcome to the 🎃 **RCS Trick or Treat Adventure** 🎃\n\n"
                     "When you are ready to begin this timed event, just type `++halloween start`.  At the time, "
                     "you will be issued your first challenge and the timer will start. The event will end at 10pm "
                     "ET on Nov. 1.  The fastest person (or ghost) to complete the challenges will be in for a "
                     "treat....")
         for discord_id in testers:
-            live = False
+            live = True
             user = self.bot.get_user(discord_id)
             if live:
                 await user.send(init_msg)
@@ -285,129 +298,143 @@ class Halloween(commands.Cog):
                                           f"{clan['clanName']} (<{clan['invite_link']}>) and try `++challenge` again.",
                                           delete_after=60)
             # Assume player is on the correct server for the current challenge
+            data = await self.get_stats(ctx)
             await ctx.message.delete()
-            if player_info['cur_challenge'] != 2:
-                func_call = getattr(challenges, f"challenge_{player_info['cur_challenge']}")
-            else:
-                func_call = getattr(challenges, f"challenge_{player_info['cur_challenge']}a")
-            if player_info['cur_challenge'] in (1, 4, 11, 13):
-                challenge, image = func_call()
-            else:
-                challenge = func_call()
-                image = None
-            await self.send_challenge(ctx, player_info['cur_challenge'], challenge, image)
+            if data["cur_challenge"] == 2:
+                return await self.send_challenge_2(ctx)
+            func_call = getattr(challenges, f"challenge_{data['cur_challenge']}")
+            data['challenge'], data['title'], data['image_url'] = func_call()
+            embed = self.build_embed(data)
+            await ctx.author.send(embed=embed)
 
-    async def send_challenge(self, ctx, cur_challenge, challenge, image):
-        if cur_challenge in (3, 5, 6, 7, 8, 9, 10, 12, 15):
-            await ctx.author.send(challenge)
-        if cur_challenge in (1, 4, 11, 13, 14):
-            await ctx.author.send(challenge)
-            await ctx.author.send(file=image)
-        if cur_challenge == 2:
-            reactions_1 = ("🔥", "🕵", "🦁", "🌬")
-            reactions_2 = ("🇼", "🇨", "🇧", "🇲", "🇬")
-            reactions_3 = (
-                "🐾", "💤", "👯", "💼", "🐦", "📞", "🗑", "🌡", "🐍", "🌳", "🗞", "📸", "💳", "🗡", "🔋", "🖊",
-                "🔫", "📎", "⏱", "🏀"
-            )
+    async def send_challenge_2(self, ctx):
+        reactions_1 = ("🔥", "🕵", "🦁", "🌬")
+        reactions_2 = ("🇼", "🇨", "🇧", "🇲", "🇬")
+        reactions_3 = (
+            "🐾", "💤", "👯", "💼", "🐦", "📞", "🗑", "🌡", "🐍", "🌳", "🗞", "📸", "💳", "🗡", "🔋", "🖊",
+            "🔫", "📎", "⏱", "🏀"
+        )
 
-            def check_1(reaction, user):
-                return user == ctx.message.author and str(reaction.emoji) in reactions_1
+        def check_1(reaction, user):
+            return user == ctx.message.author and str(reaction.emoji) in reactions_1
 
-            def check_2(reaction, user):
-                return user == ctx.message.author and str(reaction.emoji) in reactions_2
+        def check_2(reaction, user):
+            return user == ctx.message.author and str(reaction.emoji) in reactions_2
 
-            def check_3(reaction, user):
-                return user == ctx.message.author and str(reaction.emoji) in reactions_3
+        def check_3(reaction, user):
+            return user == ctx.message.author and str(reaction.emoji) in reactions_3
 
-            msg = await ctx.author.send(challenges.challenge_2a())
-            for r in reactions_1:
-                await msg.add_reaction(r)
+        msg = await ctx.author.send(challenges.challenge_2a())
+        for r in reactions_1:
+            await msg.add_reaction(r)
 
-            for i in range(4):
-                try:
-                    reaction, user = await ctx.bot.wait_for("reaction_add", timeout=60, check=check_1)
-                except asyncio.TimeoutError:
-                    await msg.clear_reactions()
-                    await msg.edit("You have run out of time. When you're ready, just type `++challenge`.")
-                    return
-
-                if str(reaction.emoji) != reactions_1[2]:
-                    await ctx.author.send(random.choice([
-                        "I'm afraid that was the wrong door.  You're dead.  But a magical "
-                        "fairy has come and brought you back to life.  Try again!",
-                        "Do you have a death wish?! You're lucky that you have 9 lives! Try again.",
-                        "Are you nuts? There was practically a sign on that door that said 'Die "
-                        "here' and you went and opened it!  Fortunately, the Healer was nearby "
-                        "and you live to try another door.  One more time..."
-                    ]))
-                else:
-                    break
-            else:
+        for i in range(4):
+            try:
+                reaction, user = await ctx.bot.wait_for("reaction_add", timeout=60, check=check_1)
+            except asyncio.TimeoutError:
                 await msg.clear_reactions()
                 await msg.edit("You have run out of time. When you're ready, just type `++challenge`.")
                 return
 
-            await ctx.author.send(
-                "**That's right!  Wise choice.  Those lions all died of starvation and you are safe!**")
-
-            # 2a complete, start 2b
-            msg = await ctx.author.send(challenges.challenge_2b())
-            for r in reactions_2:
-                await msg.add_reaction(r)
-
-            for i in range(5):
-                try:
-                    reaction, user = await ctx.bot.wait_for("reaction_add", timeout=60, check=check_2)
-                except asyncio.TimeoutError:
-                    await msg.clear_reactions()
-                    await msg.edit("You have run out of time. When you're ready, just type `++challenge`.")
-                    return
-
-                if str(reaction.emoji) != reactions_2[3]:
-                    await ctx.author.send(random.choice([
-                        "False arrest. They did nothing wrong! Try again!",
-                        "Innocent, I say! Innocent! Try again!",
-                        "There is no way you can prove that! Pick someone else!",
-                        "And you would be wrong. Check the clues and guess again!",
-                        "They didn't do it. Try one more time!"
-                    ]))
-                else:
-                    break
+            if str(reaction.emoji) != reactions_1[2]:
+                await ctx.author.send(random.choice([
+                    "I'm afraid that was the wrong door.  You're dead.  But a magical "
+                    "fairy has come and brought you back to life.  Try again!",
+                    "Do you have a death wish?! You're lucky that you have 9 lives! Try again.",
+                    "Are you nuts? There was practically a sign on that door that said 'Die "
+                    "here' and you went and opened it!  Fortunately, the Healer was nearby "
+                    "and you live to try another door.  One more time..."
+                ]))
             else:
+                break
+        else:
+            await msg.clear_reactions()
+            await msg.edit("You have run out of time. When you're ready, just type `++challenge`.")
+            return
+
+        await ctx.author.send(
+            "**That's right!  Wise choice.  Those lions all died of starvation and you are safe!**")
+
+        # 2a complete, start 2b
+        msg = await ctx.author.send(challenges.challenge_2b())
+        for r in reactions_2:
+            await msg.add_reaction(r)
+
+        for i in range(5):
+            try:
+                reaction, user = await ctx.bot.wait_for("reaction_add", timeout=60, check=check_2)
+            except asyncio.TimeoutError:
                 await msg.clear_reactions()
                 await msg.edit("You have run out of time. When you're ready, just type `++challenge`.")
                 return
 
-            await ctx.author.send("**The maid lied about getting the mail. There is no mail delivery on Sunday!**")
-
-            # 2b complete, start 2c
-            msg = await ctx.author.send(challenges.challenge_2c())
-            for r in reactions_3:
-                await msg.add_reaction(r)
-
-            for i in range(12):
-                try:
-                    reaction, user = await ctx.bot.wait_for("reaction_add", timeout=90, check=check_3)
-                except asyncio.TimeoutError:
-                    await msg.clear_reactions()
-                    await msg.edit("You have run out of time. When you're ready, just type `++challenge`.")
-                    return
-
-                if str(reaction.emoji) != reactions_3[11]:
-                    await ctx.author.send("That's an interesting choice.  Also wrong.  Please try again.")
-                else:
-                    break
+            if str(reaction.emoji) != reactions_2[3]:
+                await ctx.author.send(random.choice([
+                    "False arrest. They did nothing wrong! Try again!",
+                    "Innocent, I say! Innocent! Try again!",
+                    "There is no way you can prove that! Pick someone else!",
+                    "And you would be wrong. Check the clues and guess again!",
+                    "They didn't do it. Try one more time!"
+                ]))
             else:
+                break
+        else:
+            await msg.clear_reactions()
+            await msg.edit("You have run out of time. When you're ready, just type `++challenge`.")
+            return
+
+        await ctx.author.send("**The maid lied about getting the mail. There is no mail delivery on Sunday!**")
+
+        # 2b complete, start 2c
+        msg = await ctx.author.send(challenges.challenge_2c())
+        for r in reactions_3:
+            await msg.add_reaction(r)
+
+        for i in range(12):
+            try:
+                reaction, user = await ctx.bot.wait_for("reaction_add", timeout=90, check=check_3)
+            except asyncio.TimeoutError:
                 await msg.clear_reactions()
                 await msg.edit("You have run out of time. When you're ready, just type `++challenge`.")
                 return
 
-            await ctx.author.send("**He's a photographer of course!  Well done!**")
-            await ctx.author.send(responses[2])
-            with Sql() as cursor:
-                sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"
-                cursor.execute(sql, (cur_challenge, ctx.author.id))
+            if str(reaction.emoji) != reactions_3[11]:
+                await ctx.author.send("That's an interesting choice.  Also wrong.  Please try again.")
+            else:
+                break
+        else:
+            await msg.clear_reactions()
+            await msg.edit("You have run out of time. When you're ready, just type `++challenge`.")
+            return
+
+        await ctx.author.send("**He's a photographer of course!  Well done!**")
+        await ctx.author.send(responses[2])
+        with Sql() as cursor:
+            sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"
+            cursor.execute(sql, (2, ctx.author.id))
+
+    async def get_stats(self, ctx):
+        with Sql() as cursor:
+            sql = ("SELECT last_completed, skip_count, start_time "
+                   "FROM rcs_halloween_players "
+                   "WHERE discord_id = %s")
+            cursor.execute(sql, ctx.author.id)
+            fetch = cursor.fetchone()
+            stats = {"last_completed": fetch[0], "skip_count": fetch[1], "start_time": fetch[2]}
+            sql = ("SELECT count(discord_id) as num_players, "
+                   "(SELECT count(discord_id) FROM rcs_halloween_players WHERE finish_time IS NOT NULL) as done "
+                   "FROM rcs_halloween_players")
+            cursor.execute(sql)
+            fetch = cursor.fetchone()
+        hours, mins, secs = self.get_elapsed(stats["start_time"], datetime.now())
+        data = {
+            "num_players": fetch[0],
+            "num_finished": fetch[1],
+            "cur_challenge": stats["last_completed"] + 1,
+            "skips": f"{stats['skip_count']}/3",
+            "elapsed": f"{hours}:{mins}:{secs}"
+        }
+        return data
 
     @commands.command(name="remind", aliases=["reminder"])
     async def remind(self, ctx):
@@ -417,43 +444,15 @@ class Halloween(commands.Cog):
             return await ctx.send("We haven't started just yet. We'll let you know when it's time to go!",
                                   delete_after=30)
         async with ctx.typing():
-            with Sql() as cursor:
-                sql = ("SELECT last_completed, skip_count, start_time "
-                       "FROM rcs_halloween_players "
-                       "WHERE discord_id = %s")
-                cursor.execute(sql, ctx.author.id)
-                fetch = cursor.fetchone()
-                stats = {"last_completed": fetch[0], "skip_count": fetch[1], "start_time": fetch[2]}
-                sql = ("SELECT count(discord_id) as num_players, "
-                       "(SELECT count(discord_id) FROM rcs_halloween_players WHERE finish_time IS NOT NULL) as done "
-                       "FROM rcs_halloween_players")
-                cursor.execute(sql)
-                fetch = cursor.fetchone()
-            if stats["last_completed"] == 1:
-                return await self.send_challenge(ctx, 2, "", "")
-            hours, mins, secs = self.get_elapsed(stats["start_time"], datetime.now())
-            embed_data = {
-                "num_players": fetch[0],
-                "num_finished": fetch[1],
-                "cur_challenge": stats["last_completed"] + 1,
-                "skips": f"{stats['skip_count']}/3",
-                "elapsed": f"{hours}:{mins}:{secs}"
-            }
-            if embed_data['cur_challenge'] != 2:
-                func_call = getattr(challenges, f"challenge_{embed_data['cur_challenge']}")
-            else:
-                func_call = getattr(challenges, f"challenge_{embed_data['cur_challenge']}a")
-            if embed_data['cur_challenge'] in (1, 4, 11, 13):
-                embed_data['challenge'], image = func_call()
-            else:
-                embed_data['challenge'] = func_call()
-                image = None
-        embed = self.build_embed(embed_data)
+            data = await self.get_stats(ctx)
+            if data["cur_challenge"] == 2:
+                return await self.send_challenge_2(ctx)
+            func_call = getattr(challenges, f"challenge_{data['cur_challenge']}")
+            data['challenge'], data['title'], data['image_url'] = func_call()
+            embed = self.build_embed(data)
         await ctx.send(f"Sure thing {ctx.author.display_name}!  Here comes a DM with a reminder of where you are.",
                        delete_after=30)
         await ctx.author.send(embed=embed)
-        if image:
-            await ctx.author.send(file=image)
         if isinstance(ctx.message.channel, discord.TextChannel):
             try:
                 await ctx.message.delete(delay=29)
@@ -548,7 +547,7 @@ class Halloween(commands.Cog):
                     await ctx.message.delete(delay=30)
                     return await ctx.send("It appears you might be on the wrong server for this challenge. Try "
                                           "`++remind` if you are a bit lost.", delete_after=30)
-                if "<@231075161556779010>" in ctx.message.content:
+                if "231075161556779010" in ctx.message.content:
                     if len(ctx.message.attachments) > 0:
                         for attachment in ctx.message.attachments:
                             ext = attachment.filename.split(".")[-1]
@@ -597,6 +596,16 @@ class Halloween(commands.Cog):
         with Sql() as cursor:
             sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"
             cursor.execute(sql, (cur_challenge, player.id))
+
+    @commands.Cog.listener()
+    async def on_member_update(self, before, after):
+        if before.guild.id in (602621563770109992, 609516136693760031):
+            # may need more than this one
+            if "🦇" in after.nick and before.nick != after.nick:
+                await after.send(responses[12])
+                with Sql() as cursor:
+                    sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"
+                    cursor.execute(sql, (12, after.id))
 
     @commands.command(name="clean_up", hidden=True)
     async def clean_up(self, ctx):
