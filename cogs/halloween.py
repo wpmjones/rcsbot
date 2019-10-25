@@ -142,6 +142,33 @@ class Halloween(commands.Cog):
                                    f"you can delete this message!  ;)  Thanks!")
                 self.bot.logger.info(f"Messages sent to {guild}")
 
+    @halloween.command(name="init", hidden=True)
+    async def init(self, ctx):
+        # Get SQL players for production
+        prep_msg = ("Greetings! This is just a prep message to let you know that I'm looking to start testing either "
+                    "Friday night or Saturday morning, US time.  Talk to you soon!")
+        init_msg = ("**TESTING!!!**\n"
+                    "The time has come, the Walrus said,\n"
+                    "  To talk of many things:\n"
+                    "Of shoes — and ships — and sealing-wax —\n"
+                    "  Of cabbages — and kings —\n"
+                    "And why the sea is boiling hot —\n"
+                    "  And whether pigs have wings.\n\n"
+                    "So let's do this thing!  Welcome to the 🎃 **RCS Trick or Treat Adventure** 🎃\n\n"
+                    "When you are ready to begin this timed event, just type `++halloween start`.  At the time, "
+                    "you will be issued your first challenge and the timer will start. The event will end at 10pm "
+                    "ET on Nov. 1.  The fastest person (or ghost) to complete the challenges will be in for a "
+                    "treat....")
+        for discord_id in testers:
+            live = False
+            user = self.bot.get_user(discord_id)
+            if live:
+                await user.send(init_msg)
+                await asyncio.sleep(3)
+                await user.send("...or a trick!!!")
+            else:
+                await user.send(prep_msg)
+
     @halloween.command(hidden=True)
     async def bot(self, ctx):
         await ctx.send(self.invite_link)
@@ -438,7 +465,6 @@ class Halloween(commands.Cog):
             cursor.execute(sql, ctx.author.id)
             fetch = cursor.fetchone()
             cur_challenge = int(fetch[0]) + 1
-            self.bot.logger.info(cur_challenge)
             if cur_challenge in (1, 4, 6, 7, 9, 11, 13, 14, 15):
                 answer = answers[cur_challenge]
                 if ctx.message.content.lower() == answer and cur_challenge != 15:
@@ -515,7 +541,20 @@ class Halloween(commands.Cog):
                     await ctx.message.delete(delay=30)
                     return await ctx.send("It appears you might be on the wrong server for this challenge. Try "
                                           "`++remind` if you are a bit lost.", delete_after=30)
-                self.bot.logger.info(ctx.message.content)
+                # test <@251150854571163648>
+                if "<@231075161556779010>" in ctx.message.content:
+                    if len(ctx.message.attachments) > 0:
+                        for attachment in ctx.message.attachments:
+                            ext = attachment.filename.split(".")[-1]
+                            if ext in ("jpg", "jpeg", "png", "gif", "tif", "webm"):
+                                await ctx.author.send(responses[cur_challenge])
+                                sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"
+                                cursor.execute(sql, (cur_challenge, ctx.author.id))
+                                await attachment.save(f"images/10/{ctx.author.display_name}.{ext}")
+                            else:
+                                return await ctx.send("Nice file, but I don't think that's an image! Try again please!")
+                    else:
+                        return await ctx.send("You need to attach an image for this challenge.")
 
     @commands.command(name="clean_up", hidden=True)
     async def clean_up(self, ctx):
