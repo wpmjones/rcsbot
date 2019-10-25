@@ -515,12 +515,12 @@ class Halloween(commands.Cog):
                     await ctx.message.delete(delay=30)
                     return await ctx.send("It appears you might be on the wrong server for this challenge. Try "
                                           "`++remind` if you are a bit lost.", delete_after=30)
-                print(ctx.message.content)
+                self.bot.logger.info(ctx.message.content)
 
     @commands.command(name="clean_up", hidden=True)
     async def clean_up(self, ctx):
-        print(ctx.channel.id)
-        print(safe_channels)
+        self.bot.logger.info(ctx.channel.id)
+        self.bot.logger.info(safe_channels)
         if ctx.channel.id not in safe_channels:
             content = ctx.message.content
             await ctx.message.delete()
