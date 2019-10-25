@@ -5,7 +5,7 @@ import asyncio
 from discord.ext import commands
 from cogs.utils.db import Sql
 from cogs.utils.helper import get_emoji_url
-from cogs.utils.constants import answers, responses, wrong_answers_resp, testers, halloween_channels
+from cogs.utils.constants import answers, responses, wrong_answers_resp, testers, safe_channels
 from cogs.utils import challenges
 from datetime import datetime
 from config import settings
@@ -438,6 +438,7 @@ class Halloween(commands.Cog):
             cursor.execute(sql, ctx.author.id)
             fetch = cursor.fetchone()
             cur_challenge = int(fetch[0]) + 1
+            print(cur_challenge)
             if cur_challenge in (1, 4, 6, 7, 9, 11, 13, 14, 15):
                 answer = answers[cur_challenge]
                 if ctx.message.content.lower() == answer and cur_challenge != 15:
@@ -516,21 +517,23 @@ class Halloween(commands.Cog):
                                           "`++remind` if you are a bit lost.", delete_after=30)
                 print(ctx.message.content)
 
-
     @commands.command(name="clean_up", hidden=True)
     async def clean_up(self, ctx):
-        content = ctx.message.content
-        await ctx.message.delete()
-        if content.lower() in answers.values():
-            content = f"**{ctx.author.display_name} said:\n**" + content
-            await ctx.author.send(content)
-            await ctx.invoke(self.answer)
-        else:
-            content = f"**{ctx.author.display_name} said:\n**" + content
-            content += ("\n\nWe don't want to clutter up the trick or treat channels. Let's keep the conversation "
-                        "here. If you were attempting to answer a question, that wasn't the right answer. "
-                        "Maybe give it another shot?")
-            await ctx.author.send(content)
+        print(ctx.channel.id)
+        print(safe_channels)
+        if ctx.channel.id not in safe_channels:
+            content = ctx.message.content
+            await ctx.message.delete()
+            if content.lower() in answers.values():
+                content = f"**{ctx.author.display_name} said:\n**" + content
+                await ctx.author.send(content)
+                await ctx.invoke(self.answer)
+            else:
+                content = f"**{ctx.author.display_name} said:\n**" + content
+                content += ("\n\nWe don't want to clutter up the trick or treat channels. Let's keep the conversation "
+                            "here. If you were attempting to answer a question, that wasn't the right answer. "
+                            "Maybe give it another shot?")
+                await ctx.author.send(content)
 
     @commands.command(name="skip", aliases=["next"])
     async def skip(self, ctx):
