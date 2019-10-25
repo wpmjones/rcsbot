@@ -5,7 +5,7 @@ import asyncio
 from discord.ext import commands
 from cogs.utils.db import Sql
 from cogs.utils.helper import get_emoji_url
-from cogs.utils.constants import answers, responses, wrong_answers_resp, testers, safe_channels
+from cogs.utils.constants import answers, responses, wrong_answers_resp, testers, halloween_channels, safe_channels
 from cogs.utils import challenges
 from datetime import datetime
 from config import settings
@@ -31,7 +31,7 @@ class Halloween(commands.Cog):
     def completion_msg(self, data):
         hours_to_end, mins_to_end, _ = self.get_elapsed(datetime.utcnow(), self.event_end)
         desc = (f"Fantastic job {data['player_name']}!  You have completed the first ever "
-                f"RCS Trick or Treat Adventure! We hope that there were some treats to go along with "
+                f"🎃 RCS Trick or Treat Adventure 🎃! We hope that there were some treats to go along with "
                 f"the tricks we threw at you.  And most of all, we hope you had "
                 f"fun!  Once everyone is done (or time runs out), we'll take a look and see who was the fastest "
                 f"and announce things in <#298622700849463297>.")
@@ -144,6 +144,13 @@ class Halloween(commands.Cog):
 
     @halloween.command(name="init", hidden=True)
     async def init(self, ctx):
+        # TODO Make this an embed and include ++challenge info
+        channel_msg = ("Welcome to the 🎃 **RCS Trick or Treat Adventure** 🎃\n\n"
+                       "You will soon be receiving some ghostly (ghastly?) visitors. Treat them well and they won't "
+                       "trick you.  Muahahhahhahaaahaaaaa!")
+        for channel_id in halloween_channels:
+            channel = self.bot.get_channel(channel_id)
+            await channel.send(channel_msg)
         # Get SQL players for production
         prep_msg = ("Greetings! This is just a prep message to let you know that I'm looking to start testing either "
                     "Friday night or Saturday morning, US time.  Talk to you soon!")
@@ -237,7 +244,7 @@ class Halloween(commands.Cog):
                 f"find the <#{electrum_channel}> channel, and type `++challenge` to begin your first challenge.")
         embed = discord.Embed(description=desc, title=self.title, color=self.color)
         embed.add_field(name="Prize Info:",
-                        value="Sexy role color, maybe a t-shirt, maybe some Clash swag",
+                        value="Sexy role color, free socks, and maybe some Clash swag",
                         inline=False)
         embed.add_field(name="Clue #1",
                         value=clue,
@@ -297,7 +304,7 @@ class Halloween(commands.Cog):
             await ctx.author.send(challenge)
             await ctx.author.send(file=image)
         if cur_challenge == 2:
-            reactions_1 = ("🔥", "🕵", "🦁")
+            reactions_1 = ("🔥", "🕵", "🦁", "🌬")
             reactions_2 = ("🇼", "🇨", "🇧", "🇲", "🇬")
             reactions_3 = (
                 "🐾", "💤", "👯", "💼", "🐦", "📞", "🗑", "🌡", "🐍", "🌳", "🗞", "📸", "💳", "🗡", "🔋", "🖊",
@@ -541,7 +548,6 @@ class Halloween(commands.Cog):
                     await ctx.message.delete(delay=30)
                     return await ctx.send("It appears you might be on the wrong server for this challenge. Try "
                                           "`++remind` if you are a bit lost.", delete_after=30)
-                # test <@251150854571163648>
                 if "<@231075161556779010>" in ctx.message.content:
                     if len(ctx.message.attachments) > 0:
                         for attachment in ctx.message.attachments:
@@ -555,6 +561,37 @@ class Halloween(commands.Cog):
                                 return await ctx.send("Nice file, but I don't think that's an image! Try again please!")
                     else:
                         return await ctx.send("You need to attach an image for this challenge.")
+
+    @commands.command(name="pumpkin")
+    async def pumpkin(self, ctx):
+        if ctx.message.channel.id != 636380378113900544:
+            return
+        content = ctx.message.content
+        start = content.find("@") + 1
+        end = content.find(">")
+        player_id = content[start:end]
+        if player_id == ctx.author.id:
+            return await ctx.send(f"Nice try but you can't do this one on your own. Recruit someone else to issue "
+                                  f"the `++pumpkin {ctx.author.display_name}` command for you.")
+        player = self.bot.get_user(player_id)
+        with Sql() as cursor:
+            sql = "SELECT last_completed + 1 FROM rcs_halloween_players WHERE discord_id = %d"
+            cursor.execute(sql, player_id)
+            fetch = cursor.fetchone()
+            cur_challenge = fetch[0]
+        if cur_challenge != 8:
+            return await ctx.send(f"I really appreciate your help, but {player.display_name} isn't working on this "
+                                  f"challenge right now.")
+        embed_msg = (f"Thank you to {ctx.author.display_name} for your help!  {player.display_name}, you have now "
+                     f"completed Challenge #8 with Dartaholics!  Check your DMs for your next challenge!")
+        embed = discord.Embed(color=self.color)
+        embed.add_field(name=f"{player.name}#{player.discriminator}", value=player.display_name, inline=False)
+        embed.add_field(name="Challenge Complete!", value=embed_msg, inline=False)
+        embed.set_image(url=player.avatar_url_as(size=128))
+        embed.set_footer(text=f"Discord ID: {player.id}",
+                         icon_url="https://discordapp.com/assets/2c21aeda16de354ba5334551a883b481.png")
+        await ctx.send(embed=embed)
+        await player.send(responses[8])
 
     @commands.command(name="clean_up", hidden=True)
     async def clean_up(self, ctx):
@@ -594,10 +631,7 @@ class Halloween(commands.Cog):
                 self.bot.logger.info(f"{ctx.author} skipped Challenge #{last_completed}.")
                 if last_completed != 15:
                     await ctx.send(f"Challenge #{last_completed} skipped. You have {skips_left} skips left.")
-                    if last_completed != 2:
-                        await ctx.send(responses[last_completed])
-                    else:
-                        await ctx.send(responses["2c"])
+                    await ctx.send(responses[last_completed])
                 else:
                     # Final challenge skipped
                     now = datetime.utcnow()
