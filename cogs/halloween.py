@@ -599,9 +599,8 @@ class Halloween(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
-        if before.guild.id in (602621563770109992, 609516136693760031):
-            # may need more than this one
-            if "🦇" in after.nick and before.nick != after.nick:
+        if before.guild.id in (602621563770109992, 609516136693760031) and before.nick != after.nick:
+            if "🦇" in after.nick:
                 await after.send(responses[12])
                 with Sql() as cursor:
                     sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"
