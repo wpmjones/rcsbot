@@ -5,7 +5,7 @@ import asyncio
 from discord.ext import commands
 from cogs.utils.db import Sql
 from cogs.utils.helper import get_emoji_url
-from cogs.utils.constants import answers, responses, wrong_answers_resp, testers
+from cogs.utils.constants import answers, responses, wrong_answers_resp, testers, halloween_channels
 from cogs.utils import challenges
 from datetime import datetime
 from config import settings
@@ -70,6 +70,18 @@ class Halloween(commands.Cog):
         """[Group] Let the halloween fun begin!  Trick or treat!"""
         if ctx.invoked_subcommand is None:
             return await ctx.send_help(ctx.command)
+
+    @halloween.command(name="channels", aliases=["ch"], hidden=True)
+    async def channels(self, ctx):
+        with Sql() as cursor:
+            sql = "SELECT clan_name, channel_id FROM rcs_halloween_clans ORDER BY challenge"
+            cursor.execute(sql)
+            fetch = cursor.fetchall()
+        content = "```"
+        for row in fetch:
+            content += f"{row[0]}: <#{row[1]}>\n"
+        content += "```"
+        await ctx.send(content)
 
     @halloween.command(name="install", hidden=True)
     @commands.is_owner()
@@ -403,7 +415,7 @@ class Halloween(commands.Cog):
                 embed_data['challenge'] = func_call()
                 image = None
         embed = self.build_embed(embed_data)
-        await ctx.send(f"Sure thing {ctx.author.display_name}!  I'll shoot you a DM with a reminder of where you are.",
+        await ctx.send(f"Sure thing {ctx.author.display_name}!  Here comes a DM with a reminder of where you are.",
                        delete_after=30)
         await ctx.author.send(embed=embed)
         if image:
@@ -421,8 +433,6 @@ class Halloween(commands.Cog):
             await ctx.message.delete(delay=30)
             return await ctx.send("We haven't started just yet. We'll let you know when it's time to go!",
                                   delete_after=30)
-        print("Starting answer")
-        print(ctx.message.content)
         with Sql() as cursor:
             sql = "SELECT last_completed FROM rcs_halloween_players WHERE discord_id = %s"
             cursor.execute(sql, ctx.author.id)
@@ -458,6 +468,54 @@ class Halloween(commands.Cog):
                     await ctx.author.send(embed=embed)
                 else:
                     await ctx.author.send(random.choice(wrong_answers_resp))
+            if cur_challenge == 3:
+                sql = "SELECT discord_id FROM rcs_halloween_clans WHERE challenge = %d"
+                cursor.execute(sql, cur_challenge)
+                fetch = cursor.fetchone()
+                cur_server = fetch[0]
+                if ctx.message.guild.id != cur_server:
+                    await ctx.message.delete(delay=30)
+                    return await ctx.send("It appears you might be on the wrong server for this challenge. Try "
+                                          "`++remind` if you are a bit lost.", delete_after=30)
+                if len(ctx.message.attachments) > 0:
+                    for attachment in ctx.message.attachments:
+                        ext = attachment.filename.split(".")[-1]
+                        if ext in ("jpg", "jpeg", "png",  "gif", "tif"):
+                            await ctx.author.send(responses[cur_challenge])
+                            sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"
+                            cursor.execute(sql, (cur_challenge, ctx.author.id))
+                            await attachment.save(f"images/3/{ctx.author.display_name}.{ext}")
+                        else:
+                            await ctx.message.delete(delay=30)
+                            return await ctx.send("Nice file, but I don't think that's an image! Try again please!",
+                                                  delete_after=30)
+                else:
+                    await ctx.message.delete(delay=30)
+                    return await ctx.send("You need to attach an image for this challenge.",
+                                          delete_after=30)
+            if cur_challenge == 5:
+                clan = await self.bot.coc.get_clan('#2UUCUJL')
+                counter = 0
+                for p in clan.itermembers:
+                    if p.trophies >= 5000:
+                        counter += 1
+                if ctx.message.content.lower() != str(counter):
+                    await ctx.author.send(random.choice(wrong_answers_resp))
+                else:
+                    await ctx.author.send(responses[cur_challenge])
+                    sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"
+                    cursor.execute(sql, (cur_challenge, ctx.author.id))
+            if cur_challenge == 10:
+                sql = "SELECT discord_id FROM rcs_halloween_clans WHERE challenge = %d"
+                cursor.execute(sql, cur_challenge)
+                fetch = cursor.fetchone()
+                cur_server = fetch[0]
+                if ctx.message.guild.id != cur_server:
+                    await ctx.message.delete(delay=30)
+                    return await ctx.send("It appears you might be on the wrong server for this challenge. Try "
+                                          "`++remind` if you are a bit lost.", delete_after=30)
+                print(ctx.message.content)
+
 
     @commands.command(name="clean_up", hidden=True)
     async def clean_up(self, ctx):

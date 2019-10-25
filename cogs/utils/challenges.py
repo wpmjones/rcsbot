@@ -63,7 +63,7 @@ def challenge_5():
     challenge = ("**10% Beaver Challenge:**\n"
                  "No one really knows for sure how much wood would a woodchuck chuck if a woodchuck could chuck "
                  "wood.  But you can answer this one.  How many beavers in the clan are currently "
-                 "chewing on over 5000 trophies?")
+                 "chewing on 5000 or more trophies?")
     return challenge
 
 
