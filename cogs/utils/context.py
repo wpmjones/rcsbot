@@ -174,7 +174,7 @@ class Context(commands.Context):
 
     def tick(self, opt, label=None):
         lookup = {
-            True: '<:greenTick:596576670815879169>',
+            True: '\u2705',
             False: '<:redTick:596576672149667840>',
             None: '<:greyTick:596576672900186113>',
         }
