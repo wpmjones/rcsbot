@@ -519,8 +519,6 @@ class Halloween(commands.Cog):
 
     @commands.command(name="clean_up", hidden=True)
     async def clean_up(self, ctx):
-        self.bot.logger.info(ctx.channel.id)
-        self.bot.logger.info(safe_channels)
         if ctx.channel.id not in safe_channels:
             content = ctx.message.content
             await ctx.message.delete()
@@ -533,7 +531,7 @@ class Halloween(commands.Cog):
             else:
                 content = f"**{ctx.author.display_name} said:\n**" + content
                 await ctx.author.send(content)
-            await ctx.invoke(self.answer)
+        await ctx.invoke(self.answer)
 
     @commands.command(name="skip", aliases=["next"])
     async def skip(self, ctx):
