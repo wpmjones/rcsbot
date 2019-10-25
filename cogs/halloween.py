@@ -568,14 +568,13 @@ class Halloween(commands.Cog):
             return
         content = ctx.message.content
         guild = ctx.message.guild
-        start = content.find("@") + 1
-        end = content.find(">")
+        start = content.find("!") + 1
+        end = content.find(">", start)
         player_id = content[start:end]
-        self.bot.logger.debug(f"Player: {player_id} - Author: {ctx.author.id}")
         if player_id == ctx.author.id:
             return await ctx.send(f"Nice try but you can't do this one on your own. Recruit someone else to issue "
                                   f"the `++pumpkin {ctx.author.mention}` command for you.")
-        player = guild.get_member(player_id)
+        player = guild.get_member(int(player_id))
         with Sql() as cursor:
             sql = "SELECT last_completed + 1 FROM rcs_halloween_players WHERE discord_id = %d"
             cursor.execute(sql, player_id)

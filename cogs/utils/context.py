@@ -175,7 +175,8 @@ class Context(commands.Context):
     def tick(self, opt, label=None):
         lookup = {
             True: '\u2705',
-            False: '<:redTick:596576672149667840>',
+            False: '\u274C',
+            # False: '<:redTick:596576672149667840>',
             None: '<:greyTick:596576672900186113>',
         }
         emoji = lookup.get(opt, '<:redTick:596576672149667840>')
