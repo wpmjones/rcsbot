@@ -666,8 +666,9 @@ class Halloween(commands.Cog):
                 cursor.execute(sql, (ctx.author.id, last_completed))
                 self.bot.logger.info(f"{ctx.author} skipped Challenge #{last_completed}.")
                 if last_completed != 15:
-                    await ctx.send(f"Challenge #{last_completed} skipped. You have {skips_left} skips left.")
-                    return await ctx.send(responses[last_completed])
+                    await ctx.send(f"Challenge #{last_completed} skipped. You have {skips_left} skips left.",
+                                   delete_after=60)
+                    return await ctx.author.send(responses[last_completed])
                 else:
                     # Final challenge skipped
                     now = datetime.utcnow()
