@@ -562,8 +562,9 @@ class Halloween(commands.Cog):
                     sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"
                     cursor.execute(sql, (cur_challenge, ctx.author.id))
             if cur_challenge == 10:
-                cur_channel = 443663009743634453
-                if ctx.channel.id != cur_channel:
+                print("Current Challenge = 10")
+                cur_channel_id = 443663009743634453
+                if ctx.channel.id != cur_channel_id:
                     await ctx.message.delete(delay=30)
                     return await ctx.send("It appears you might be in the wrong channel for this challenge. Try "
                                           "`++remind` if you are a bit lost.", delete_after=30)
