@@ -235,17 +235,21 @@ class Halloween(commands.Cog):
                                           f"about your next challenge, just type `++halloween remind`.",
                                           delete_after=30)
                 # Initiate time and issue the first clue
+                self.bot.logger.debug(f"Line 238 - {ctx.author}")
                 start_time = datetime.utcnow()
                 cursor.callproc("rcs_halloween_start", (ctx.author.id, start_time))
                 sql = "SELECT COUNT(discord_id) FROM rcs_halloween_players WHERE start_time IS NOT NULL"
                 cursor.execute(sql)
                 fetch = cursor.fetchone()
+                self.bot.logger.debug(f"Line 244 - {ctx.author}")
                 num_players = fetch[0]
                 sql = "SELECT channel_ID, invite_link FROM rcs_halloween_clans WHERE discord_id = %d"
                 cursor.execute(sql, 437848948204634113)
                 fetch = cursor.fetchone()
+                self.bot.logger.debug(f"Line 249 - {ctx.author}")
                 electrum_channel = fetch[0]
                 electrum_invite = fetch[1]
+                self.bot.logger.debug(f"Line 252 - {ctx.author}")
         desc = ("Congratulations! Your time has started and you have officially begun the RCS Trick or Treat "
                 "Adventure! You will now be offered 15 challenges to accomplish. You will have 3 skips that you "
                 "can use strategically throughout the event. Use them wisely! The member completing the challenges "
@@ -326,7 +330,7 @@ class Halloween(commands.Cog):
         def check_3(reaction, user):
             return user == ctx.message.author and str(reaction.emoji) in reactions_3
 
-        msg = await ctx.author.send(challenges.challenge_2a())
+        msg = await ctx.author.send(embed=challenges.challenge_2a())
         for r in reactions_1:
             await msg.add_reaction(r)
 
@@ -358,7 +362,7 @@ class Halloween(commands.Cog):
             "**That's right!  Wise choice.  Those lions all died of starvation and you are safe!**")
 
         # 2a complete, start 2b
-        msg = await ctx.author.send(challenges.challenge_2b())
+        msg = await ctx.author.send(embed=challenges.challenge_2b())
         for r in reactions_2:
             await msg.add_reaction(r)
 
@@ -388,7 +392,7 @@ class Halloween(commands.Cog):
         await ctx.author.send("**The maid lied about getting the mail. There is no mail delivery on Sunday!**")
 
         # 2b complete, start 2c
-        msg = await ctx.author.send(challenges.challenge_2c())
+        msg = await ctx.author.send(embed=challenges.challenge_2c())
         for r in reactions_3:
             await msg.add_reaction(r)
 
@@ -428,7 +432,7 @@ class Halloween(commands.Cog):
                    "FROM rcs_halloween_players")
             cursor.execute(sql)
             fetch = cursor.fetchone()
-        hours, mins, secs = self.get_elapsed(stats["start_time"], datetime.now())
+        hours, mins, secs = self.get_elapsed(stats["start_time"], datetime.utcnow())
         data = {
             "num_players": fetch[0],
             "num_finished": fetch[1],
