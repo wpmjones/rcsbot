@@ -229,27 +229,23 @@ class Halloween(commands.Cog):
                 sql = "SELECT start_time FROM rcs_halloween_players WHERE discord_id = %d"
                 cursor.execute(sql, ctx.author.id)
                 fetch = cursor.fetchone()
-                if fetch[0]:
+                if fetch:
                     start_time = fetch[0]
                     return await ctx.send(f"You started the event at {start_time} UTC. If you need a reminder "
                                           f"about your next challenge, just type `++halloween remind`.",
                                           delete_after=30)
                 # Initiate time and issue the first clue
-                self.bot.logger.debug(f"Line 238 - {ctx.author}")
                 start_time = datetime.utcnow()
                 cursor.callproc("rcs_halloween_start", (ctx.author.id, start_time))
                 sql = "SELECT COUNT(discord_id) FROM rcs_halloween_players WHERE start_time IS NOT NULL"
                 cursor.execute(sql)
                 fetch = cursor.fetchone()
-                self.bot.logger.debug(f"Line 244 - {ctx.author}")
                 num_players = fetch[0]
                 sql = "SELECT channel_ID, invite_link FROM rcs_halloween_clans WHERE discord_id = %d"
                 cursor.execute(sql, 437848948204634113)
                 fetch = cursor.fetchone()
-                self.bot.logger.debug(f"Line 249 - {ctx.author}")
                 electrum_channel = fetch[0]
                 electrum_invite = fetch[1]
-                self.bot.logger.debug(f"Line 252 - {ctx.author}")
         desc = ("Congratulations! Your time has started and you have officially begun the RCS Trick or Treat "
                 "Adventure! You will now be offered 15 challenges to accomplish. You will have 3 skips that you "
                 "can use strategically throughout the event. Use them wisely! The member completing the challenges "
