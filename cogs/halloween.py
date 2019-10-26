@@ -230,10 +230,11 @@ class Halloween(commands.Cog):
                 cursor.execute(sql, ctx.author.id)
                 fetch = cursor.fetchone()
                 if fetch:
-                    start_time = fetch[0]
-                    return await ctx.send(f"You started the event at {start_time} UTC. If you need a reminder "
-                                          f"about your next challenge, just type `++halloween remind`.",
-                                          delete_after=30)
+                    if fetch[0] != "None":
+                        start_time = fetch[0]
+                        return await ctx.send(f"You started the event at {start_time} UTC. If you need a reminder "
+                                              f"about your next challenge, just type `++halloween remind`.",
+                                              delete_after=60)
                 # Initiate time and issue the first clue
                 start_time = datetime.utcnow()
                 cursor.callproc("rcs_halloween_start", (ctx.author.id, start_time))
