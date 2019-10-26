@@ -32,6 +32,7 @@ class Halloween(commands.Cog):
 
     def completion_msg(self, data):
         hours_to_end, mins_to_end, _ = self.get_elapsed(datetime.utcnow(), self.event_end)
+        elapsed = f"{data['elapsed'][0]:02}:{data['elapsed'][1]:02}:{data['elapsed'][2]:02}"
         desc = (f"Fantastic job {data['player_name']}!  You have completed the first ever "
                 f"🎃 RCS Trick or Treat Adventure 🎃! We hope that there were some treats to go along with "
                 f"the tricks we threw at you.  And most of all, we hope you had "
@@ -41,7 +42,7 @@ class Halloween(commands.Cog):
         embed.add_field(name="Players:", value=data['num_players'], inline=True)
         embed.add_field(name="Players Finished:", value=data['num_finished'], inline=True)
         embed.add_field(name="Your progress:", value="Finished!", inline=True)
-        embed.add_field(name="Completion Time:", value=data['elapsed'], inline=True)
+        embed.add_field(name="Completion Time:", value=elapsed, inline=True)
         embed.set_footer(text=f"The event ends in {hours_to_end} hours and {mins_to_end} minutes.",
                          icon_url="https://cdn.discordapp.com/emojis/629481616091119617.png")
         return embed
@@ -49,14 +50,10 @@ class Halloween(commands.Cog):
     @staticmethod
     def get_elapsed(start_time, _now):
         elapsed = _now - start_time
+        days_hours = elapsed.days * 24
         hours, rem = divmod(elapsed.seconds, 3600)
+        hours = hours + days_hours
         mins, secs = divmod(rem, 60)
-        if hours < 10:
-            hours = f"0{hours}"
-        if mins < 10:
-            mins = f"0{mins}"
-        if secs < 10:
-            secs = f"0{secs}"
         return hours, mins, secs
 
     @property
@@ -283,6 +280,11 @@ class Halloween(commands.Cog):
                        "WHERE discord_id = %d")
                 cursor.execute(sql, ctx.author.id)
                 player_info = cursor.fetchone()
+                if player_info['cur_challenge'] > 15:
+                    await ctx.message.delete(delay=60)
+                    return await ctx.send("What?! 15 challenges weren't enough for you? You've completed all the "
+                                          "challenges. Sit back and wait for everyone else to catch up!",
+                                          delete_after=60)
                 sql = "SELECT challenge FROM rcs_halloween_clans WHERE discord_id = %d"
                 cursor.execute(sql, ctx.message.guild.id)
                 clan = cursor.fetchone()
@@ -432,7 +434,7 @@ class Halloween(commands.Cog):
             "num_finished": fetch[1],
             "cur_challenge": stats["last_completed"] + 1,
             "skips": f"{stats['skip_count']}/3",
-            "elapsed": f"{hours}:{mins}:{secs}"
+            "elapsed": f"{hours:02}:{mins:02}:{secs:02}"
         }
         return data
 
@@ -445,6 +447,9 @@ class Halloween(commands.Cog):
                                   delete_after=30)
         async with ctx.typing():
             data = await self.get_stats(ctx)
+            if data["cur_challenge"] > 15:
+                await ctx.message.delete(delay=60)
+                return await ctx.send("Can't remind you of anything! You're already done!", delete_after=60)
             if data["cur_challenge"] == 2:
                 return await self.send_challenge_2(ctx)
             func_call = getattr(challenges, f"challenge_{data['cur_challenge']}")
@@ -482,9 +487,15 @@ class Halloween(commands.Cog):
                     sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"
                     cursor.execute(sql, (cur_challenge, ctx.author.id))
                 elif ctx.message.content.lower() == answer and cur_challenge == 15:
+                    guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
+                    tot_role = guild.get_role(636646591880626177)
+                    party_role = guild.get_role(636646824538669066)
+                    member = guild.get_member(ctx.author.id)
+                    await member.remove_roles(tot_role)
+                    await member.add_roles(party_role)
                     now = datetime.utcnow()
                     sql = ("UPDATE rcs_halloween_players "
-                           "SET finish_time = %s "
+                           "SET finish_time = %s, last_completed = 15 "
                            "OUTPUT inserted.start_time "
                            "WHERE discord_id = %d")
                     cursor.execute(sql, (now, ctx.author.id))
@@ -503,6 +514,10 @@ class Halloween(commands.Cog):
                     }
                     embed = self.completion_msg(embed_data)
                     await ctx.author.send(embed=embed)
+                    # TODO Send announcement - CHANGE TO 298621931748327426 - give bot perms to SEND
+                    news_channel = self.bot.get_channel(628008799663292436)
+                    await news_channel.send(f"{ctx.author.display_name} has just completed the "
+                                            f"🎃 RCS Trick or Treat Adventure 🎃!")
                 else:
                     await ctx.author.send(random.choice(wrong_answers_resp))
             if cur_challenge == 3:
@@ -645,10 +660,13 @@ class Halloween(commands.Cog):
                     return await ctx.send("I'm sorry, but you've already used all 3 skips. Gotta finish this one!")
                 last_completed = fetch[0]
                 skips_left = 3 - fetch[1]
+                sql = ("(INSERT INTO rcs_halloween_skips (discord_id, challenge) "
+                       "VALUES (%d, %d)")
+                cursor.execute(sql, ctx.author.id, last_completed)
                 self.bot.logger.info(f"{ctx.author} skipped Challenge #{last_completed}.")
                 if last_completed != 15:
                     await ctx.send(f"Challenge #{last_completed} skipped. You have {skips_left} skips left.")
-                    await ctx.send(responses[last_completed])
+                    return await ctx.send(responses[last_completed])
                 else:
                     # Final challenge skipped
                     now = datetime.utcnow()
