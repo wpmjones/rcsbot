@@ -7,7 +7,8 @@ def challenge_1():
     challenge = ("Clash of clans offered a one time limited edition Halloween trap that was added to the game "
                  "the same Day the Reddit Clan System was born! (October 27, 2012 was the day Flammy posted "
                  "the original post that later became our wiki and announced we were open for business).\n\n"
-                 "The limited edition trap is shown in this picture.  What was it called?")
+                 "The limited edition trap is shown in this picture.  What was it called?\n\n"
+                 "`NOTE: Unless the bot specifically tells you to do so, don't use ++ when providing answers.`")
     title = "Reddit Electrum Challenge #1:"
     image_url = "http://www.mayodev.com/images/1.jpg"
     return challenge, title, image_url
