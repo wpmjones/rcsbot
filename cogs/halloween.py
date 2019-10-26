@@ -589,6 +589,7 @@ class Halloween(commands.Cog):
         start = content.find("!") + 1
         end = content.find(">", start)
         player_id = int(content[start:end])
+        self.bot.logger.debug(player_id)
         if player_id == ctx.author.id:
             return await ctx.send(f"Nice try but you can't do this one on your own. Recruit someone else to issue "
                                   f"the `++pumpkin {ctx.author.mention}` command for you.")
@@ -660,7 +661,7 @@ class Halloween(commands.Cog):
                     return await ctx.send("I'm sorry, but you've already used all 3 skips. Gotta finish this one!")
                 last_completed = fetch[0]
                 skips_left = 3 - fetch[1]
-                sql = ("(INSERT INTO rcs_halloween_skips (discord_id, challenge) "
+                sql = ("INSERT INTO rcs_halloween_skips (discord_id, challenge) "
                        "VALUES (%d, %d)")
                 cursor.execute(sql, (ctx.author.id, last_completed))
                 self.bot.logger.info(f"{ctx.author} skipped Challenge #{last_completed}.")
