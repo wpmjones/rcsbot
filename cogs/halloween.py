@@ -662,7 +662,7 @@ class Halloween(commands.Cog):
                 skips_left = 3 - fetch[1]
                 sql = ("(INSERT INTO rcs_halloween_skips (discord_id, challenge) "
                        "VALUES (%d, %d)")
-                cursor.execute(sql, ctx.author.id, last_completed)
+                cursor.execute(sql, (ctx.author.id, last_completed))
                 self.bot.logger.info(f"{ctx.author} skipped Challenge #{last_completed}.")
                 if last_completed != 15:
                     await ctx.send(f"Challenge #{last_completed} skipped. You have {skips_left} skips left.")
