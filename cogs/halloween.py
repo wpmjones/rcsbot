@@ -641,6 +641,8 @@ class Halloween(commands.Cog):
                 content = f"**{ctx.author.display_name} said:\n**" + content
                 await ctx.author.send(content)
                 await ctx.invoke(self.answer)
+        else:
+            await ctx.invoke(self.answer)
 
     @commands.command(name="skip", aliases=["next"])
     async def skip(self, ctx):
