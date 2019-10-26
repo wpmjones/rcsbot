@@ -72,7 +72,12 @@ class Halloween(commands.Cog):
 
     @commands.group(name="halloween", aliases=["h"])
     async def halloween(self, ctx):
-        """[Group] Let the halloween fun begin!  Trick or treat!"""
+        """[Group] Let the halloween fun begin!  Trick or treat!
+
+            Use ++challenge to get the next challenge (on the appropriate Discord server
+            Use ++remind in case you've forgotten what challenge you are working on or get stuck
+            When answering challenges, you do not need the ++ unless the bot tells you to use it
+        """
         if ctx.invoked_subcommand is None:
             return await ctx.send_help(ctx.command)
 
@@ -149,42 +154,40 @@ class Halloween(commands.Cog):
 
     @halloween.command(name="init", hidden=True)
     async def init(self, ctx):
-        # TODO Make this an embed and include ++challenge info
-        channel_msg = ("Welcome to the 🎃 **RCS Trick or Treat Adventure** 🎃\n\n"
-                       "You will soon be receiving some ghostly (ghastly?) visitors. Treat them well and they won't "
-                       "trick you.  Muahahhahhahaaahaaaaa!")
+        title = "Welcome to the 🎃 RCS Trick or Treat Adventure 🎃"
+        desc = ("The fun has begun and the spooks are wandering the servers of the RCS looking for treats "
+                "and tricks and innocents on which to pick! Play nice and they will take care. Play mean and they "
+                "are sure to scare!\n\n"
+                "If you are here to play, type `++challenge` and see what's next.  Use `++remind` if you become "
+                "vexxed.")
+        embed = discord.Embed(title=title, description=desc, color=self.color)
         for channel_id in halloween_channels:
             channel = self.bot.get_channel(channel_id)
-            await channel.send(channel_msg)
+            await channel.send(embed=embed)
         # Get SQL players for production
-        prep_msg = ("Greetings! This is just a prep message to let you know that I'm looking to start testing either "
-                    "Friday night or Saturday morning, US time.  Talk to you soon!")
-        init_msg = ("**TESTING!!!**\n"
-                    # "The time has come, the Walrus said,\n"
-                    # "  To talk of many things:\n"
-                    # "Of shoes — and ships — and sealing-wax —\n"
-                    # "  Of cabbages — and kings —\n"
-                    # "And why the sea is boiling hot —\n"
-                    # "  And whether pigs have wings.\n\n"
-                    "OK, time for you folks to break this thing for me (tuba). I've been through once already and "
-                    "successfully completed it.  But I want you to provide some wrong answers. Break some rules. See "
-                    "what happens if...  If you see something that doesn't look right, let me know in our group DM. "
-                    "Screenshots and the time when it happened will be helpful. I'll line that up with logs and see "
-                    "what went wrong.\n\n"
+        with Sql() as cursor:
+            sql = "SELECT discord_id FROM rcs_halloween_players"
+            cursor.execute(sql)
+            players = cursor.fetchall()
+        init_msg = ("```The time has come, the Walrus said,\n"
+                    "  To talk of many things:\n"
+                    "Of shoes — and ships — and sealing-wax —\n"
+                    "  Of cabbages — and kings —\n"
+                    "And why the sea is boiling hot —\n"
+                    "  And whether pigs have wings.```\n\n"
                     "So let's do this thing!  Welcome to the 🎃 **RCS Trick or Treat Adventure** 🎃\n\n"
                     "When you are ready to begin this timed event, just type `++halloween start`.  At the time, "
                     "you will be issued your first challenge and the timer will start. The event will end at 10pm "
                     "ET on Nov. 1.  The fastest person (or ghost) to complete the challenges will be in for a "
                     "treat....")
-        for discord_id in testers:
-            live = True
-            user = self.bot.get_user(discord_id)
-            if live:
+        for player in players:
+            if player[0] not in testers:
+                user = self.bot.get_user(player[0])
                 await user.send(init_msg)
                 await asyncio.sleep(3)
-                await user.send("...or a trick!!!")
-            else:
-                await user.send(prep_msg)
+                await user.send("...or a trick!!!\n\n"
+                                "`NOTE: Unless specifically instructed to do so, do not use ++ when "
+                                "answering challenges.`")
 
     @halloween.command(hidden=True)
     async def bot(self, ctx):
