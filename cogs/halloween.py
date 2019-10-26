@@ -480,6 +480,7 @@ class Halloween(commands.Cog):
             cursor.execute(sql, ctx.author.id)
             fetch = cursor.fetchone()
             cur_challenge = int(fetch[0]) + 1
+            print(cur_challenge)
             if cur_challenge in (1, 4, 6, 7, 9, 11, 13, 14, 15):
                 if cur_challenge == 13 and ctx.message.content.startswith("#"):
                     start = 1
