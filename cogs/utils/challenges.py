@@ -59,7 +59,11 @@ def challenge_4():
                  "someone cannot like a particular candy, put an X in the square for that candy in that person's "
                  "row.  When you know what candy they do like, put an O.  Every person likes one of the 5 candies "
                  "best, no two people have the same favorite. So you can use process of elimination "
-                 "to find out who has which as their favorite!)")
+                 "to find out who has which as their favorite!)\n\n"
+                 "```1. cary'd and Maren don't like candies named after troops who are blue\n"
+                 "2. Roville and Dan don't care for candies that have names that are more than one word\n" 
+                 "3. Maren's favorite is named after a female troop\n"
+                 "4. Dan has sworn off all things goblin after having his DE stolen one too many times!```")
     title = "Reddit Pi Challenge #4:"
     image_url = "http://www.mayodev.com/images/4.png"
     return challenge, title, image_url
