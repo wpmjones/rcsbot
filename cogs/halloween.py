@@ -582,22 +582,17 @@ class Halloween(commands.Cog):
                         return await ctx.send("You need to attach an image for this challenge.")
 
     @commands.command(name="pumpkin")
-    async def pumpkin(self, ctx):
+    async def pumpkin(self, ctx, player: discord.Member):
         if ctx.message.channel.id != 636380378113900544:
             return
         content = ctx.message.content
         guild = ctx.message.guild
-        start = content.find("!") + 1
-        end = content.find(">", start)
-        player_id = int(content[start:end])
-        self.bot.logger.debug(player_id)
-        if player_id == ctx.author.id:
+        if player.id == ctx.author.id:
             return await ctx.send(f"Nice try but you can't do this one on your own. Recruit someone else to issue "
                                   f"the `++pumpkin {ctx.author.mention}` command for you.")
-        player = guild.get_member(player_id)
         with Sql() as cursor:
             sql = "SELECT last_completed + 1 FROM rcs_halloween_players WHERE discord_id = %d"
-            cursor.execute(sql, player_id)
+            cursor.execute(sql, player.id)
             fetch = cursor.fetchone()
             cur_challenge = fetch[0]
         if cur_challenge != 8:
