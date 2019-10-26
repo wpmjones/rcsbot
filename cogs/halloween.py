@@ -608,7 +608,6 @@ class Halloween(commands.Cog):
                          icon_url="https://discordapp.com/assets/2c21aeda16de354ba5334551a883b481.png")
         await ctx.send(embed=embed)
         await player.send(responses[8])
-        await ctx.author.send(responses[cur_challenge])
         with Sql() as cursor:
             sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"
             cursor.execute(sql, (cur_challenge, player.id))
