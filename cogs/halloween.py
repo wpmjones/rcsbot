@@ -568,9 +568,12 @@ class Halloween(commands.Cog):
                     return await ctx.send("It appears you might be in the wrong channel for this challenge. Try "
                                           "`++remind` if you are a bit lost.", delete_after=30)
                 if "231075161556779010" in ctx.message.content:
+                    self.bot.logger.debug("SAQ tagged")
                     if len(ctx.message.attachments) > 0:
+                        self.bot.logger.debug("Found attachments")
                         for attachment in ctx.message.attachments:
                             ext = attachment.filename.split(".")[-1]
+                            print(ext)
                             if ext in ("jpg", "jpeg", "png", "gif", "tif", "webm"):
                                 await ctx.author.send(responses[cur_challenge])
                                 sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"

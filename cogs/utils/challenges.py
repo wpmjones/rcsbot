@@ -122,7 +122,8 @@ def challenge_9():
 
 
 def challenge_10():
-    challenge = ("Find your favorite spooky picture and @ the leader (SAQ) with that image.  Who knows?  "
+    challenge = ("Find your favorite spooky picture and @ the leader (SAQ) with that image in the "
+                 "<#443663009743634453> channel.  Who knows?  "
                  "Maybe it will end up as his profile picture!")
     title = "Reddit Ace Challenge #10:"
     image_url = False
