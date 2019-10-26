@@ -128,9 +128,13 @@ class RcsBot(commands.Bot):
         ctx = await self.get_context(message, cls=context.Context)
         # Halloween Helper
         if not isinstance(ctx.channel, discord.TextChannel) and not message.content.startswith(prefix):
-            await ctx.invoke(self.get_cog('Halloween').answer)
+            logger.debug(f"Message from DM:\n{message.author}\n"
+                         f"{message.content}")
+            return await ctx.invoke(self.get_cog('Halloween').answer)
         if message.channel.id in halloween_channels and not message.content.startswith(prefix):
-            await ctx.invoke(self.get_cog('Halloween').clean_up)
+            logger.debug(f"Message from Halloween Channel:\n{message.author}\n{message.channel.name}\n"
+                         f"{message.content}")
+            return await ctx.invoke(self.get_cog('Halloween').clean_up)
         if ctx.command is None:
             return
         async with ctx.acquire():
