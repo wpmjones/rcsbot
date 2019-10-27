@@ -195,7 +195,8 @@ def challenge_15():
                  "X-Ray\n"
                  "Yankee\n"
                  "Zulu\n\n"
-                 "Of these, which did not follow the official NATO alphabet?  (Use the first letter like `ABCD`)")
+                 "Of these, which clans do **not** follow the official NATO alphabet?  "
+                 "(Use the first letter like `ACLX`)")
     title = "Reddit Zulu Challenge #15:"
     image_url = False
     return challenge, title, image_url

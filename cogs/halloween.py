@@ -16,6 +16,8 @@ class Halloween(commands.Cog):
         self.bot = bot
         self.title = "🎃 RCS Trick or Treat Adventure 🎃"
         self.color = discord.Color.dark_orange()
+        # TODO Send announcement - CHANGE TO 298621931748327426 - give bot perms to SEND
+        self.news_channel = self.bot.get_channel(628008799663292436)
         self.event_end = datetime(2019, 11, 1, 3, 00, 00)
 
     def build_embed(self, data):
@@ -480,7 +482,6 @@ class Halloween(commands.Cog):
             cursor.execute(sql, ctx.author.id)
             fetch = cursor.fetchone()
             cur_challenge = int(fetch[0]) + 1
-            print(cur_challenge)
             if cur_challenge in (1, 4, 6, 7, 9, 11, 13, 14, 15):
                 if cur_challenge == 13 and ctx.message.content.startswith("#"):
                     start = 1
@@ -519,9 +520,7 @@ class Halloween(commands.Cog):
                     }
                     embed = self.completion_msg(embed_data)
                     await ctx.author.send(embed=embed)
-                    # TODO Send announcement - CHANGE TO 298621931748327426 - give bot perms to SEND
-                    news_channel = self.bot.get_channel(628008799663292436)
-                    await news_channel.send(f"{ctx.author.display_name} has just completed the "
+                    await self.news_channel.send(f"{ctx.author.display_name} has just completed the "
                                             f"🎃 RCS Trick or Treat Adventure 🎃!")
                 else:
                     await ctx.author.send(random.choice(wrong_answers_resp))
@@ -563,19 +562,15 @@ class Halloween(commands.Cog):
                     sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"
                     cursor.execute(sql, (cur_challenge, ctx.author.id))
             if cur_challenge == 10:
-                print("Current Challenge = 10")
                 cur_channel_id = 443663009743634453
                 if ctx.channel.id != cur_channel_id:
                     await ctx.message.delete(delay=30)
                     return await ctx.send("It appears you might be in the wrong channel for this challenge. Try "
                                           "`++remind` if you are a bit lost.", delete_after=30)
                 if "231075161556779010" in ctx.message.content:
-                    self.bot.logger.debug("SAQ tagged")
                     if len(ctx.message.attachments) > 0:
-                        self.bot.logger.debug("Found attachments")
                         for attachment in ctx.message.attachments:
                             ext = attachment.filename.split(".")[-1]
-                            print(ext)
                             if ext in ("jpg", "jpeg", "png", "gif", "tif", "webm"):
                                 await ctx.author.send(responses[cur_challenge])
                                 sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"
@@ -694,6 +689,8 @@ class Halloween(commands.Cog):
                     }
                     embed = self.completion_msg(embed_data)
                     await ctx.send(embed=embed)
+                    await self.news_channel.send(f"{ctx.author.display_name} has just completed the "
+                                            f"🎃 RCS Trick or Treat Adventure 🎃!")
 
 
 def setup(bot):
