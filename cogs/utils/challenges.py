@@ -156,7 +156,7 @@ def challenge_14():
     challenge = ("Those sneaky Pirates have hidden their bounty where they think you'll never find it. "
                  "But we have faith!\n\n"
                  "Look at the picture below?  How many 'R's and 'P's are hidden in the Deep B Sea?\n\n"
-                 "Enter yout answer in the format of `##` where the first digit is the number of 'R's "
+                 "Enter your answer in the format of `##` where the first digit is the number of 'R's "
                  "and the second digit is the number of 'P's.")
     title = "Reddit Pirates Challenge #14:"
     image_url = "http://www.mayodev.com/images/14.jpg"
