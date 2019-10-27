@@ -313,11 +313,11 @@ class Halloween(commands.Cog):
                     return await ctx.send("There are no more challenges for you!  You have completed the event.",
                                           delete_after=60)
                 if player_info['cur_challenge'] != clan['challenge']:
-                    sql = "SELECT clanName, invite_link FROM rcs_halloween_clans WHERE challenge = %d"
+                    sql = "SELECT clan_name, invite_link FROM rcs_halloween_clans WHERE challenge = %d"
                     cursor.execute(sql, player_info['cur_challenge'])
                     clan = cursor.fetchone()
                     return await ctx.send(f"Looks like you're on the wrong server for this challenge.  Head over to "
-                                          f"{clan['clanName']} (<{clan['invite_link']}>) and try `++challenge` again.",
+                                          f"{clan['clan_name']} (<{clan['invite_link']}>) and try `++challenge` again.",
                                           delete_after=60)
             # Assume player is on the correct server for the current challenge
             data = await self.get_stats(ctx)
