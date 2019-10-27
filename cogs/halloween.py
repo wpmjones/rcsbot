@@ -195,6 +195,10 @@ class Halloween(commands.Cog):
     async def bot(self, ctx):
         await ctx.send(self.invite_link)
 
+    @commands.command()
+    async def join(self, ctx):
+        await ctx.invoke(self.halloween_join)
+
     @halloween.command(name="join", aliases=["register"])
     async def halloween_join(self, ctx):
         """ - Issue this command to register for the event"""
