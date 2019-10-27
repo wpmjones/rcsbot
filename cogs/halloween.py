@@ -145,8 +145,9 @@ class Halloween(commands.Cog):
                     sql = "UPDATE rcs_halloween_clans SET channel_id = %d WHERE discord_id = %d"
                     cursor.execute(sql, (channel.id, guild.id))
                 await channel.send("🎃 **Halloween is coming** 🎃\n\n"
-                                   "The RCS has something mysterious planned for you.  If you would like to participate, "
-                                   "type `++halloween join` and we will send you a message when the fun begins!")
+                                   "The RCS has something mysterious planned for you.  If you would "
+                                   "like to participate, type `++halloween join` and we will send you a "
+                                   "message when the fun begins!")
                 await channel.send(f"{guild.owner.mention} This channel is currently invisible to `@everyone`. "
                                    f"It will be up to you to open it up to your members when you want to. After that, "
                                    f"you can delete this message!  ;)  Thanks!")
@@ -283,7 +284,6 @@ class Halloween(commands.Cog):
             sql = "DELETE FROM rcs_halloween_skips WHERE discord_id = %d"
             cursor.execute(sql, discord_id)
         await ctx.confirm()
-
 
     @commands.command(name="challenge")
     async def challenge(self, ctx):
