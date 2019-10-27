@@ -179,10 +179,14 @@ class Context(commands.Context):
             # False: '<:redTick:596576672149667840>',
             None: '<:greyTick:596576672900186113>',
         }
-        emoji = lookup.get(opt, '<:redTick:596576672149667840>')
+        emoji = lookup.get(opt, '\u274C')
         if label is not None:
             return f'{emoji}: {label}'
         return emoji
+
+    async def confirm(self, opt=True):
+        emoji = self.tick(opt)
+        await self.message.add_reaction(emoji)
 
     @property
     def db(self):

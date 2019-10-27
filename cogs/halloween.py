@@ -273,6 +273,18 @@ class Halloween(commands.Cog):
         await ctx.message.delete(delay=15)
         await ctx.author.send(embed=embed)
 
+    @halloween.command(name="reset", hidden=True)
+    async def halloween_reset(self, ctx, discord_id):
+        with Sql() as cursor:
+            sql = ("UPDATE rcs_halloween_players "
+                   "SET start_time = NULL, finish_time = NULL, skip_count = 0, last_completed = 0 "
+                   "WHERE discord_id = %d")
+            cursor.execute(sql, discord_id)
+            sql = "DELETE FROM rcs_halloween_skips WHERE discord_id = %d"
+            cursor.execute(sql, discord_id)
+        await ctx.confirm()
+
+
     @commands.command(name="challenge")
     async def challenge(self, ctx):
         """Issued to receive the challenge for that server"""
