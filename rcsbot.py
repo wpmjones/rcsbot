@@ -87,7 +87,10 @@ class RcsBot(commands.Bot):
         self.remove_command("help")
         self.coc = coc_client
         self.color = discord.Color.dark_red()
+        self.logger = logger
         self.client_id = settings['discord']['rcs_client_id']
+        # TODO Send announcement - CHANGE TO 298621931748327426 - give bot perms to SEND
+        self.news_channel = self.get_channel(628008799663292436)
         self.messages = {}
 
         coc_client.add_events(self.on_event_error)
@@ -95,9 +98,9 @@ class RcsBot(commands.Bot):
         for extension in initial_extensions:
             try:
                 self.load_extension(extension)
-                logger.debug(f"{extension} loaded successfully")
+                self.logger.debug(f"{extension} loaded successfully")
             except Exception as extension:
-                logger.error(f"Failed to load extension {extension}.", file=sys.stderr)
+                self.logger.error(f"Failed to load extension {extension}.", file=sys.stderr)
                 traceback.print_exc()
 
     @property
@@ -128,12 +131,12 @@ class RcsBot(commands.Bot):
         ctx = await self.get_context(message, cls=context.Context)
         # Halloween Helper
         if not isinstance(ctx.channel, discord.TextChannel) and not message.content.startswith(prefix):
-            logger.debug(f"Message from DM:\n{message.author}\n"
-                         f"{message.content}")
+            self.logger.debug(f"Message from DM:\n{message.author}\n"
+                              f"{message.content}")
             return await ctx.invoke(self.get_cog('Halloween').answer)
         if message.channel.id in halloween_channels and not message.content.startswith(prefix):
-            logger.debug(f"Message from Halloween Channel:\n{message.author}\n{message.channel.name}\n"
-                         f"{message.content}")
+            self.logger.debug(f"Message from Halloween Channel:\n{message.author}\n{message.channel.name}\n"
+                              f"{message.content}")
             return await ctx.invoke(self.get_cog('Halloween').clean_up)
         if ctx.command is None:
             return
@@ -148,9 +151,9 @@ class RcsBot(commands.Bot):
         elif isinstance(error, commands.CommandInvokeError):
             original = error.original
             if not isinstance(original, discord.HTTPException):
-                logger.error(f"In {ctx.command.qualified_name}:", file=sys.stderr)
+                self.logger.error(f"In {ctx.command.qualified_name}:", file=sys.stderr)
                 traceback.print_tb(original.__traceback__)
-                logger.error(f"{original.__class__.__name__}: {original}", file=sys.stderr)
+                self.logger.error(f"{original.__class__.__name__}: {original}", file=sys.stderr)
         elif isinstance(error, commands.ArgumentParsingError):
             await ctx.send(error)
 
@@ -187,14 +190,14 @@ class RcsBot(commands.Bot):
             pass
 
     async def on_ready(self):
-        logger.add(self.send_log, level=log_level)
-        logger.info("rcs-bot has started")
+        self.logger.add(self.send_log, level=log_level)
+        self.logger.info("rcs-bot has started")
         activity = discord.Game("Clash of Clans")
         await self.change_presence(status=discord.Status.online, activity=activity)
-        logger.info(f'Ready: {self.user} (ID: {self.user.id})')
+        self.logger.info(f'Ready: {self.user} (ID: {self.user.id})')
 
     async def on_resumed(self):
-        logger.info("resumed...")
+        self.logger.info("resumed...")
 
     async def close(self):
         await super().close()
@@ -208,7 +211,6 @@ if __name__ == "__main__":
         bot = RcsBot()
         bot.repo = git.Repo(os.getcwd())
         bot.pool = pool
-        bot.logger = logger
         bot.run(token, reconnect=True)
     except:
         traceback.print_exc()

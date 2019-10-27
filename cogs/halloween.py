@@ -16,8 +16,6 @@ class Halloween(commands.Cog):
         self.bot = bot
         self.title = "🎃 RCS Trick or Treat Adventure 🎃"
         self.color = discord.Color.dark_orange()
-        # TODO Send announcement - CHANGE TO 298621931748327426 - give bot perms to SEND
-        self.news_channel = self.bot.get_channel(628008799663292436)
         self.event_end = datetime(2019, 11, 1, 3, 00, 00)
 
     def build_embed(self, data):
@@ -525,7 +523,7 @@ class Halloween(commands.Cog):
                     embed = self.completion_msg(embed_data)
                     await ctx.author.send(embed=embed)
                     await self.news_channel.send(f"{ctx.author.display_name} has just completed the "
-                                            f"🎃 RCS Trick or Treat Adventure 🎃!")
+                                                 f"🎃 RCS Trick or Treat Adventure 🎃!")
                 else:
                     await ctx.author.send(random.choice(wrong_answers_resp))
             if cur_challenge == 3:
