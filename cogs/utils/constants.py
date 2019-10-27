@@ -61,7 +61,7 @@ trophy_leagues = ["Bronze III",
 answers = {
     1: "pumpkin bomb",
     4: "goblinstoppers",
-    6: "[--rough--]",
+    6: ["[--rough--]", "[—rough—]"],
     7: "heinz",
     9: "gdfechba",
     11: "16",

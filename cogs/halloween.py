@@ -502,7 +502,7 @@ class Halloween(commands.Cog):
                 else:
                     start = 0
                 answer = answers[cur_challenge]
-                if ctx.message.content.lower()[start:] == answer and cur_challenge != 15:
+                if ctx.message.content.lower()[start:] in answer and cur_challenge != 15:
                     await ctx.author.send(responses[cur_challenge])
                     sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"
                     cursor.execute(sql, (cur_challenge, ctx.author.id))
