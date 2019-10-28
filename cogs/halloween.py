@@ -350,9 +350,9 @@ class Halloween(commands.Cog):
         for r in reactions_1:
             await msg.add_reaction(r)
 
-        for i in range(4):
+        for i in range(8):
             try:
-                reaction, user = await ctx.bot.wait_for("reaction_add", timeout=60, check=check_1)
+                reaction, user = await ctx.bot.wait_for("reaction_add", timeout=120, check=check_1)
             except asyncio.TimeoutError:
                 await msg.clear_reactions()
                 await msg.edit("You have run out of time. When you're ready, just type `++challenge`.")
@@ -382,7 +382,7 @@ class Halloween(commands.Cog):
         for r in reactions_2:
             await msg.add_reaction(r)
 
-        for i in range(5):
+        for i in range(8):
             try:
                 reaction, user = await ctx.bot.wait_for("reaction_add", timeout=60, check=check_2)
             except asyncio.TimeoutError:
@@ -534,8 +534,10 @@ class Halloween(commands.Cog):
                     }
                     embed = self.completion_msg(embed_data)
                     await ctx.author.send(embed=embed)
-                    await self.news_channel.send(f"{ctx.author.display_name} has just completed the "
-                                                 f"🎃 RCS Trick or Treat Adventure 🎃!")
+                    # TODO Send announcement - CHANGE TO 298621931748327426 - give bot perms to SEND
+                    news_channel = self.bot.get_channel(628008799663292436)
+                    await news_channel.send(f"{ctx.author.display_name} has just completed the "
+                                            f"🎃 RCS Trick or Treat Adventure 🎃!")
                 else:
                     await ctx.author.send(random.choice(wrong_answers_resp))
             if cur_challenge == 3:
@@ -703,7 +705,9 @@ class Halloween(commands.Cog):
                     }
                     embed = self.completion_msg(embed_data)
                     await ctx.send(embed=embed)
-                    await self.news_channel.send(f"{ctx.author.display_name} has just completed the "
+                    # TODO Send announcement - CHANGE TO 298621931748327426 - give bot perms to SEND
+                    news_channel = self.bot.get_channel(628008799663292436)
+                    await news_channel.send(f"{ctx.author.display_name} has just completed the "
                                             f"🎃 RCS Trick or Treat Adventure 🎃!")
 
 

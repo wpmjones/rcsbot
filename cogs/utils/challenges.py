@@ -4,8 +4,8 @@ color = discord.Color.dark_orange()
 
 
 def challenge_1():
-    challenge = ("Clash of clans offered a one time limited edition Halloween trap that was added to the game "
-                 "the same Day the Reddit Clan System was born! (October 27, 2012 was the day Flammy posted "
+    challenge = ("Clash of Clans offered a one time limited edition Halloween trap that was added to the game "
+                 "the same day the Reddit Clan System was born! (October 27, 2012 was the day Flammy posted "
                  "the original post that later became our wiki and announced we were open for business).\n\n"
                  "The limited edition trap is shown in this picture.  What was it called?\n\n"
                  "`NOTE: Unless the bot specifically tells you to do so, don't use ++ when providing answers.`")
