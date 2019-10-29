@@ -186,7 +186,8 @@ class Halloween(commands.Cog):
                 user = self.bot.get_user(player[0])
                 await user.send(init_msg)
                 await asyncio.sleep(3)
-                await user.send("...or a trick!!!\n\n"
+                await user.send("...or a trick!!!  There is also a special prize for the fastest to complete all"
+                                "15 challenges without using any skips!\n\n"
                                 "`NOTE: Unless specifically instructed to do so, do not use ++ when "
                                 "answering challenges.`")
 
@@ -221,12 +222,6 @@ class Halloween(commands.Cog):
     @halloween.command(name="start")
     async def halloween_start(self, ctx):
         """ - Issue this command to start the event."""
-        # REMOVE THIS BEFORE EVENT STARTS!!!
-        if ctx.author.id not in testers:
-            self.bot.logger.info(f"{ctx.author} just tried to start Halloween!")
-            await ctx.message.delete(delay=30)
-            return await ctx.send("We haven't started just yet. We'll let you know when it's time to go!",
-                                  delete_after=30)
         async with ctx.typing():
             guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
             tot_role = guild.get_role(636646591880626177)
@@ -274,26 +269,9 @@ class Halloween(commands.Cog):
         await ctx.message.delete(delay=15)
         await ctx.author.send(embed=embed)
 
-    @halloween.command(name="reset", hidden=True)
-    async def halloween_reset(self, ctx, discord_id):
-        with Sql() as cursor:
-            sql = ("UPDATE rcs_halloween_players "
-                   "SET start_time = NULL, finish_time = NULL, skip_count = 0, last_completed = 0 "
-                   "WHERE discord_id = %d")
-            cursor.execute(sql, discord_id)
-            sql = "DELETE FROM rcs_halloween_skips WHERE discord_id = %d"
-            cursor.execute(sql, discord_id)
-        await ctx.confirm()
-
     @commands.command(name="challenge")
     async def challenge(self, ctx):
         """Issued to receive the challenge for that server"""
-        # REMOVE THIS BEFORE EVENT STARTS!!!
-        if ctx.author.id not in testers:
-            self.bot.logger.info(f"{ctx.author} just tried to get a challenge!")
-            await ctx.message.delete(delay=30)
-            return await ctx.send("We haven't started just yet. We'll let you know when it's time to go!",
-                                  delete_after=30)
         async with ctx.typing():
             with Sql(as_dict=True) as cursor:
                 sql = ("SELECT last_completed + 1 as cur_challenge, finish_time FROM rcs_halloween_players "
@@ -460,11 +438,7 @@ class Halloween(commands.Cog):
 
     @commands.command(name="remind", aliases=["reminder"])
     async def remind(self, ctx):
-        # REMOVE THIS BEFORE EVENT STARTS!!!
-        if ctx.author.id not in testers:
-            await ctx.message.delete(delay=30)
-            return await ctx.send("We haven't started just yet. We'll let you know when it's time to go!",
-                                  delete_after=30)
+        """ - Used to get a reminder from the bot on what challenge you are working on."""
         async with ctx.typing():
             data = await self.get_stats(ctx)
             if data["cur_challenge"] > 15:
@@ -486,11 +460,6 @@ class Halloween(commands.Cog):
 
     @commands.command(name="answer", hidden=True)
     async def answer(self, ctx):
-        # REMOVE THIS BEFORE EVENT STARTS!!!
-        if ctx.author.id not in testers:
-            await ctx.message.delete(delay=30)
-            return await ctx.send("We haven't started just yet. We'll let you know when it's time to go!",
-                                  delete_after=30)
         with Sql() as cursor:
             sql = "SELECT last_completed FROM rcs_halloween_players WHERE discord_id = %s"
             cursor.execute(sql, ctx.author.id)
@@ -657,11 +626,6 @@ class Halloween(commands.Cog):
 
     @commands.command(name="skip", aliases=["next"])
     async def skip(self, ctx):
-        # REMOVE THIS BEFORE EVENT STARTS!!!
-        if ctx.author.id not in testers:
-            await ctx.message.delete(delay=30)
-            return await ctx.send("We haven't started just yet. We'll let you know when it's time to go!",
-                                  delete_after=30)
         async with ctx.typing():
             with Sql() as cursor:
                 sql = ("UPDATE rcs_halloween_players "
