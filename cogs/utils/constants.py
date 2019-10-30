@@ -97,7 +97,7 @@ responses = {
         "RCS members who know their history!  Just type `++challenge` and see what you find!"),
     9: ("Hmm you are a smart one.  Well done.  I’m sure you didn’t have to use the wiki at all!  :wink:  "
         "Well put on a happy face and head over to Reddit Ace (<https://discord.gg/m2ppRKp>) and "
-        "see what `++challenge` awaits you there."),
+        "see what `++challenge` awaits you in the <#443663009743634453> channel."),
     10: ("I am both pleased and frightened at the same time.  Well done… I think.  So I think it’s "
          "time you get a*round* to the Extremeillusion server (<https://discord.gg/spVUafy>).  They have some cool "
          "stuff going on over there and we need to check your eyesight while you’re there."),
