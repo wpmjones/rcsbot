@@ -239,7 +239,7 @@ class Halloween(commands.Cog):
                     if fetch[0]:
                         start_time = fetch[0]
                         return await ctx.send(f"You started the event at {start_time} UTC. If you need a reminder "
-                                              f"about your next challenge, just type `++halloween remind`.",
+                                              f"about your next challenge, just type `++remind`.",
                                               delete_after=60)
                 # Initiate time and issue the first clue
                 start_time = datetime.utcnow()
