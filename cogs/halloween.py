@@ -223,7 +223,7 @@ class Halloween(commands.Cog):
         content = (f"**Fastest player with skips:**\n"
                    f"<@{fws_discord_id}> with {fws_skip_count} skips.\n"
                    f"Elapsed time: {fws_elapsed[10:19]}\n\n"
-                   f"**Fasted player without skips:**\n"
+                   f"**Fastest player without skips:**\n"
                    f"<@{fns_discord_id}>\n"
                    f"Elapsed time: {fns_elapsed[10:19]}")
         await ctx.message.delete()

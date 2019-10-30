@@ -32,7 +32,7 @@ def challenge_2b():
                  "The butler (B) said that he was cleaning the upstairs closet. The maid (M) said that she "
                  "was getting the mail just like she had the day before.  The gardener (G) said he was "
                  "picking vegetables for lunch. Who do the police arrest?")
-    title = "Reddit Elclipse Challenge #2b:"
+    title = "Reddit Eclipse Challenge #2b:"
     embed = discord.Embed(title=title, description=challenge, color=color)
     return embed
 
