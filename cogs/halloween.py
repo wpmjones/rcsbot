@@ -486,11 +486,14 @@ class Halloween(commands.Cog):
                     cursor.execute(sql, (cur_challenge, ctx.author.id))
                 elif ctx.message.content.lower() == answer and cur_challenge == 15:
                     guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
-                    tot_role = guild.get_role(636646591880626177)
-                    party_role = guild.get_role(636646824538669066)
-                    member = guild.get_member(ctx.author.id)
-                    await member.remove_roles(tot_role)
-                    await member.add_roles(party_role)
+                    try:
+                        tot_role = guild.get_role(636646591880626177)
+                        party_role = guild.get_role(636646824538669066)
+                        member = guild.get_member(ctx.author.id)
+                        await member.remove_roles(tot_role)
+                        await member.add_roles(party_role)
+                    except discord.Forbidden:
+                        self.bot.logger.error(f"No role change for {ctx.author}")
                     now = datetime.utcnow()
                     sql = ("UPDATE rcs_halloween_players "
                            "SET finish_time = %s, last_completed = 15 "
