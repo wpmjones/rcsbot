@@ -314,7 +314,7 @@ class Halloween(commands.Cog):
                 sql = "SELECT start_time FROM rcs_halloween_players WHERE discord_id = %d"
                 cursor.execute(sql, ctx.author.id)
                 fetch = cursor.fetchone()
-                if not fetch[0]:
+                if not fetch['start_time']:
                     return await ctx.send("You must type `++halloween start` before requesting a challenge!",
                                           delete_after=240)
                 sql = ("SELECT last_completed + 1 as cur_challenge, finish_time FROM rcs_halloween_players "
