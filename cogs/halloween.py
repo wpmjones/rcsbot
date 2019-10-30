@@ -716,7 +716,7 @@ class Halloween(commands.Cog):
                     embed = self.completion_msg(embed_data)
                     await ctx.send(embed=embed)
                     # TODO Send announcement - CHANGE TO 298621931748327426 - give bot perms to SEND
-                    news_channel = self.bot.get_channel(628008799663292436)
+                    news_channel = self.bot.get_channel(298621931748327426)
                     await news_channel.send(f"{ctx.author.display_name} has just completed the "
                                             f"🎃 RCS Trick or Treat Adventure 🎃!")
 
