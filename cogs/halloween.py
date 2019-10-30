@@ -277,6 +277,12 @@ class Halloween(commands.Cog):
         """Issued to receive the challenge for that server"""
         async with ctx.typing():
             with Sql(as_dict=True) as cursor:
+                sql = "SELECT start_time FROM rcs_halloween_players WHERE discord_id = %d"
+                cursor.execute(sql, ctx.author.id)
+                fetch = cursor.fetchone()
+                if not fetch[0]:
+                    await ctx.send("You must type `++halloween start` before requesting a challenge!",
+                                   delete_after=240)
                 sql = ("SELECT last_completed + 1 as cur_challenge, finish_time FROM rcs_halloween_players "
                        "WHERE discord_id = %d")
                 cursor.execute(sql, ctx.author.id)
