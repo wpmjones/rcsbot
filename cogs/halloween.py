@@ -221,7 +221,7 @@ class Halloween(commands.Cog):
         fns_discord_id = fetch2[0]
         fns_elapsed = fetch2[1].strftime("%Y-%m-%d %H:%M:%S.%f")
         content = (f"**Fastest player with skips:**\n"
-                   f"<@{fws_discord_id}> with {fws_skip_count} skips."
+                   f"<@{fws_discord_id}> with {fws_skip_count} skips.\n"
                    f"Elapsed time: {fws_elapsed[10:19]}\n\n"
                    f"**Fasted player without skips:**\n"
                    f"<@{fns_discord_id}>\n"
