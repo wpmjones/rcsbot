@@ -195,6 +195,40 @@ class Halloween(commands.Cog):
     async def bot(self, ctx):
         await ctx.send(self.invite_link)
 
+    @halloween.command(hidden=True)
+    @commands.has_role(636646824538669066)
+    async def bgiloquv(self, ctx):
+        with Sql() as cursor:
+            sql = ("SELECT TOP 1 discord_id, finish_time-start_time as elapsed, skip_count "
+                   "FROM rcs_halloween_players WHERE finish_time IS NOT NULL "
+                   "AND discord_id NOT IN (271429742996094976, 123779421357211656, 276955502632501250, "
+                   "218060364309463040, 322419245453672449, 397163055038857217, 205344025740312576, "
+                   "251150854571163648) "
+                   "ORDER BY elapsed")
+            cursor.execute(sql)
+            fetch1 = cursor.fetchone()
+            sql = ("SELECT TOP 1 discord_id, finish_time-start_time as elapsed "
+                   "FROM rcs_halloween_players WHERE finish_time IS NOT NULL "
+                   "AND discord_id NOT IN (271429742996094976, 123779421357211656, 276955502632501250, "
+                   "218060364309463040, 322419245453672449, 397163055038857217, 205344025740312576, "
+                   "251150854571163648) AND skip_count = 0 "
+                   "ORDER BY elapsed")
+            cursor.execute(sql)
+            fetch2 = cursor.fetchone()
+        fws_discord_id = fetch1[0]
+        fws_elapsed = fetch1[1].strftime("%Y-%m-%d %H:%M:%S.%f")
+        fws_skip_count = fetch1[2]
+        fns_discord_id = fetch2[0]
+        fns_elapsed = fetch2[1].strftime("%Y-%m-%d %H:%M:%S.%f")
+        content = (f"**Fastest player with skips:**\n"
+                   f"<@{fws_discord_id}> with {fws_skip_count} skips."
+                   f"Elapsed time: {fws_elapsed[10:19]}\n\n"
+                   f"**Fasted player without skips:**\n"
+                   f"<@{fns_discord_id}>\n"
+                   f"Elapsed time: {fns_elapsed[10:19]}")
+        await ctx.message.delete()
+        await ctx.send(content)
+
     @commands.command()
     async def join(self, ctx):
         await ctx.invoke(self.halloween_join)
