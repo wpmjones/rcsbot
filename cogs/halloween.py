@@ -514,10 +514,14 @@ class Halloween(commands.Cog):
                 else:
                     start = 0
                 answer = answers[cur_challenge]
-                if ctx.message.content.lower()[start:] in answer and cur_challenge != 15:
-                    await ctx.author.send(responses[cur_challenge])
+                if ctx.message.content.lower()[start:] in answer and cur_challenge == 6:
                     sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"
                     cursor.execute(sql, (cur_challenge, ctx.author.id))
+                    return await ctx.author.send(responses[cur_challenge])
+                elif ctx.message.content.lower()[start:] == answer and cur_challenge != 15:
+                    sql = "UPDATE rcs_halloween_players SET last_completed = %d WHERE discord_id = %d"
+                    cursor.execute(sql, (cur_challenge, ctx.author.id))
+                    return await ctx.author.send(responses[cur_challenge])
                 elif ctx.message.content.lower() == answer and cur_challenge == 15:
                     guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
                     try:
