@@ -223,10 +223,13 @@ class Halloween(commands.Cog):
     async def halloween_start(self, ctx):
         """ - Issue this command to start the event."""
         async with ctx.typing():
-            guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
-            tot_role = guild.get_role(636646591880626177)
-            member = guild.get_member(ctx.author.id)
-            await member.add_roles(tot_role)
+            try:
+                guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
+                tot_role = guild.get_role(636646591880626177)
+                member = guild.get_member(ctx.author.id)
+                await member.add_roles(tot_role)
+            except:
+                pass
             with Sql() as cursor:
                 # Check to see if they've already started
                 sql = "SELECT start_time FROM rcs_halloween_players WHERE discord_id = %d"
