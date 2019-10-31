@@ -719,10 +719,18 @@ class Halloween(commands.Cog):
                     }
                     embed = self.completion_msg(embed_data)
                     await ctx.send(embed=embed)
-                    # TODO Send announcement - CHANGE TO 298621931748327426 - give bot perms to SEND
                     news_channel = self.bot.get_channel(298621931748327426)
                     await news_channel.send(f"{ctx.author.display_name} has just completed the "
                                             f"🎃 RCS Trick or Treat Adventure 🎃!")
+                    guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
+                    try:
+                        tot_role = guild.get_role(636646591880626177)
+                        party_role = guild.get_role(636646824538669066)
+                        member = guild.get_member(ctx.author.id)
+                        await member.remove_roles(tot_role)
+                        await member.add_roles(party_role)
+                    except discord.Forbidden:
+                        self.bot.logger.error(f"No role change for {ctx.author}")
 
 
 def setup(bot):
