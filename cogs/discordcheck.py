@@ -5,7 +5,7 @@ import requests
 
 from datetime import datetime, date
 from discord.ext import commands, tasks
-from cogs.utils.db import conn_sql
+from cogs.utils.db import Sql
 from config import settings, color_pick
 
 
@@ -30,71 +30,68 @@ class DiscordCheck(commands.Cog):
             notes_channel = guild.get_channel(settings['rcsChannels']['leaderNotes'])
             mods_channel = guild.get_channel(settings['rcsChannels']['mods'])
             member_role = guild.get_role(settings['rcsRoles']['members'])
-            conn = conn_sql()
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM rcs_vwDiscordClans ORDER BY clanName")
-            fetch = cursor.fetchall()
-            daily_clans = [{"short_name": row[1], "leader_tag": row[2], "clan_name": row[3]} for row in fetch]
-            cursor.execute("SELECT clanName, discordTag FROM rcs_data ORDER BY clanName")
-            fetch = cursor.fetchall()
-            rcs_clans = {}
-            for row in fetch:
-                rcs_clans[row[0]] = row[1]
-            rcs_clans = [{"clan_name": row[0], "leader_tag": row[1]} for row in fetch]
-            cursor.execute("SELECT shortName, clanName FROM rcs_data ORDER BY clanName")
-            fetch = cursor.fetchall()
-            clan_list = []
-            for row in fetch:
-                if "/" in row[0]:
-                    for clan in row[0].split("/"):
-                        clan_list.append(clan)
-                else:
-                    clan_list.append(row[0])
-            self.bot.logger.debug("About the clear messages")
-            async for message in danger_channel.history():
-                await message.delete()
-            self.bot.logger.debug("Messages cleared")
-            # THIS IS THE BEGINNING OF THE LEADER NOTE CHECKS
-            message_list = []
-            async for message in notes_channel.history(limit=None, oldest_first=True):
-                message_list.append(message.content)
-            self.bot.logger.debug("Messages pulled from Leader Notes")
-            messages = " - ".join(message_list)
-            regex = r"[tT]ag:\s[a-zA-Z0-9]+|#[a-zA-Z0-9]{6,}"
-            ban_set = set()
-            for match in re.finditer(regex, messages):
-                if match.group() != "#":
-                    ban_set.add(match.group().upper().replace("TAG: ", "#"))
-                else:
-                    ban_set.add(match.group())
-            ban_list = list(ban_set)
-            self.bot.logger.debug("Starting to loop through ban_list")
-            for tag in ban_list:
-                try:
-                    player = await self.bot.coc.get_player(tag)
-                    if player.clan and player.clan in rcs_clans:
-                        cursor.execute(f"SELECT COUNT(timestamp) AS reported, clanTag, memberTag "
-                                       f"FROM rcs_notify "
-                                       f"WHERE memberTag = {player.tag[1:]} AND clanTag = {player.clan.tag[1:]} "
-                                       f"GROUP BY clanTag, memberTag")
-                        row = cursor.fetchone()
-                        reported = row[0]
-                        if reported > 3:
-                            embed = discord.Embed(color=discord.Color.dark_red())
-                            embed.add_field(name="Leader Note found:",
-                                            value=f"<@{rcs_clans[player.clan.tag[1:]]['leader_tag']}> "
-                                            f"{player.name} ({player.tag}) is in {player.clan.name}. Please "
-                                            f"search for `in:leader-notes {player.tag}` for details.")
-                            embed.set_footer(text="Reminder: This is not a ban list, simply information that this "
-                                                  "member has caused problems in the past.")
-                            await danger_channel.send(embed=embed)
-                            cursor.execute(f"INSERT INTO rcs_notify "
-                                           f"VALUES ({datetime.now().strftime('%m-%d-%Y %H:%M:%S')}, "
-                                           f"{player.clan.tag[1:]}, {player.tag[1:]})")
-                            conn.commit()
-                        conn.close()
-                except:
-                    self.bot.logger.warning(f"Exception on tag: {tag}")
+            with Sql() as cursor:
+                cursor.execute("SELECT * FROM rcs_vwDiscordClans ORDER BY clanName")
+                fetch = cursor.fetchall()
+                daily_clans = [{"short_name": row[1], "leader_tag": row[2], "clan_name": row[3]} for row in fetch]
+                cursor.execute("SELECT clanName, discordTag FROM rcs_data ORDER BY clanName")
+                fetch = cursor.fetchall()
+                rcs_clans = {}
+                for row in fetch:
+                    rcs_clans[row[0]] = row[1]
+                rcs_clans = [{"clan_name": row[0], "leader_tag": row[1]} for row in fetch]
+                cursor.execute("SELECT shortName, clanName FROM rcs_data ORDER BY clanName")
+                fetch = cursor.fetchall()
+                clan_list = []
+                for row in fetch:
+                    if "/" in row[0]:
+                        for clan in row[0].split("/"):
+                            clan_list.append(clan)
+                    else:
+                        clan_list.append(row[0])
+                self.bot.logger.debug("About the clear messages")
+                async for message in danger_channel.history():
+                    await message.delete()
+                self.bot.logger.debug("Messages cleared")
+                # THIS IS THE BEGINNING OF THE LEADER NOTE CHECKS
+                message_list = []
+                async for message in notes_channel.history(limit=None, oldest_first=True):
+                    message_list.append(message.content)
+                self.bot.logger.debug("Messages pulled from Leader Notes")
+                messages = " - ".join(message_list)
+                regex = r"[tT]ag:\s[a-zA-Z0-9]+|#[a-zA-Z0-9]{6,}"
+                ban_set = set()
+                for match in re.finditer(regex, messages):
+                    if match.group() != "#":
+                        ban_set.add(match.group().upper().replace("TAG: ", "#"))
+                    else:
+                        ban_set.add(match.group())
+                ban_list = list(ban_set)
+                self.bot.logger.debug("Starting to loop through ban_list")
+                for tag in ban_list:
+                    try:
+                        player = await self.bot.coc.get_player(tag)
+                        if player.clan and player.clan in rcs_clans:
+                            cursor.execute(f"SELECT COUNT(timestamp) AS reported, clanTag, memberTag "
+                                           f"FROM rcs_notify "
+                                           f"WHERE memberTag = {player.tag[1:]} AND clanTag = {player.clan.tag[1:]} "
+                                           f"GROUP BY clanTag, memberTag")
+                            row = cursor.fetchone()
+                            reported = row[0]
+                            if reported > 3:
+                                embed = discord.Embed(color=discord.Color.dark_red())
+                                embed.add_field(name="Leader Note found:",
+                                                value=f"<@{rcs_clans[player.clan.tag[1:]]['leader_tag']}> "
+                                                f"{player.name} ({player.tag}) is in {player.clan.name}. Please "
+                                                f"search for `in:leader-notes {player.tag}` for details.")
+                                embed.set_footer(text="Reminder: This is not a ban list, simply information that this "
+                                                      "member has caused problems in the past.")
+                                await danger_channel.send(embed=embed)
+                                cursor.execute(f"INSERT INTO rcs_notify "
+                                               f"VALUES ({datetime.now().strftime('%m-%d-%Y %H:%M:%S')}, "
+                                               f"{player.clan.tag[1:]}, {player.tag[1:]})")
+                    except:
+                        self.bot.logger.warning(f"Exception on tag: {tag}")
             # THIS IS THE BEGINNING OF THE NAME CHECKS
             self.bot.logger.debug("Beginning of daily clan check")
             for clan in daily_clans:

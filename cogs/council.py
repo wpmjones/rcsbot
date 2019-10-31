@@ -290,13 +290,47 @@ class CouncilCog(commands.Cog):
                        f"Recruiters role from <@{fetched['discordTag']}>. If they have any other roles, "
                        f"you will need to remove them manually.")
 
+    @commands.command(name="in_war", aliases=["inwar"], hidden=True)
+    @commands.has_any_role("Admin1", "Leaders", "Council")
+    async def in_war(self, ctx):
+        async with ctx.typing():
+            with Sql(as_dict=True) as cursor:
+                cursor.execute("SELECT '#' + clanTag AS tag, isWarLogPublic FROM rcs_data "
+                               "WHERE classification <> 'feeder' ORDER BY clanName")
+                clans = cursor.fetchall()
+            tags = [clan['tag'] for clan in clans if clan['isWarLogPublic'] == 1]
+            in_prep = ""
+            in_war = ""
+            async for war in self.bot.coc.get_current_wars(tags):
+                try:
+                    if war.state == "preparation":
+                        in_prep += (f"{war.clan.name} ({war.clan.tag}) has "
+                                    f"{war.start_time.seconds_until // 3600:.0f} hours until war.\n")
+                    if war.state == "inWar":
+                        in_war += (f"{war.clan.name} ({war.clan.tag}) has "
+                                   f"{war.end_time.seconds_until // 3600:.0f} hours left in war.\n")
+                except Exception as e:
+                    self.bot.logger.exception("get war state")
+            await ctx.send_embed(ctx.channel,
+                                 "RCS Clan War Status",
+                                 "This does not include CWL wars.",
+                                 in_prep,
+                                 discord.Color.dark_gold())
+            await ctx.send_embed(ctx.channel,
+                                 "RCS Clan War Status",
+                                 "This does not include CWL wars.",
+                                 in_war,
+                                 discord.Color.dark_red())
+
     @commands.command(name="leader", hidden=True)
     @commands.has_any_role(settings['rcs_roles']['council'],
                            settings['rcs_roles']['chat_mods'],
                            settings['rcs_roles']['leaders'])
     async def leader(self, ctx, *, clan: ClanConverter = None):
         """Command to find the leader for the selected clan.
-        Usage: ++leader Reddit Argon"""
+
+        Usage: ++leader Reddit Tau
+        """
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         with Sql(as_dict=True) as cursor:

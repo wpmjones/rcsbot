@@ -10,9 +10,17 @@ def get_render_type(type_, table):
     elif type_ == "defenses":
         render = table.board_1("Def")
     elif type_ == "donations":
-        render = table.board_2("Don/Rec")
+        render = table.board_2("Don", "Rec")
+    elif type_ in ("trophies", "besttrophies"):
+        render = table.board_1("Cups")
+    elif type_ == "bhtrophies":
+        render = table.board_1("vsCups")
+    elif type_ == "warstars":
+        render = table.board_1("Stars")
+    elif type_ in ("townhalls", "builderhalls"):
+        render = table.board_3()
     else:
-        render = table.board_1
+        render = table.board_1()
     return render
 
 
@@ -114,11 +122,26 @@ class CLYTable:
         self._rows = []
 
     def board_1(self, category):
-        fmt = f"{emojis['other']['number']}`⠀{category:\u00A0>6.6}⠀` `⠀{'Name':\u00A0>16.16}⠀`\n"
+        fmt = f"{emojis['other']['num']}`⠀{category:\u00A0>6.6}⠀` `⠀{'Name':\u00A0>16.16}⠀`\n"
         for v in self._rows:
             index = int(v[0]) + 1
-            index = emojis['numbers'][index]  # if index <= 100 else misc['idle']
+            index = emojis['level'][index]  # if index <= 100 else misc['idle']
             fmt += f"{index}`⠀{str(v[1]):\u00A0>6.6}⠀` `⠀{str(v[2]):\u00A0>16.16}⠀`\n"
+        return fmt
+
+    def board_2(self, category_1, category_2):
+        fmt = f"{emojis['other']['num']}`⠀{category_1:\u00A0>6.6}⠀` `⠀{category_2:\u00A0>5.5}⠀` `⠀{'Name':\u00A0>10.10}⠀`\n"
+        for v in self._rows:
+            index = int(v[0]) + 1
+            index = emojis['level'][index]  # if index <= 100 else misc['idle']
+            fmt += f"{index}`⠀{str(v[1]):\u00A0>6.6}⠀` `⠀{str(v[2]):\u00A0>5.5}⠀` `⠀{str(v[3]):\u00A0>10.10}⠀`\n"
+        return fmt
+
+    def board_3(self):
+        fmt = ""  # f"{emojis['other']['gap']}` {'Name':\u00A0<18.18}⠀`\n"
+        for v in self._rows:
+            fmt += f"{emojis['th_icon'][int(v[0])]}`⠀{str(v[1]):\u00A0<18.18}⠀`\n"
+            # fmt += f"{emojis['th'][int(v[0])]}`⠀{str(v[1]):\u00A0<18.18}⠀`\n"
         return fmt
 
 
@@ -151,13 +174,15 @@ class TablePaginator(Pages):
     def create_row(self, data):
         if self.type_ in ("attacks",
                           "defenses",
-                          "donations",
                           "trophies",
-                          "bh_trophies",
+                          "bhtrophies",
                           "besttrophies",
                           "warstars",
                           ):
             row = [data[0], data[1][0], data[1][1]]
+        elif self.type_ in ("donations",
+                            ):
+            row = [data[0], data[1][0], data[1][1], data[1][2]]
         elif self.type_ in ("townhalls",
                             "builderhalls",
                             "builderhalls",

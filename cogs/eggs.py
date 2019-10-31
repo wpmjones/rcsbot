@@ -33,7 +33,6 @@ class Eggs(commands.Cog):
             embed.set_footer(text=f"Discord ID: {user.id}",
                              icon_url="https://discordapp.com/assets/2c21aeda16de354ba5334551a883b481.png")
             response = await ctx.send(embed=embed)
-            self.bot.logger.info(ctx.command, f"avatar for {user.id}", ctx.author)
         else:
             response = await ctx.send(emojis['other']['redx'] + """ I don't believe that's a real Discord user. Please 
                 make sure you are using the '@' prefix or give me an ID or something I can work with.""")
@@ -84,6 +83,19 @@ class Eggs(commands.Cog):
 
     @commands.command(name="roll")
     async def roll(self, ctx, *args):
+        """Roll a set number of dice providing random results
+
+        **Parameters**
+        Max number on die (one whole number per die)
+
+        **Format**
+        `++roll integer [integer] [integer]...`
+
+        **Example**
+        `++roll 6 6' for two "traditional" dice
+        `++roll 4 6 8 10 12 20` if you're a D&D fan
+        `++roll 25` if you just need a random number 1-25
+        """
         def get_die(num):
             path = pathlib.Path(f"static/{num}.png")
             if path.exists() and path.is_file():
@@ -95,6 +107,7 @@ class Eggs(commands.Cog):
                 font_size = 54
                 font = ImageFont.truetype("static/sc-magic.ttf", font_size)
                 text_width, text_height = draw.textsize(num, font)
+                # handle different height/width numbers
                 while text_width > 57 or text_height > 57:
                     font_size -= 5
                     font = ImageFont.truetype("static/sc-magic.ttf", font_size)
@@ -113,6 +126,7 @@ class Eggs(commands.Cog):
         for die in args:
             answer = str(randint(1, int(die)))
             dice.append(get_die(answer))
+            # die is 64 wide plus 4 for padding
             final_width += 64 + 4
         final_image = Image.new("RGBA", (final_width, 64), (255, 0, 0, 0))
         current_pos = 0
@@ -125,37 +139,6 @@ class Eggs(commands.Cog):
         response = await ctx.send(file=discord.File(final_buffer, f"results.png"))
         # Currently DISABLED - Remove comment to auto-delete response with command
         # self.bot.messages[ctx.message.id] = response
-
-    @commands.command(name="in_war", aliases=["inwar"], hidden=True)
-    @commands.has_any_role("Admin1", "Leaders", "Council")
-    async def in_war(self, ctx):
-        sent_msg = await ctx.send("Retrieving clan war status...")
-        with Sql(as_dict=True) as cursor:
-            cursor.execute("SELECT '#' + clanTag AS tag, isWarLogPublic FROM rcs_data "
-                           "WHERE classification <> 'feeder' ORDER BY clanName")
-            clans = cursor.fetchall()
-        tags = [clan['tag'] for clan in clans if clan['isWarLogPublic'] == 1]
-        in_prep = ""
-        in_war = ""
-        async for war in self.bot.coc.get_current_wars(tags):
-            try:
-                if war.state == "preparation":
-                    in_prep += f"{war.clan.name} ({war.clan.tag}) has {war.start_time.seconds_until // 3600:.0f} hours until war.\n"
-                if war.state == "inWar":
-                    in_war += f"{war.clan.name} ({war.clan.tag}) has {war.end_time.seconds_until // 3600:.0f} hours left in war.\n"
-            except Exception as e:
-                self.bot.logger.exception("get war state")
-        await sent_msg.delete()
-        await self.send_embed(ctx.channel,
-                              "RCS Clan War Status",
-                              "This does not include CWL wars.",
-                              in_prep,
-                              discord.Color.dark_gold())
-        await self.send_embed(ctx.channel,
-                              "RCS Clan War Status",
-                              "This does not include CWL wars.",
-                              in_war,
-                              discord.Color.dark_red())
 
     @commands.group(invoke_without_subcommands=True)
     async def season(self, ctx):
