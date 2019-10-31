@@ -17,8 +17,12 @@ def get_render_type(type_, table):
         render = table.board_1("vsCups")
     elif type_ == "warstars":
         render = table.board_1("Stars")
-    elif type_ in ("townhalls", "builderhalls"):
+    elif type_ == "games":
+        render = table.board_1("Points")
+    elif type_ == "townhalls":
         render = table.board_3()
+    elif type_ == "builderhalls":
+        render = table.board_4()
     else:
         render = table.board_1()
     return render
@@ -138,10 +142,15 @@ class CLYTable:
         return fmt
 
     def board_3(self):
-        fmt = ""  # f"{emojis['other']['gap']}` {'Name':\u00A0<18.18}⠀`\n"
+        fmt = ""
         for v in self._rows:
             fmt += f"{emojis['th_icon'][int(v[0])]}`⠀{str(v[1]):\u00A0<18.18}⠀`\n"
-            # fmt += f"{emojis['th'][int(v[0])]}`⠀{str(v[1]):\u00A0<18.18}⠀`\n"
+        return fmt
+
+    def board_4(self):
+        fmt = ""
+        for v in self._rows:
+            fmt += f"{emojis['th'][int(v[0])]}`⠀{str(v[1]):\u00A0<18.18}⠀`\n"
         return fmt
 
 
@@ -178,6 +187,7 @@ class TablePaginator(Pages):
                           "bhtrophies",
                           "besttrophies",
                           "warstars",
+                          "games",
                           ):
             row = [data[0], data[1][0], data[1][1]]
         elif self.type_ in ("donations",
@@ -189,7 +199,6 @@ class TablePaginator(Pages):
                             ):
             row = [data[1][0], data[1][1]]
         else:
-            # TODO placeholder for top command
             row = [data[1][0], data[1][1]]
 
         self.table.add_row(row)

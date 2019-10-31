@@ -33,7 +33,6 @@ class NewHelp(commands.Cog):
                            "Perhaps try ++help to see all commands.")
             channel = self.bot.get_channel(settings['rcsChannels']['botDev'])
             await channel.send(f"Do we need a help command for {command}?")
-            self.bot.logger.info(f"{command} is an invalid option | {ctx.author} | {ctx.guild}")
             return
 
         # respond to help request
@@ -168,6 +167,7 @@ class NewHelp(commands.Cog):
             return
         embed.set_footer(icon_url="https://openclipart.org/image/300px/svg_to_png/122449/1298569779.png",
                          text="rcs-bot proudly maintained by TubaKid.")
+        bot_log("help", command, ctx.author, ctx.guild)
         await ctx.send(embed=embed)
 
 
