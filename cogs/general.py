@@ -278,13 +278,10 @@ class General(commands.Cog):
     @commands.has_any_role(settings['rcs_roles']['council'],
                            settings['rcs_roles']['chat_mods'],
                            settings['rcs_roles']['leaders'])
-    async def link(self, ctx, member: discord.Member, player_tag):
-        try:
-            player = await PlayerConverter().convert(ctx, player_tag)
-        except:
-            self.bot.logger.error(f"{ctx.author} provided {player_tag} for the link command.")
-            # TODO Provide some random fun here
-            return await ctx.send("I don't particularly care for that player tag. Wanna try again?")
+    async def link(self, ctx, member: discord.Member, player: PlayerConverter = None):
+        if not player:
+            self.bot.logger.error(f"{ctx.author} provided some bad info for the link command.")
+            return await ctx.send("I don't particularly care for that player. Wanna try again?")
         if player.clan.tag[1:] in self.bot.rcs_clans.values():
             try:
                 await self.bot.db.link_user(player.tag[1:], member.id)

@@ -388,7 +388,7 @@ class Admin(commands.Cog):
         table.add_rows(list(r.values()) for r in results)
         render = table.render()
 
-        fmt = f'```\n{render}\n```\n*Returned {plural(rows):row} in {dt:.2f}ms*'
+        fmt = f'```{query}\n\n{render}\n```\n*Returned {plural(rows):row} in {dt:.2f}ms*'
         if len(fmt) > 2000:
             fp = io.BytesIO(fmt.encode('utf-8'))
             await ctx.send('Too many results...', file=discord.File(fp, 'results.txt'))
@@ -425,7 +425,7 @@ class Admin(commands.Cog):
         table.add_rows(list(r.values()) for r in results)
         render = table.render()
 
-        fmt = f'```\n{render}\n```\n*Returned {plural(rows):row} in {dt:.2f}ms*'
+        fmt = f'```{query}\n\n{render}\n```\n*Returned {plural(rows):row} in {dt:.2f}ms*'
         if len(fmt) > 2000:
             fp = io.BytesIO(fmt.encode('utf-8'))
             await ctx.send('Too many results...', file=discord.File(fp, 'results.txt'))

@@ -17,14 +17,13 @@ def get_render_type(type_, table):
         render = table.board_1("vsCups")
     elif type_ == "warstars":
         render = table.board_1("Stars")
-    elif type_ == "games":
+    elif type_ in ("games", "all"):
         render = table.board_1("Points")
     elif type_ == "townhalls":
         render = table.board_3()
     elif type_ == "builderhalls":
         render = table.board_4()
-    else:
-        render = table.board_1()
+
     return render
 
 
