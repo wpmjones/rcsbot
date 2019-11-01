@@ -25,7 +25,6 @@ if enviro == "LIVE":
                           "cogs.push",
                           "cogs.background",
                           "cogs.discordcheck",
-                          "cogs.halloween",
                           "cogs.games",
                           "cogs.newhelp",
                           "cogs.council",
@@ -48,7 +47,6 @@ elif enviro == "home":
                           "cogs.eggs",
                           "cogs.owner",
                           "cogs.admin",
-                          "cogs.halloween",
                           ]
 else:
     token = settings['discord']['testToken']
@@ -62,7 +60,6 @@ else:
                           "cogs.eggs",
                           "cogs.owner",
                           "cogs.admin",
-                          "cogs.halloween",
                           ]
 
 description = """Multi bot to serve the RCS - by TubaKid
