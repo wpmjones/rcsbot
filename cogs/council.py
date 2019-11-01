@@ -23,9 +23,7 @@ class CouncilCog(commands.Cog):
         with Sql() as cursor:
             sql = ("SELECT discord_id FROM rcs_halloween_players "
                    "WHERE finish_time IS NOT NULL "
-                   "AND discord_id NOT IN (166611344995385344, 271429742996094976, 123779421357211656, "
-                   "276955502632501250, 218060364309463040, 322419245453672449, 397163055038857217, "
-                   "205344025740312576, 251150854571163648)")
+                   "AND discord_id <> 166611344995385344")
             cursor.execute(sql)
             fetch = cursor.fetchall()
         players = [p[0] for p in fetch]
