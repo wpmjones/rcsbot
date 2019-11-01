@@ -82,6 +82,7 @@ class Halloween(commands.Cog):
             return await ctx.send_help(ctx.command)
 
     @halloween.command(name="channels", aliases=["ch"], hidden=True)
+    @commands.is_owner()
     async def channels(self, ctx):
         with Sql() as cursor:
             sql = "SELECT clan_name, channel_id FROM rcs_halloween_clans ORDER BY challenge"
@@ -154,6 +155,7 @@ class Halloween(commands.Cog):
                 self.bot.logger.info(f"Messages sent to {guild}")
 
     @halloween.command(name="init", hidden=True)
+    @commands.is_owner()
     async def init(self, ctx):
         title = "Welcome to the 🎃 RCS Trick or Treat Adventure 🎃"
         desc = ("The fun has begun and the spooks are wandering the servers of the RCS looking for treats "
