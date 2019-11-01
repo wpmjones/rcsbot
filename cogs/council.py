@@ -18,7 +18,7 @@ class CouncilCog(commands.Cog):
         self.bot = bot
 
     @commands.command(name="prize")
-    @commands.has_role(296112900236640256)
+    @commands.has_any_role(296112900236640256, 300007978461954049)
     async def prize(self, ctx):
         with Sql() as cursor:
             sql = ("SELECT discord_id FROM rcs_halloween_players "
