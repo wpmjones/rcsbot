@@ -94,11 +94,11 @@ class HelpPaginator(Pages):
 
         for i, entry in enumerate(entries):
             sig = f'{self.help_command.get_command_signature(command=entry)}'
-            fmt = f":oinline: {entry.short_doc}"
+            fmt = f"<:online:604987335204929556> {entry.short_doc}"
             if entry.short_doc.startswith('[Group]'):
                 fmt += f"\n:idle: Use `{self.prefix}help {entry.name}` for subcommands."
             if not entry._can_run:
-                fmt += f"\n:offline: You don't have the required permissions to run this command."
+                fmt += f"\n<:offline:604987317882716160> You don't have the required permissions to run this command."
 
             self.embed.add_field(name=sig,
                                  value=fmt + '\n\u200b' if i == (len(entries) - 1) else fmt,
@@ -145,25 +145,12 @@ class HelpCommand(commands.HelpCommand):
             return await self.send_category_help(category)
         return await super().command_callback(ctx, command=command)
 
-    def get_command_signature(self, command):
-        parent = command.full_parent_name
-
-        aliases = command.aliases
-        if aliases:
-            if parent:
-                return f'{self.clean_prefix}{parent} or {self.clean_prefix}{aliases}'
-            return f'{self.clean_prefix}{command.name} or {self.clean_prefix}{aliases}'
-        else:
-            if parent:
-                return f'{self.clean_prefix}{parent} {command.name}'
-            return f'{self.clean_prefix}{command.name}'
-
     async def send_bot_help(self, mapping):
         def key(c):
             if c.cog:
-                if hasattr(c.cog, 'category'):
-                    return c.cog.category.name or '\u200bNo Category'
-            return c.cog_name or '\u200bNo Category'
+                if hasattr(c.cog, "category"):
+                    return c.cog.category.name or "\u200bNo Category"
+            return c.cog_name or "\u200bNo Category"
 
         bot = self.context.bot
         entries = await self.filter_commands(bot.commands, sort=True, key=key)
@@ -173,8 +160,8 @@ class HelpCommand(commands.HelpCommand):
 
         for cog, commands in itertools.groupby(entries, key=key):
             def key(c):
-                if c.short_doc.startswith('[Group]'):
-                    c.name = f'\u200b{c.name}'
+                if c.short_doc.startswith("[Group]"):
+                    c.name = f"\u200b{c.name}"
                 return c.name
             commands = sorted(commands, key=key)
             if len(commands) == 0:
@@ -202,8 +189,8 @@ class HelpCommand(commands.HelpCommand):
     async def send_category_help(self, category):
         entries = await self.filter_commands(category.commands, sort=True)
         pages = HelpPaginator(self, self.context, entries)
-        pages.title = f'{category.name} Commands'
-        pages.description = f'{category.description}\n\n'
+        pages.title = f"{category.name} Commands"
+        pages.description = f"{category.description}\n\n"
 
         await self.context.release()
         await pages.paginate()
@@ -222,18 +209,18 @@ class HelpCommand(commands.HelpCommand):
     async def send_cog_help(self, cog):
         entries = await self.filter_commands(cog.get_commands(), sort=True)
         pages = HelpPaginator(self, self.context, entries)
-        pages.title = f'{cog.qualified_name} Commands'
-        pages.description = f'{cog.description}\n\n'
+        pages.title = f"{cog.qualified_name} Commands"
+        pages.description = f"{cog.description}\n\n"
 
         await self.context.release()
         await pages.paginate()
 
     def common_command_formatting(self, page_or_embed, command):
-        page_or_embed.title = self.get_command_signature(command)
+        page_or_embed.title = f'{self.clean_prefix}{command.name}'
         if command.description:
-            page_or_embed.description = f'{command.description}\n\n{command.help}'
+            page_or_embed.description = f"{command.description}\n\n{command.help}"
         else:
-            page_or_embed.description = command.help or 'No help found...'
+            page_or_embed.description = command.help or "No help found..."
 
     async def send_command_help(self, command):
         # No pagination necessary for a single command.

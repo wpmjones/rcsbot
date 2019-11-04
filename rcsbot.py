@@ -6,7 +6,7 @@ import sys
 import asyncio
 import discord
 
-from cogs.utils import context
+from cogs.utils import context, category
 from cogs.utils.db import Psql
 from cogs.utils.helper import rcs_clans
 from discord.ext import commands
@@ -14,7 +14,7 @@ from datetime import datetime
 from config import settings
 from loguru import logger
 
-enviro = "LIVE"
+enviro = "home"
 
 if enviro == "LIVE":
     token = settings['discord']['rcsbot_token']
@@ -57,7 +57,6 @@ else:
     coc_names = "dev"
     initial_extensions = ["cogs.general",
                           "cogs.games",
-                          "cogs.discordcheck",
                           "cogs.newhelp",
                           "cogs.council",
                           "cogs.eggs",
@@ -90,7 +89,9 @@ class RcsBot(commands.Bot):
         self.coc = coc_client
         self.rcs_clans = rcs_clans()
         self.color = discord.Color.dark_red()
+        self.client_id = settings['discord']['rcs_client_id']
         self.messages = {}
+        self.categories = {}
 
         coc_client.add_events(self.on_event_error)
 
@@ -105,6 +106,9 @@ class RcsBot(commands.Bot):
     @property
     def log_channel(self):
         return self.get_channel(settings['log_channels']['rcs'])
+
+    def get_category(self, name) -> category.Category:
+        return self.categories.get(name)
 
     def send_log(self, message):
         asyncio.ensure_future(self.send_message(message))

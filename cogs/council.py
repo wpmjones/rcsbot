@@ -1,14 +1,13 @@
 import discord
 import coc
 import asyncio
-import random
 import re
 import requests
 
 from discord.ext import commands
 from cogs.utils.converters import ClanConverter
 from cogs.utils.db import Sql
-from cogs.utils.helper import rcs_clans
+from cogs.utils import helper
 from config import settings, color_pick
 from datetime import datetime
 
@@ -284,7 +283,9 @@ class CouncilCog(commands.Cog):
                                     reason=f"Clan Recruiters role removed by ++removeClan command of rcs-bot.")
         await ctx.send(f"{clan.name} has been removed from the database.  The change will appear on the wiki "
                        "in the next 3 hours.")
-        # TODO invalidate the cache and update the wiki
+        # TODO update the wiki
+        helper.rcs_clans.clear_cache()
+        helper.get_clan.clear_cache()
         await ctx.send("<@251150854571163648> Please recycle the bot so we aren't embarassed with old data!")
         await ctx.send(f"Please don't forget to remove {fetched['leaderReddit'][22:]} as a mod from META and "
                        f"update the META clan directory.  I've removed the Leaders, RCS Leaders, and Clan "
@@ -358,7 +359,7 @@ class CouncilCog(commands.Cog):
                         inline=False)
         await ctx.send(embed=embed)
 
-    @commands.group(invoke_without_command=True)
+    @commands.group(invoke_without_command=True, hidden=True)
     @commands.has_any_role(settings['rcs_roles']['council'],
                            settings['rcs_roles']['chat_mods'],
                            settings['rcs_roles']['leaders'])
@@ -409,7 +410,7 @@ class CouncilCog(commands.Cog):
                 cursor.execute(sql)
                 await ctx.send(f"{alt} has been removed as an alt for the leader of {clan[0].name}.")
 
-    @commands.group(invoke_without_subcommand=True)
+    @commands.group(invoke_without_subcommand=True, hidden=True)
     @commands.has_role(settings['rcs_roles']['council'])
     async def dm(self, ctx):
         """Group command to send DMs to various roles in the RCS Discord Server"""
