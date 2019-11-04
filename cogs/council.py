@@ -364,7 +364,7 @@ class CouncilCog(commands.Cog):
                            settings['rcs_roles']['chat_mods'],
                            settings['rcs_roles']['leaders'])
     async def alts(self, ctx):
-        """Group command to deal with leader alts"""
+        """[Group] Command to handle alt accounts of RCS leaders"""
         if ctx.invoked_subcommand is None:
             return await ctx.show_help(ctx.command)
 

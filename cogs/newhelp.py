@@ -5,6 +5,7 @@ import itertools
 from discord.ext import commands
 from cogs.utils.paginator import Pages
 from datetime import datetime
+from config import emojis
 
 
 class NewHelp(commands.Cog):
@@ -94,7 +95,7 @@ class HelpPaginator(Pages):
 
         for i, entry in enumerate(entries):
             sig = f'{self.help_command.get_command_signature(command=entry)}'
-            fmt = f"<:online:604987335204929556> {entry.short_doc}"
+            fmt = f"{emojis['other']['online']}{entry.short_doc}"
             if entry.short_doc.startswith('[Group]'):
                 fmt += f"\n:idle: Use `{self.prefix}help {entry.name}` for subcommands."
             if not entry._can_run:
@@ -105,15 +106,14 @@ class HelpPaginator(Pages):
                                  inline=False
                                  )
 
-        self.embed.add_field(name='Support', value='Problem? Bug? Please join the support '
-                                                   'server for more help: '
-                                                   'https://discord.gg/ePt8y4V')
+        self.embed.add_field(name="Support",
+                             value=f"Problem? Bug? Please submit feedback using {self.prefix}feedback")
 
         if self.maximum_pages:
             self.embed.set_author(name=f'Page {page}/{self.maximum_pages} ({self.total} commands)')
 
     async def show_help(self):
-        self.title = 'The Donation Tracker Bot Help'
+        self.title = 'RCS-Bot Help'
         description = 'This is the help command for the bot.\nA few points to notice:\n\n' \
                       f":online: This command is powered by reactions: \n" \
                       ':arrow_backward: goes to the previous page\n' \

@@ -14,7 +14,7 @@ from datetime import datetime
 from config import settings
 from loguru import logger
 
-enviro = "home"
+enviro = "dev"
 
 if enviro == "LIVE":
     token = settings['discord']['rcsbot_token']
@@ -196,14 +196,14 @@ class RcsBot(commands.Bot):
         await super().close()
         await self.coc.close()
 
-    def send_log(self, message):
-        asyncio.ensure_future(self.send_message(message))
-
     async def send_message(self, message):
         if len(message) < 2000:
             await self.log_channel.send(f"`{message}`")
         else:
             await self.log_channel.send(f"`{message[:1950]}`")
+
+    def send_log(self, message):
+        asyncio.ensure_future(self.send_message(message))
 
     async def after_ready(self):
         await bot.wait_until_ready()
