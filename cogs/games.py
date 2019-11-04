@@ -16,7 +16,7 @@ class Games(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.group()
+    @commands.group(invoke_without_command=True)
     async def games(self, ctx, *, clan: ClanConverter = None):
         """[Group] Commands for clan games"""
         if ctx.invoked_subcommand is not None:
@@ -64,44 +64,45 @@ class Games(commands.Cog):
 
     @games.command(name="clan")
     async def games_clan(self, ctx, clan: ClanConverter = None):
-        with Sql(as_dict=True) as cursor:
-            cursor.execute("SELECT TOP 1 playerPoints, startTime "
-                           "FROM rcs_events "
-                           "WHERE eventType = 5 "
-                           "ORDER BY eventId DESC")
-            row = cursor.fetchone()
-            player_points = row['playerPoints']
-            cursor.execute("CREATE TABLE #rcs_players (playerTag varchar(15), playerName nvarchar(50)) "
-                           "INSERT INTO #rcs_players "
-                           "SELECT DISTINCT playerTag, playerName FROM rcs_members")
-            cursor.execute(f"SELECT '#' + playerTag as tag, CASE WHEN (currentPoints - startingPoints) > {player_points} "
-                           f"THEN {player_points} ELSE (currentPoints - startingPoints) END AS points "
-                           f"FROM rcs_clanGames "
-                           f"WHERE eventId = (SELECT MAX(eventId) FROM rcs_events WHERE eventType = 5) "
-                           f"AND clanTag = '{clan.tag[1:]}' "
-                           f"ORDER BY points DESC")
-            fetched = cursor.fetchall()
-            cursor.callproc("rcs_spClanGamesAverage")
-            for row in cursor:
-                if clan.name.lower() == row['clanName'].lower():
-                    clan_average = row['clanAverage']
-                    break
-            clan_total = 0
-            data = []
-            for member in fetched:
-                clan_total += member['points']
-                player = await self.bot.coc.get_player(member['tag'], cache=True)
-                if member['points'] >= player_points:
-                    data.append([member['points'], "* " + player.name])
-                else:
-                    data.append([member['points'], player.name])
+        async with ctx.typing():
+            with Sql(as_dict=True) as cursor:
+                cursor.execute("SELECT TOP 1 playerPoints, startTime "
+                               "FROM rcs_events "
+                               "WHERE eventType = 5 "
+                               "ORDER BY eventId DESC")
+                row = cursor.fetchone()
+                player_points = row['playerPoints']
+                cursor.execute("CREATE TABLE #rcs_players (playerTag varchar(15), playerName nvarchar(50)) "
+                               "INSERT INTO #rcs_players "
+                               "SELECT DISTINCT playerTag, playerName FROM rcs_members")
+                cursor.execute(f"SELECT '#' + playerTag as tag, CASE WHEN (currentPoints - startingPoints) > {player_points} "
+                               f"THEN {player_points} ELSE (currentPoints - startingPoints) END AS points "
+                               f"FROM rcs_clanGames "
+                               f"WHERE eventId = (SELECT MAX(eventId) FROM rcs_events WHERE eventType = 5) "
+                               f"AND clanTag = '{clan.tag[1:]}' "
+                               f"ORDER BY points DESC")
+                fetched = cursor.fetchall()
+                cursor.callproc("rcs_spClanGamesAverage")
+                for row in cursor:
+                    if clan.name.lower() == row['clanName'].lower():
+                        clan_average = row['clanAverage']
+                        break
+                clan_total = 0
+                data = []
+                for member in fetched:
+                    clan_total += member['points']
+                    player = await self.bot.coc.get_player(member['tag'], cache=True)
+                    if member['points'] >= player_points:
+                        data.append([member['points'], "* " + player.name])
+                    else:
+                        data.append([member['points'], player.name])
         page_count = math.ceil(len(data) / 25)
         title = f"{clan.name} Points {clan_total}"
         ctx.icon = "https://cdn.discordapp.com/emojis/639623355770732545.png"
         p = formats.TablePaginator(ctx, data=data, title=title, page_count=page_count)
         await p.paginate()
 
-    @games.command(name="add", aliases=["games+", "ga"])
+    @games.command(name="add", aliases=["games+", "ga"], hidden=True)
     @commands.has_any_role(settings['rcs_roles']['council'],
                            settings['rcs_roles']['chat_mods'],
                            settings['rcs_roles']['leaders'])

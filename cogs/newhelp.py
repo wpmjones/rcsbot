@@ -1,8 +1,10 @@
 import discord
-import requests
-from datetime import datetime
+import asyncio
+import itertools
+
 from discord.ext import commands
-from config import settings, color_pick
+from cogs.utils.paginator import Pages
+from datetime import datetime
 
 
 class NewHelp(commands.Cog):
@@ -10,172 +12,246 @@ class NewHelp(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="help", hidden=True)
-    async def help(self, ctx, command: str = "all"):
-        """Welcome to the rcs-bot"""
-        desc = ("All commands must begin with a ++\n\n"
-                "References to a clan can be in the form of the clan name (spelled correctly) or the clan tag "
-                "(with or without the #).\n\n"
-                "You can type ++help <command> to display only the help for that command.")
+        bot.help_command = HelpCommand()
+        bot.help_command.cog = self
+        bot.invite = self.invite_link
 
-        eggs = self.bot.get_cog('General')
-        list_commands = eggs.get_commands()
-        for comm in list_commands:
-            print(comm.name)
+    @property
+    def invite_link(self):
+        perms = discord.Permissions.none()
+        perms.read_messages = True
+        perms.external_emojis = True
+        perms.send_messages = True
+        perms.manage_channels = True
+        perms.manage_messages = True
+        perms.embed_links = True
+        perms.read_message_history = True
+        perms.add_reactions = True
+        perms.attach_files = True
+        return discord.utils.oauth_url(self.bot.client_id, perms)
 
-        command_list = ["all", "cwl", "attacks", "defenses", "donations", "trophies", "besttrophies",
-                        "townhalls", "builderhalls", "warstars", "games", "roll", "push", "season",
-                        "top", "reddit", "council", "tasks", "alts"]
+    @commands.command(aliases=["join"])
+    async def invite(self, ctx):
+        """Get an invite to add the bot to a server."""
+        await ctx.send(f"<{self.invite_link}>")
 
-        # respond if help is requested for a command that does not exist
-        if command not in command_list:
-            await ctx.send(":x: You have provided a command that does not exist.  "
-                           "Perhaps try ++help to see all commands.")
-            channel = self.bot.get_channel(settings['rcsChannels']['botDev'])
-            await channel.send(f"Do we need a help command for {command}?")
+    @commands.command()
+    async def feedback(self, ctx, *, content):
+        """Give feedback on the bot."""
+        e = discord.Embed(title="Feedback", color=discord.Color.green())
+        channel = self.bot.get_channel(640755164004745235)
+        if channel is None:
             return
 
-        # respond to help request
-        embed = discord.Embed(title="rcs-bot Help File", description=desc, color=color_pick(15, 250, 15))
-        embed.add_field(name="Commands:", value="-----------", inline=False)
-        if command in ["all", "cwl"]:
-            help_text = "Updates the specified clan's CWL league"
-            embed.add_field(name="++cwl <clan name> <CWL league name>", value=help_text)
-        if command in ["all", "attacks", "attack", "attackwins", "att"]:
-            help_text = "Responds with the current attack wins for all members of the clan specified."
-            embed.add_field(name="++attacks <clan name or tag>", value=help_text)
-        if command in ["all", "defenses", "defense", "defensewins", "defences", "defence", "defencewins", "def", 
-                       "defend", "defends"]:
-            help_text = "Responds with the current defense wins for all members of the clan specified."
-            embed.add_field(name="++defenses <clan name or tag>", value=help_text)
-        if command in ["all", "donations", "donates", "donate", "donation"]:
-            help_text = ("Responds with the donation count and the donations received count for all members "
-                         "of the clan specified.")
-            embed.add_field(name="++donations <clan name or tag>", value=help_text)
-        if command in ["all", "trophies", "trophy"]:
-            help_text = "Responds with the trophy count for all members of the clan specified."
-            embed.add_field(name="++trophies <clan name or tag>", value=help_text)
-        if command in ["all", "besttrophies", "besttrophy", "mosttrophies"]:
-            help_text = "Responds wtih the best trophy count for all members of the clan specified."
-            embed.add_field(name="++besttrophies <clan name or tag>", value=help_text)
-        if command in ["all", "townhalls", "th", "townhall"]:
-            help_text = "Responds with the town hall levels for all members of the clan specified."
-            embed.add_field(name="++townhalls <clan name or tag>", value=help_text)
-        if command in ["all", "builderhalls", "bh", "builderhall"]:
-            help_text = "Responds with the builder hall  levels for all members of the clan specified."
-            embed.add_field(name="++builderhalls <clan name or tag>", value=help_text)
-        if command in ["all", "warstars", "stars"]:
-            help_text = "Responds with the war star counts for all members of the clan specified."
-            embed.add_field(name="++warstars <clan name or tag>", value=help_text)
-        if command in ["all", "top"]:
-            help_text = ("Responds with the top ten players across all of the RCS for the category specified."
-                         "\nOptions include:"
-                         "\n  :crossed_swords: attacks"
-                         "\n  :shield:  defenses"
-                         "\n  :trophy: trophies"
-                         "\n  :moneybag: donations"
-                         "\n  :star: warstars"
-                         "\n  :medal: games")
-            embed.add_field(name="++top <category>", value=help_text)
-        if command in ["all", "games"]:
-            help_text = ("Responds with the Clan Games information for the category specified."
-                         "\n  - <all (or no category)> responds with all RCS clans and their current Clan Games score."
-                         "\n  - <clan name or tag> responds with individual scores for the clan specified."
-                         "\n  - <average> responds with the average individual score for all clans in the RCS.")
-            embed.add_field(name="++games <category or clan name/tag>", value=help_text)
-        if command in ["roll"]:
-            help_text = ("Responds with a roll of the dice based on the number of sides you provide.\n"
-                         "In this example, it will roll 2 dice.  One with 12 sides and one with 20 sides.")
-            embed.add_field(name="++roll 12 20", value=help_text)
-        if command in ["push"]:
-            help_text = ("Responds with the Trophy Push information for the category specified."
-                         "\n  - <all (or no category)> responds with all RCS clans and their current Trophy Push score."
-                         "\n  - <diff> responds with the top clan and the difference in points for the other clans."
-                         "\n  - <TH#> responds with all players of the town hall level specified and their scores."
-                         "\n  - <clan name or tag> responds with all players in the clan specified and their scores."
-                         "\n  - <top> responds with the top ten players for each town hall level and their scores."
-                         "\n  - <gain> responds with the top 25 players in trophies gained.")
-            embed.add_field(name="++push <category or clan name/tag>", value=help_text)
-        if command in ["all", "reddit"]:
-            help_text = "Responds with the subreddit link for the clan specified."
-            embed.add_field(name="++reddit <clan name/tag>", value=help_text)
-        if command in ["all", "season"]:
-            help_text = "Responds with the information on the current COC season."
-            embed.add_field(name="++season info", value=help_text)
-        if command == "council" and is_council(ctx.author.roles):
-            help_text = "Responds with a link to the Council Magic Google Form"
-            embed.add_field(name="++magic", value=help_text)
-            help_text = "Leader command responds with the leader of the requested clan name/tag"
-            embed.add_field(name="++leader <clan name/tag>", value=help_text)
-            help_text = ('List, add, or remove alt accounts for RCS leaders\n'
-                         '++alts list Clan Name\n'
-                         '++alts add "Clan Name" alt account (quotes required for clans with a space in their name\n'
-                         '++alts remove #clan_tag alt account\n'
-                         '++alts remove "Clan Name" (if you don\'t provide an alt name, it will remove all alts '
-                         'for the specified clan')
-            embed.add_field(name="++alts list <clan name or tag>", value=help_text)
-            help_text = "Find command responds with the Discord names that contain the specified string"
-            embed.add_field(name="++find <search string>", value=help_text)
-            help_text = "Adds clan to the RCS database, add leader roles"
-            embed.add_field(name="++addClan <clan name [no tags]>", value=help_text)
-            help_text = "Remove clan from RCS database, remove feeder (if it exists), remove roles from leader"
-            embed.add_field(name="++removeClan <clan name [no tags]>", value=help_text)
-            help_text = "Reports user information on the Discord ID provided"
-            embed.add_field(name="++ui <discord user or ID>", value=help_text)
-            help_text = "Responds with a larger version of the specified user's avatar"
-            embed.add_field(name="++avatar <discord mention or ID>", value=help_text)
-            help_text = "Sends the provided message to all RCS leaders via DM"
-            embed.add_field(name="++dm_leaders <message>", value=help_text)
-            help_text = ("Used to manage tasks for council\nThere are a number of commands for this category\n"
-                         "Please use `++help tasks` for more detailed information")
-            embed.add_field(name="++tasks ++add ++assign ++change ++done", value=help_text)
-        elif command == "council":
-            await ctx.send(":x: You've requested help for commands you cannot access.")
-            return
-        if command == "tasks" and is_council(ctx.author.roles):
-            help_text = "Responds with all active tasks for the RCS Council (via DM)"
-            embed.add_field(name="++tasks all", value=help_text)
-            help_text = "Responds with all tasks assigned to you (COMING SOON)"
-            embed.add_field(name="++tasks mine", value=help_text, inline=False)
-            help_text = "Responds with all Suggestions"
-            embed.add_field(name="++tasks suggestions or ++tasks sugg", value=help_text, inline=False)
-            help_text = "Responds with all Council Nominations"
-            embed.add_field(name="++tasks council", value=help_text, inline=False)
-            help_text = "Responds with all Verification Requests"
-            embed.add_field(name="++tasks verification or ++tasks veri", value=help_text, inline=False)
-            help_text = "Responds with all other comments from the Comm Log"
-            embed.add_field(name="++tasks other", value=help_text, inline=False)
-            help_text = "Responds with all action items"
-            embed.add_field(name="++tasks action or ++tasks act", value=help_text, inline=False)
-            help_text = ("Adds the specified action item and assigns it you choose. A DM will be sent to the "
-                         "user so they are aware of the action item.  Action items can only be assigned to "
-                         "council members.")
-            embed.add_field(name="++add <Discord User> <Action Item>", value=help_text, inline=False)
-            help_text = ("Assigns the specified task to the user you choose. Only suggestions, other items, and "
-                         "action items can be assigned to an individual. If you don't know the Task ID, use ++task "
-                         "to find it.")
-            embed.add_field(name="++assign <Discord User> <Task ID>", value=help_text, inline=False)
-            help_text = ("Modifies the status of a Clan Verification. If you know the status number, use it. If "
-                         "you leave off the status number, it will prompt you for the new status.")
-            embed.add_field(name="++verification <Task ID> <status number (optional)>", value=help_text, inline=False)
-            help_text = "Change the action item to the newly specified text."
-            embed.add_field(name="++change <Task ID> <new action item text>", value=help_text, inline=False)
-            help_text = "Marks the specified task as completed."
-            embed.add_field(name="++done <Task ID>", value=help_text, inline=False)
-        elif command == "tasks":
-            await ctx.send(":x: You've requested help for commands you cannot access.")
-            return
-        embed.set_footer(icon_url="https://openclipart.org/image/300px/svg_to_png/122449/1298569779.png",
-                         text="rcs-bot proudly maintained by TubaKid.")
-        bot_log("help", command, ctx.author, ctx.guild)
-        await ctx.send(embed=embed)
+        e.set_author(name=str(ctx.author), icon_url=ctx.author.avatar_url)
+        e.description = content
+        e.timestamp = ctx.message.created_at
+
+        if ctx.guild is not None:
+            e.add_field(name="Guild", value=f"{ctx.guild.name} (ID: {ctx.guild.id})", inline=False)
+
+        e.add_field(name="Channel", value=f"{ctx.channel} (ID: {ctx.channel.id})", inline=False)
+        e.set_footer(text=f"Author ID: {ctx.author.id}")
+
+        await channel.send(embed=e)
+        await ctx.send(f"{ctx.tick(True)} Successfully sent feedback")
 
 
-def is_council(user_roles):
-    for role in user_roles:
-        if role.id == settings['rcsRoles']['council']:
-            return True
-    return False
+class HelpPaginator(Pages):
+    def __init__(self, help_command, ctx, entries, *, per_page=9):
+        super().__init__(ctx, entries=entries, per_page=per_page)
+        self.ctx = ctx
+        self.embed.colour = discord.Colour.green()
+        self.title = ""
+        self.description = ""
+        self.prefix = help_command.clean_prefix
+        self.total = len(entries)
+        self.help_command = help_command
+        self.reaction_emojis = [
+            ('\N{BLACK LEFT-POINTING TRIANGLE}', self.previous_page),
+            ('\N{BLACK RIGHT-POINTING TRIANGLE}', self.next_page),
+            ('\N{INPUT SYMBOL FOR NUMBERS}', self.numbered_page),
+            ('\N{WHITE QUESTION MARK ORNAMENT}', self.show_help)
+        ]
+
+    def get_bot_page(self, page):
+        cog, description, commands = self.entries[page - 1]
+        if hasattr(cog, 'qualified_name'):
+            self.title = cog.qualified_name
+        else:
+            self.title = cog.name
+        self.description = description
+        return commands
+
+    def prepare_embed(self, entries, page, *, first=False):
+        self.embed.clear_fields()
+        self.embed.title = self.title
+        self.embed.description = self.description
+
+        self.embed.set_footer(text=f'Use the reactions to navigate pages, '
+                                   f'and "{self.prefix}help command" for more help.')
+        self.embed.timestamp = datetime.utcnow()
+
+        for i, entry in enumerate(entries):
+            sig = f'{self.help_command.get_command_signature(command=entry)}'
+            fmt = f":oinline: {entry.short_doc}"
+            if entry.short_doc.startswith('[Group]'):
+                fmt += f"\n:idle: Use `{self.prefix}help {entry.name}` for subcommands."
+            if not entry._can_run:
+                fmt += f"\n:offline: You don't have the required permissions to run this command."
+
+            self.embed.add_field(name=sig,
+                                 value=fmt + '\n\u200b' if i == (len(entries) - 1) else fmt,
+                                 inline=False
+                                 )
+
+        self.embed.add_field(name='Support', value='Problem? Bug? Please join the support '
+                                                   'server for more help: '
+                                                   'https://discord.gg/ePt8y4V')
+
+        if self.maximum_pages:
+            self.embed.set_author(name=f'Page {page}/{self.maximum_pages} ({self.total} commands)')
+
+    async def show_help(self):
+        self.title = 'The Donation Tracker Bot Help'
+        description = 'This is the help command for the bot.\nA few points to notice:\n\n' \
+                      f":online: This command is powered by reactions: \n" \
+                      ':arrow_backward: goes to the previous page\n' \
+                      ':arrow_forward: goes to the next page\n' \
+                      ':1234: lets you type a page number to go to\n' \
+                      ':grey_question: Takes you to this page\n' \
+                      f":online: Help for a specific command can be found with `+help commandname`\n" \
+                      f":online: e.g `+help don` or `+help add donationboard`.\n\n" \
+                      f":online: Press :arrow_forward: to proceed."
+
+        self.description = description
+        embed = self.embed.copy() if self.embed else discord.Embed(colour=self.bot.colour)
+        embed.clear_fields()
+        embed.description = description
+        embed.set_footer(text=f'We were on page {self.current_page} before this message.')
+        await self.message.edit(content=None, embed=embed)
+
+        async def go_back_to_current_page():
+            await asyncio.sleep(60.0)
+            await self.show_current_page()
+
+        self.bot.loop.create_task(go_back_to_current_page())
+
+
+class HelpCommand(commands.HelpCommand):
+    async def command_callback(self, ctx, *, command=None):
+        category = self.context.bot.get_category(command)
+        if category:
+            return await self.send_category_help(category)
+        return await super().command_callback(ctx, command=command)
+
+    def get_command_signature(self, command):
+        parent = command.full_parent_name
+
+        aliases = command.aliases
+        if aliases:
+            if parent:
+                return f'{self.clean_prefix}{parent} or {self.clean_prefix}{aliases}'
+            return f'{self.clean_prefix}{command.name} or {self.clean_prefix}{aliases}'
+        else:
+            if parent:
+                return f'{self.clean_prefix}{parent} {command.name}'
+            return f'{self.clean_prefix}{command.name}'
+
+    async def send_bot_help(self, mapping):
+        def key(c):
+            if c.cog:
+                if hasattr(c.cog, 'category'):
+                    return c.cog.category.name or '\u200bNo Category'
+            return c.cog_name or '\u200bNo Category'
+
+        bot = self.context.bot
+        entries = await self.filter_commands(bot.commands, sort=True, key=key)
+        nested_pages = []
+        per_page = 9
+        total = len(entries)
+
+        for cog, commands in itertools.groupby(entries, key=key):
+            def key(c):
+                if c.short_doc.startswith('[Group]'):
+                    c.name = f'\u200b{c.name}'
+                return c.name
+            commands = sorted(commands, key=key)
+            if len(commands) == 0:
+                continue
+
+            total += len(commands)
+            actual_cog = bot.get_cog(cog) or bot.get_category(cog)
+            # get the description if it exists (and the cog is valid) or return Empty embed.
+            description = actual_cog.description or discord.Embed.Empty
+            nested_pages.extend((actual_cog, description, commands[i:i + per_page])
+                                for i in range(0, len(commands), per_page
+                                               )
+                                )
+
+        # a value of 1 forces the pagination session
+        pages = HelpPaginator(self, self.context, entries=nested_pages, per_page=1)
+
+        # swap the get_page implementation to work with our nested pages.
+        pages.is_bot = True
+        pages.total = total
+        pages.get_page = pages.get_bot_page
+        await self.context.release()
+        await pages.paginate()
+
+    async def send_category_help(self, category):
+        entries = await self.filter_commands(category.commands, sort=True)
+        pages = HelpPaginator(self, self.context, entries)
+        pages.title = f'{category.name} Commands'
+        pages.description = f'{category.description}\n\n'
+
+        await self.context.release()
+        await pages.paginate()
+
+    async def filter_commands(self, _commands, *, sort=False, key=None):
+        self.verify_checks = False
+        valid = await super().filter_commands(_commands, sort=sort, key=key)
+        for n in valid:
+            try:
+                can_run = await n.can_run(self.context)
+                n._can_run = can_run
+            except commands.CommandError:
+                n._can_run = False
+        return valid
+
+    async def send_cog_help(self, cog):
+        entries = await self.filter_commands(cog.get_commands(), sort=True)
+        pages = HelpPaginator(self, self.context, entries)
+        pages.title = f'{cog.qualified_name} Commands'
+        pages.description = f'{cog.description}\n\n'
+
+        await self.context.release()
+        await pages.paginate()
+
+    def common_command_formatting(self, page_or_embed, command):
+        page_or_embed.title = self.get_command_signature(command)
+        if command.description:
+            page_or_embed.description = f'{command.description}\n\n{command.help}'
+        else:
+            page_or_embed.description = command.help or 'No help found...'
+
+    async def send_command_help(self, command):
+        # No pagination necessary for a single command.
+        embed = discord.Embed(colour=discord.Colour.blurple())
+        self.common_command_formatting(embed, command)
+        await self.context.send(embed=embed)
+
+    async def send_group_help(self, group):
+        subcommands = group.commands
+        if len(subcommands) == 0:
+            return await self.send_command_help(group)
+
+        entries = await self.filter_commands(subcommands, sort=True)
+        pages = HelpPaginator(self, self.context, entries)
+        self.common_command_formatting(pages, group)
+
+        await self.context.release()
+        await pages.paginate()
 
 
 def setup(bot):

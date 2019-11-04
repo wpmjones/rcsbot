@@ -17,7 +17,7 @@ def get_render_type(type_, table):
         render = table.board_1("vsCups")
     elif type_ == "warstars":
         render = table.board_1("Stars")
-    elif type_ in ("games", "all"):
+    elif type_ in ("games", "all", "average", "clan"):
         render = table.board_1("Points")
     elif type_ == "townhalls":
         render = table.board_3()
@@ -180,16 +180,7 @@ class TablePaginator(Pages):
         return self.entries[page - 1]
 
     def create_row(self, data):
-        if self.type_ in ("attacks",
-                          "defenses",
-                          "trophies",
-                          "bhtrophies",
-                          "besttrophies",
-                          "warstars",
-                          "games",
-                          ):
-            row = [data[0], data[1][0], data[1][1]]
-        elif self.type_ in ("donations",
+        if self.type_ in ("donations",
                             ):
             row = [data[0], data[1][0], data[1][1], data[1][2]]
         elif self.type_ in ("townhalls",
@@ -198,7 +189,7 @@ class TablePaginator(Pages):
                             ):
             row = [data[1][0], data[1][1]]
         else:
-            row = [data[1][0], data[1][1]]
+            row = [data[0], data[1][0], data[1][1]]
 
         self.table.add_row(row)
 
