@@ -1,8 +1,9 @@
-import requests
-import re
-import coc
 import discord
+import coc
 import asyncio
+import random
+import re
+import requests
 
 from discord.ext import commands
 from cogs.utils.converters import ClanConverter
