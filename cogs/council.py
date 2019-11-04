@@ -17,18 +17,6 @@ class CouncilCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="prize")
-    @commands.has_any_role(296112900236640256, 300007978461954049)
-    async def prize(self, ctx):
-        with Sql() as cursor:
-            sql = ("SELECT discord_id FROM rcs_halloween_players "
-                   "WHERE finish_time IS NOT NULL "
-                   "AND discord_id <> 166611344995385344")
-            cursor.execute(sql)
-            fetch = cursor.fetchall()
-        players = [p[0] for p in fetch]
-        await ctx.send(f"Winner is: <@{random.choice(players)}>")
-
     @commands.command(name="form", aliases=["magic"], hidden=True)
     async def magic_form(self, ctx):
         if is_council(ctx.author.roles):

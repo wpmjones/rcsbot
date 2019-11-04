@@ -9,7 +9,6 @@ import discord
 from discord.ext import commands
 from cogs.utils import context
 from cogs.utils.db import RcsDB
-from cogs.utils.constants import halloween_channels
 from datetime import datetime
 from config import settings
 from loguru import logger
@@ -86,8 +85,6 @@ class RcsBot(commands.Bot):
         self.color = discord.Color.dark_red()
         self.logger = logger
         self.client_id = settings['discord']['rcs_client_id']
-        # TODO Send announcement - CHANGE TO 298621931748327426 - give bot perms to SEND
-        self.news_channel = self.get_channel(628008799663292436)
         self.messages = {}
 
         coc_client.add_events(self.on_event_error)
@@ -126,15 +123,6 @@ class RcsBot(commands.Bot):
 
     async def process_commands(self, message):
         ctx = await self.get_context(message, cls=context.Context)
-        # Halloween Helper
-        if not isinstance(ctx.channel, discord.TextChannel) and not message.content.startswith(prefix):
-            self.logger.debug(f"Message from DM:\n{message.author}\n"
-                              f"{message.content}")
-            return await ctx.invoke(self.get_cog('Halloween').answer)
-        if message.channel.id in halloween_channels and not message.content.startswith(prefix):
-            self.logger.debug(f"Message from Halloween Channel:\n{message.author}\n{message.channel.name}\n"
-                              f"{message.content}")
-            return await ctx.invoke(self.get_cog('Halloween').clean_up)
         if ctx.command is None:
             return
         async with ctx.acquire():
