@@ -17,7 +17,7 @@ def rcs_clans():
 
 @lru_cache(maxsize=64)
 def get_clan(tag):
-    """Retrieve the details of a specific clan"""
+    """Retrieve the details of a specific clan (provide clan tag without hashtag"""
     with Sql(as_dict=True) as cursor:
         sql = ("SELECT clanName, subReddit, clanLeader, cwlLeague, discordServer, feeder, classification "
                "FROM rcs_data "
