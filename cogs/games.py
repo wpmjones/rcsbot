@@ -19,6 +19,9 @@ class Games(commands.Cog):
     @commands.group()
     async def games(self, ctx, *, clan: ClanConverter = None):
         """[Group] Commands for clan games"""
+        if ctx.invoked_subcommand is not None:
+            return
+
         if not clan:
             await ctx.invoke(self.games_all)
         else:

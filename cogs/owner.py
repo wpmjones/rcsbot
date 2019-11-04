@@ -2,6 +2,7 @@ import discord
 
 from discord.ext import commands
 from cogs.utils.db import Sql
+from cogs.utils import helper
 from datetime import datetime
 
 
@@ -92,6 +93,17 @@ class OwnerCog(commands.Cog):
                    f"VALUES ({event_id}, 5, '{start_date}', '{end_date}', {ind_points}, {clan_points})")
             cursor.execute(sql)
         await ctx.send(f"New games info added to database.")
+
+    @commands.command(name="cc", hidden=True)
+    @commands.is_owner()
+    async def clear_cache(self, ctx):
+        content = (f"```python\n"
+                   f"rcs_clans: {helper.rcs_clans.cache_info()}\n"
+                   f"get_clan: {helper.get_clan.cache_info()}```")
+        helper.rcs_clans.cache_clear()
+        helper.get_clan.cache_clear()
+        content += "Caches cleared"
+        await ctx.send(content)
 
 
 def setup(bot):
