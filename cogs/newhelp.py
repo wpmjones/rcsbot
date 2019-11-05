@@ -95,11 +95,11 @@ class HelpPaginator(Pages):
 
         for i, entry in enumerate(entries):
             sig = f'{self.help_command.get_command_signature(command=entry)}'
-            fmt = f"{emojis['other']['online']}{entry.short_doc}"
+            fmt = f"{emojis['other']['green']}{entry.short_doc}"
             if entry.short_doc.startswith('[Group]'):
                 fmt += f"\n:idle: Use `{self.prefix}help {entry.name}` for subcommands."
             if not entry._can_run:
-                fmt += f"\n<:offline:604987317882716160> You don't have the required permissions to run this command."
+                fmt += f"\n{emojis['other']['red']} You don't have the required permissions to run this command."
 
             self.embed.add_field(name=sig,
                                  value=fmt + '\n\u200b' if i == (len(entries) - 1) else fmt,
@@ -113,16 +113,16 @@ class HelpPaginator(Pages):
             self.embed.set_author(name=f'Page {page}/{self.maximum_pages} ({self.total} commands)')
 
     async def show_help(self):
-        self.title = 'RCS-Bot Help'
-        description = 'This is the help command for the bot.\nA few points to notice:\n\n' \
-                      f":online: This command is powered by reactions: \n" \
-                      ':arrow_backward: goes to the previous page\n' \
-                      ':arrow_forward: goes to the next page\n' \
-                      ':1234: lets you type a page number to go to\n' \
-                      ':grey_question: Takes you to this page\n' \
-                      f":online: Help for a specific command can be found with `+help commandname`\n" \
-                      f":online: e.g `+help don` or `+help add donationboard`.\n\n" \
-                      f":online: Press :arrow_forward: to proceed."
+        self.title = "RCS-Bot Help"
+        description = ("This is the help command for the bot.\nA few points to notice:\n\n"
+                       f"{emojis['other']['green']} This command is powered by reactions: \n"
+                       ":arrow_backward: goes to the previous page\n"
+                       ":arrow_forward: goes to the next page\n"
+                       ":1234: lets you type a page number to go to\n"
+                       ":grey_question: Takes you to this page\n"
+                       f"{emojis['other']['green']} Help for a specific command can be found with `+help commandname`\n"
+                       f"{emojis['other']['green']} e.g `+help don` or `+help add donationboard`.\n\n"
+                       f"{emojis['other']['green']} Press :arrow_forward: to proceed.")
 
         self.description = description
         embed = self.embed.copy() if self.embed else discord.Embed(colour=self.bot.colour)

@@ -6,12 +6,13 @@ from functools import lru_cache
 def rcs_clans():
     """Retrieve and cache all RCS clan names and tags"""
     with Sql(as_dict=True) as cursor:
-        sql = "SELECT clanName, clanTag FROM rcs_data ORDER BY clanName"
+        sql = "SELECT clanName, clanTag, altName FROM rcs_data ORDER BY clanName"
         cursor.execute(sql)
         fetch = cursor.fetchall()
     clans = {}
     for clan in fetch:
         clans[clan['clanName']] = clan['clanTag']
+        clans[clan['altName']] = clan['clanTag']
     return clans
 
 

@@ -29,6 +29,7 @@ class Games(commands.Cog):
 
     @games.command(name="all")
     async def games_all(self, ctx):
+        """Returns clan points for all RCS clans"""
         with Sql(as_dict=True) as cursor:
             cursor.execute("SELECT TOP 1 clanPoints "
                            "FROM rcs_events "
@@ -51,6 +52,7 @@ class Games(commands.Cog):
 
     @games.command(name="average", aliases=["avg", "averages"])
     async def games_average(self, ctx):
+        """Returns the average player points for all RCS clans"""
         with Sql(as_dict=True) as cursor:
             data = []
             cursor.callproc("rcs_spClanGamesAverage")
@@ -63,7 +65,14 @@ class Games(commands.Cog):
         await p.paginate()
 
     @games.command(name="clan")
-    async def games_clan(self, ctx, clan: ClanConverter = None):
+    async def games_clan(self, ctx, *, clan: ClanConverter = None):
+        """Returns the individual player points for the specified clan
+
+        Examples:
+        `++games clan Team Boom`
+        `++games clan #CVCJR89`
+        `++games clan Pi`
+        """
         async with ctx.typing():
             with Sql(as_dict=True) as cursor:
                 cursor.execute("SELECT TOP 1 playerPoints, startTime "
@@ -107,7 +116,13 @@ class Games(commands.Cog):
                            settings['rcs_roles']['chat_mods'],
                            settings['rcs_roles']['leaders'])
     async def games_add(self, ctx, player: PlayerConverter = None, clan: ClanConverter = None, games_points: int = 0):
-        """Add player who missed the initial pull"""
+        """Add player who missed the initial pull
+
+        Examples:
+        `++games add TubaKid "Reddit Oak" 2310`
+        `++games add #RVP02LU0 #CVCJR89 100`
+        `++games add Fredo Tau 3850`
+        """
         if not player:
             return await ctx.send("Please provide a valid player tag.")
         if not clan:

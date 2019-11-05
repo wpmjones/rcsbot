@@ -14,7 +14,7 @@ from datetime import datetime
 from config import settings
 from loguru import logger
 
-enviro = "dev"
+enviro = "home"
 
 if enviro == "LIVE":
     token = settings['discord']['rcsbot_token']
@@ -31,7 +31,6 @@ if enviro == "LIVE":
                           "cogs.owner",
                           "cogs.pfp",
                           "cogs.admin",
-                          "cogs.draft",
                           "cogs.tasks",
                           "cogs.eggs",
                           ]
@@ -48,7 +47,6 @@ elif enviro == "home":
                           "cogs.owner",
                           "cogs.admin",
                           "cogs.tasks",
-                          "cogs.draft",
                           ]
 else:
     token = settings['discord']['test_token']
@@ -63,7 +61,6 @@ else:
                           "cogs.owner",
                           "cogs.admin",
                           "cogs.tasks",
-                          "cogs.draft",
                           ]
 
 description = """Multi bot to serve the RCS - by TubaKid

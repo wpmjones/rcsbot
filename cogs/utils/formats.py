@@ -5,6 +5,7 @@ from config import emojis
 
 
 def get_render_type(type_, table):
+    print(f"|{type_}|")
     if type_ == "attacks":
         render = table.board_1("Att")
     elif type_ == "defenses":
@@ -17,12 +18,16 @@ def get_render_type(type_, table):
         render = table.board_1("vsCups")
     elif type_ == "warstars":
         render = table.board_1("Stars")
-    elif type_ in ("games", "all", "average", "clan"):
+    elif type_ == "games":
         render = table.board_1("Points")
     elif type_ == "townhalls":
         render = table.board_3()
     elif type_ == "builderhalls":
         render = table.board_4()
+    elif type_ == "push":
+        render = table.board_1("Cups")
+    else:
+        render = table.board_1("")
 
     return render
 
@@ -152,6 +157,12 @@ class CLYTable:
             fmt += f"{emojis['th'][int(v[0])]}`⠀{str(v[1]):\u00A0<18.18}⠀`\n"
         return fmt
 
+    def board_4(self):
+        fmt = ""
+        for v in self._rows:
+            fmt += f"{emojis['th'][int(v[0])]}`⠀{str(v[1]):\u00A0<18.18}⠀`\n"
+        return fmt
+
 
 class TablePaginator(Pages):
     def __init__(self, ctx, data, title=None, page_count=1, rows_per_table=25):
@@ -163,7 +174,7 @@ class TablePaginator(Pages):
         self.title = title
         self.message = None
         self.ctx = ctx
-        self.type_ = ctx.command.name
+        self.type_ = ctx.command.root_parent
 
     async def get_page(self, page):
         entry = self.entries[page - 1]
@@ -180,8 +191,7 @@ class TablePaginator(Pages):
         return self.entries[page - 1]
 
     def create_row(self, data):
-        if self.type_ in ("donations",
-                            ):
+        if self.type_ in ("donations",):
             row = [data[0], data[1][0], data[1][1], data[1][2]]
         elif self.type_ in ("townhalls",
                             "builderhalls",
