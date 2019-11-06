@@ -190,7 +190,7 @@ class Push(commands.Cog):
                     pname = player.name.replace("'", "''")
                     sql = (f"INSERT INTO rcspush_2019_2 "
                            f"(playerTag, clanTag, startingTrophies, currentTrophies, "
-                           f"bestTrophies, thLevel, playerName, clanName) "
+                           f"bestTrophies, startingThLevel, playerName, clanName) "
                            f"VALUES (%s, %s, %d, %d, %d, %d, N'{pname}', %s)")
                     cursor.execute(sql,
                                    (player.tag[1:], clan_tag, player.trophies, player.trophies,
