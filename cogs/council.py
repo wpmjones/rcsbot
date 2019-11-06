@@ -20,6 +20,7 @@ class CouncilCog(commands.Cog):
     @commands.has_role(settings['rcs_roles']['council'])
     async def magic_form(self, ctx):
         link = "https://docs.google.com/forms/d/e/1FAIpQLScnSCYr2-qA7OHxrf-z0BZFjDr8aRvvHzIM6bIMTLVtlO16GA/viewform"
+        # TODO mark bot spam channel as safe (Better way to check this?)
         if ctx.channel.id == settings['rcs_channels']['council']:
             await ctx.send(link)
         else:
