@@ -24,6 +24,7 @@ class PlayerConverter(commands.Converter):
                                            'If you didn\'t pass in a tag, '
                                            'please drop the owner a message.'
                                            )
+        # TODO clean this up for RCS specific info
         guild_clans = await ctx.get_clans()
         for g in guild_clans:
             if g.name == name or g.tag == tag:
