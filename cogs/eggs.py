@@ -11,8 +11,7 @@ from io import BytesIO
 from random import randint
 from datetime import datetime
 from discord.ext import commands
-from cogs.utils.db import Sql
-from config import settings, emojis, color_pick
+from config import settings
 
 
 class Eggs(commands.Cog):

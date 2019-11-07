@@ -8,7 +8,7 @@ import discord
 
 from cogs.utils import context, category
 from cogs.utils.db import Psql
-from cogs.utils.helper import rcs_clans
+from cogs.utils.helper import rcs_names_tags
 from discord.ext import commands
 from datetime import datetime
 from config import settings
@@ -84,7 +84,7 @@ class RcsBot(commands.Bot):
                          case_insensitive=True)
         self.remove_command("help")
         self.coc = coc_client
-        self.rcs_clans = rcs_clans()
+        self.rcs_names_tags = rcs_names_tags()
         self.color = discord.Color.dark_red()
         self.client_id = settings['discord']['rcs_client_id']
         self.messages = {}

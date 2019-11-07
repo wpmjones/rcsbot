@@ -285,7 +285,7 @@ class CouncilCog(commands.Cog):
         await ctx.send(f"{clan.name} has been removed from the database.  The change will appear on the wiki "
                        "in the next 3 hours.")
         # TODO update the wiki
-        helper.rcs_clans.clear_cache()
+        helper.rcs_names_tags.clear_cache()
         helper.get_clan.clear_cache()
         await ctx.send("<@251150854571163648> Please recycle the bot so we aren't embarassed with old data!")
         await ctx.send(f"Please don't forget to remove {fetched['leaderReddit'][22:]} as a mod from META and "

@@ -6,9 +6,8 @@ from discord.ext import commands
 from cogs.utils import formats
 from cogs.utils.converters import ClanConverter
 from cogs.utils.db import Sql
-from cogs.utils.helper import rcs_clans
+from cogs.utils.helper import rcs_tags
 from datetime import datetime
-from config import settings
 
 
 class Push(commands.Cog):
@@ -176,15 +175,14 @@ class Push(commands.Cog):
     @push.command(name="start", hidden=True)
     @commands.is_owner()
     async def push_start(self, ctx):
-        await ctx.send("Starting process...")
+        msg = await ctx.send("Starting process...")
         # start push
         start = time.perf_counter()
-        for clan in rcs_clans():
-            if clan == "Reddit Tau":  # Change to in list if more than one clan bails
+        for tag in rcs_tags():
+            if tag == "888GPQ0J":  # Change to in list if more than one clan bails
                 continue
-            clan_tag = rcs_clans()[clan]
-            self.bot.logger.info(f"Starting {clan_tag}")
-            coc_clan = await self.bot.coc.get_clan(f"#{clan_tag}")
+            self.bot.logger.info(f"Starting {tag}")
+            coc_clan = await self.bot.coc.get_clan(f"#{tag}")
             with Sql() as cursor:
                 async for player in coc_clan.get_detailed_members():
                     pname = player.name.replace("'", "''")
@@ -192,9 +190,9 @@ class Push(commands.Cog):
                            f"(playerTag, clanTag, startingTrophies, currentTrophies, "
                            f"bestTrophies, startingThLevel, playerName, clanName) "
                            f"VALUES (%s, %s, %d, %d, %d, %d, N'{pname}', %s)")
-                    cursor.execute(sql,
-                                   (player.tag[1:], clan_tag, player.trophies, player.trophies,
-                                    player.best_trophies, player.town_hall, clan))
+                    cursor.execute(sql, (player.tag[1:], tag, player.trophies, player.trophies,
+                                         player.best_trophies, player.town_hall, coc_clan.name))
+        await msg.delete()
         await ctx.send(f"All members added. Elapsed time: {(time.perf_counter() - start)/60:.2f} minutes")
 
 

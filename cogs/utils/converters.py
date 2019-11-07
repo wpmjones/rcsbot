@@ -2,7 +2,7 @@ import coc
 import re
 
 from discord.ext import commands
-from cogs.utils.helper import rcs_clans
+from cogs.utils.helper import rcs_names_tags
 
 tag_validator = re.compile("^#?[PYLQGRJCUV0289]+$")
 
@@ -50,7 +50,7 @@ class ClanConverter(commands.Converter):
 
         tag = coc.utils.correct_tag(argument)
         name = argument.strip()
-        clans = rcs_clans()
+        clans = rcs_names_tags()
 
         # If tag is valid, use the tag
         if tag_validator.match(tag):
