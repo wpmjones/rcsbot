@@ -186,9 +186,6 @@ class RcsBot(commands.Bot):
         await self.change_presence(status=discord.Status.online, activity=activity)
         logger.info(f'Ready: {self.user} (ID: {self.user.id})')
 
-    async def on_resumed(self):
-        logger.info("resumed...")
-
     async def close(self):
         await super().close()
         await self.coc.close()
