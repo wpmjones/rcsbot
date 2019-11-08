@@ -5,7 +5,6 @@ from config import emojis
 
 
 def get_render_type(type_, table):
-    print(f"|{type_}|")
     if type_ == "attacks":
         render = table.board_1("Att")
     elif type_ == "defenses":
@@ -130,37 +129,31 @@ class CLYTable:
         self._rows = []
 
     def board_1(self, category):
-        fmt = f"{emojis['other']['num']}`⠀{category:\u00A0>6.6}⠀` `⠀{'Name':\u00A0>16.16}⠀`\n"
+        fmt = f"{emojis['other']['num']}`⠀{category:\u00A0>6.6}⠀` `⠀{'Name':\u00A0>22.22}⠀`\n"
         for v in self._rows:
             index = int(v[0]) + 1
             index = emojis['level'][index]  # if index <= 100 else misc['idle']
-            fmt += f"{index}`⠀{str(v[1]):\u00A0>6.6}⠀` `⠀{str(v[2]):\u00A0>16.16}⠀`\n"
+            fmt += f"{index}`⠀{str(v[1]):\u00A0>6.6}⠀` `⠀{str(v[2]):\u00A0>22.22}⠀`\n"
         return fmt
 
     def board_2(self, category_1, category_2):
-        fmt = f"{emojis['other']['num']}`⠀{category_1:\u00A0>6.6}⠀` `⠀{category_2:\u00A0>5.5}⠀` `⠀{'Name':\u00A0>10.10}⠀`\n"
+        fmt = f"{emojis['other']['num']}`⠀{category_1:\u00A0>6.6}⠀` `⠀{category_2:\u00A0>5.5}⠀` `⠀{'Name':\u00A0>16.16}⠀`\n"
         for v in self._rows:
             index = int(v[0]) + 1
             index = emojis['level'][index]  # if index <= 100 else misc['idle']
-            fmt += f"{index}`⠀{str(v[1]):\u00A0>6.6}⠀` `⠀{str(v[2]):\u00A0>5.5}⠀` `⠀{str(v[3]):\u00A0>10.10}⠀`\n"
+            fmt += f"{index}`⠀{str(v[1]):\u00A0>6.6}⠀` `⠀{str(v[2]):\u00A0>5.5}⠀` `⠀{str(v[3]):\u00A0>16.16}⠀`\n"
         return fmt
 
     def board_3(self):
         fmt = ""
         for v in self._rows:
-            fmt += f"{emojis['th_icon'][int(v[0])]}`⠀{str(v[1]):\u00A0<18.18}⠀`\n"
+            fmt += f"{emojis['th_icon'][int(v[0])]}`⠀{str(v[1]):\u00A0<27.27}⠀`\n"
         return fmt
 
     def board_4(self):
         fmt = ""
         for v in self._rows:
-            fmt += f"{emojis['th'][int(v[0])]}`⠀{str(v[1]):\u00A0<18.18}⠀`\n"
-        return fmt
-
-    def board_4(self):
-        fmt = ""
-        for v in self._rows:
-            fmt += f"{emojis['th'][int(v[0])]}`⠀{str(v[1]):\u00A0<18.18}⠀`\n"
+            fmt += f"{emojis['th'][int(v[0])]}`⠀{str(v[1]):\u00A0<27.27}⠀`\n"
         return fmt
 
 
@@ -250,3 +243,43 @@ class TablePaginator(Pages):
                 continue
 
             await self.message.add_reaction(reaction)
+
+
+class TopTenPaginator(TablePaginator):
+    def __init__(self, ctx, data):
+        super().__init__(ctx, data, title=None, page_count=6, rows_per_table=10)
+        self.data = data
+        self.title_prefix = "RCS Push Top Ten for TH"
+        self.th_by_page = {1: 12, 2: 11, 3: 10, 4: 9, 5: 8, 6: 7}
+
+    def create_row(self, data):
+        row = [data[0], data[1][0], data[1][1]]
+        self.table.add_row(row)
+
+    async def prepare_entry(self, page):
+        self.table.clear_rows()
+        base = (page - 1) * self.rows_per_table
+        data = self.data[base:base + self.rows_per_table]
+        data = [(i, v) for (i, v) in enumerate(data)]
+        for n in data:
+            self.create_row(n)
+
+        render = get_render_type(self.type_, self.table)
+        return render
+
+    async def get_embed(self, entries, page, *, first=False):
+        if self.maximum_pages > 1:
+            if self.show_entry_count:
+                text = f'Page {page}/{self.maximum_pages} ({len(self.entries)} entries)'
+            else:
+                text = f'Page {page}/{self.maximum_pages}'
+
+            self.embed.set_footer(text=text)
+
+        self.embed.description = entries
+        self.title = f"{self.title_prefix}{self.th_by_page[page]}"
+
+        self.embed.set_author(name=textwrap.shorten(self.title, width=240, placeholder="..."),
+                              icon_url=self.ctx.icon)
+
+        return self.embed

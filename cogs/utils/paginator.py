@@ -36,7 +36,7 @@ class Pages:
     permissions: discord.Permissions
         Our permissions for the channel.
     """
-    def __init__(self, ctx, *, entries, per_page=12, show_entry_count=True):
+    def __init__(self, ctx, *, entries, per_page=12, show_entry_count=False):
         self.bot = ctx.bot
         self.entries = entries
         self.message = ctx.message
