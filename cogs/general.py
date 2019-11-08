@@ -49,7 +49,7 @@ class General(commands.Cog):
             p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
         await p.paginate()
 
-    @commands.command(name="donations", aliases=["donate", "donates", "donation"])
+    @commands.command(name="donations", aliases=["don", "dons", "donate", "donates", "donation"])
     async def donations(self, ctx, *, clan: ClanConverter = None):
         """Donations for the whole clan"""
         if not clan:
