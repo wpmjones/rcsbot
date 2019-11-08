@@ -61,7 +61,7 @@ class Push(commands.Cog):
     @push.command(name="all")
     async def push_all(self, ctx):
         """Returns list of all clans ranked by score (only top 30 trophies contribute to the score."""
-        with Sql(as_dict=True) as cursor:
+        with Sql() as cursor:
             cursor.execute("SELECT SUM(clanPoints) AS totals, clanName FROM rcspush_vwClanPointsTop30 "
                            "GROUP BY clanName "
                            "ORDER BY totals DESC")
@@ -69,7 +69,7 @@ class Push(commands.Cog):
         page_count = math.ceil(len(fetch) / 20)
         title = "RCS Push Rankings"
         ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
-        p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
+        p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count, rows_per_table=20)
         await p.paginate()
 
     @push.command(name="diff")
@@ -87,66 +87,42 @@ class Push(commands.Cog):
         page_count = math.ceil(len(fetch) / 20)
         title = "RCS Push Ranking Differentials"
         ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
-        p = formats.TablePaginator(ctx, data=data, title=title, page_count=page_count)
+        p = formats.TablePaginator(ctx, data=data, title=title, page_count=page_count, rows_per_table=20)
         await p.paginate()
 
     @push.command(name="top")
     async def push_top(self, ctx):
         """Returns list of top 10 players for each TH level."""
-        th_list = [12, 11, 10, 9, 8, 7]
-        # TODO decide what data you want to show here
-        # TODO UNION top tens and paginate on TH level
-        with Sql(as_dict=True) as cursor:
-            cursor.execute(f"SELECT TOP 10 playerName, clanName, clanPoints, currentTrophies "
-                           f"FROM rcspush_vwClanPoints "
-                           f"WHERE thLevel = {level} "
-                           f"ORDER BY clanPoints DESC")
+        with Sql() as cursor:
+            cursor.execute("SELECT currentTrophies, playerName "
+                           "FROM rcspush_vwTopTenByTh "
+                           "ORDER BY th DESC, currentTrophies DESC")
             fetch = cursor.fetchall()
-        msg_list = []
-        for row in fetch:
-            if row['clanName'][:6] == "Reddit":
-                clan_name = row['clanName'][7:]
-            else:
-                clan_name = row['clanName']
-            msg_list.append({"name": f"{row['playerName']} ({clan_name})",
-                             "points": f"{str(row['clanPoints'])[:5]} ({str(row['currentTrophies'])})"})
-            content = f"```RCS Trophy Push - Top TH{str(level)}"
-            content += "\n{0:25}{1:>17}".format("Player Name (clan)", "Points (Trophies)")
-            content += "\n------------------------------------------"
-            for item in msg_list:
-                content += "\n{0:30}{1:>12}".format(item['name'], item['points'])
-            content += "```"
-        await ctx.send(content)
+        ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
+        p = formats.TopTenPaginator(ctx, data=fetch)
+        await p.paginate()
 
     @push.command(name="th")
-    async def push_th(self, ctx, th_level):
+    async def push_th(self, ctx, th_level: int):
         if (th_level > 12) or (th_level < 6):
             return await ctx.send("You have not provided a valid town hall level.")
-        with Sql(as_dict=True) as cursor:
-            cursor.execute(f"SELECT TOP 80 playerName, clanName, clanPoints, currentTrophies "
+        with Sql() as cursor:
+            cursor.execute(f"SELECT TOP 100 currentTrophies, CAST(clanPoints AS DECIMAL(5,2)), "
+                           f"playerName + ' (' + clanName + ')'"
                            f"FROM rcspush_vwClanPoints "
                            f"WHERE thLevel = {th_level} "
                            f"ORDER BY clanPoints DESC")
-            fetched = cursor.fetchall()
-        # TODO Decide what data you want to show here
-        msg_list = []
-        for row in fetched:
-            if row['clanName'][:7] == 'Reddit ':
-                clan_name = row['clanName'][7:]
-            else:
-                clan_name = row['clanName']
-            msg_list.append({"name": f"{row['playerName']} ({clan_name})",
-                             "points": f"{str(row['clanPoints'])[:5]} ({str(row['currentTrophies'])})"})
-        content = "RCS Trophy Push - {0:4}".format(arg.upper())
-        content += "\n{0:25}{1:>17}".format("Player (Clan)", "Points (Trophies)")
-        content += "\n------------------------------------------"
-        for item in msg_list:
-            content += "\n{0:30}{1:>12}".format(item['name'], item['points'])
+            fetch = cursor.fetchall()
+        page_count = math.ceil(len(fetch) / 20)
+        title = f"RCS Push Top Points for TH{th_level}"
+        ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
+        p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count, rows_per_table=20)
+        await p.paginate()
 
     @push.command(name="gain", aliases=["gains", "increase"])
     async def push_gain(self, ctx):
         """Returns top 25 players based on number of trophies gained."""
-        with Sql(as_dict=True) as cursor:
+        with Sql() as cursor:
             cursor.execute("SELECT trophyGain, player FROM rcspush_vwGains ORDER BY trophyGain DESC")
             fetch = cursor.fetchall()
         page_count = math.ceil(len(fetch) / 25)
@@ -159,8 +135,9 @@ class Push(commands.Cog):
     async def push_clan(self, ctx, clan: ClanConverter = None):
         if not clan:
             return await ctx.send("Please provide a valid clan name/tag when using this command.")
-        with Sql(as_dict=True) as cursor:
-            cursor.execute(f"SELECT clanPoints, playerName + ' TH(' + thLevel + ')' as playerName "
+        with Sql() as cursor:
+            cursor.execute(f"SELECT CAST(clanPoints as decimal(4,2)), "
+                           f"playerName + ' (TH' + CAST(thLevel as varchar(2)) + ')' "
                            f"FROM rcspush_vwClanPoints "
                            f"WHERE clanName = %s "
                            f"ORDER BY clanPoints DESC",

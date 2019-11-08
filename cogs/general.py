@@ -13,6 +13,7 @@ class General(commands.Cog):
     """Cog for General bot commands"""
     def __init__(self, bot):
         self.bot = bot
+        # TODO Add command for ++clan to show all clan info
 
     @commands.command(name="attacks", aliases=["att", "attack", "attackwin", "attackwins"])
     async def attacks(self, ctx, *, clan: ClanConverter = None):

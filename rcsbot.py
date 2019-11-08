@@ -14,7 +14,7 @@ from datetime import datetime
 from config import settings
 from loguru import logger
 
-enviro = "home"
+enviro = "LIVE"
 
 if enviro == "LIVE":
     token = settings['discord']['rcsbot_token']
@@ -44,6 +44,7 @@ elif enviro == "home":
                           "cogs.newhelp",
                           "cogs.council",
                           "cogs.eggs",
+                          "cogs.push",
                           "cogs.owner",
                           "cogs.admin",
                           "cogs.tasks",

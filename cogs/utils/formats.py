@@ -1,32 +1,30 @@
 import textwrap
 
 from cogs.utils.paginator import Pages
+from loguru import logger
 from config import emojis
 
 
-def get_render_type(type_, table):
-    if type_ == "attacks":
-        render = table.board_1("Att")
-    elif type_ == "defenses":
-        render = table.board_1("Def")
-    elif type_ == "donations":
-        render = table.board_2("Don", "Rec")
-    elif type_ in ("trophies", "besttrophies"):
-        render = table.board_1("Cups")
-    elif type_ == "bhtrophies":
-        render = table.board_1("vsCups")
-    elif type_ == "warstars":
-        render = table.board_1("Stars")
-    elif type_ == "games":
-        render = table.board_1("Points")
-    elif type_ == "townhalls":
-        render = table.board_3()
-    elif type_ == "builderhalls":
-        render = table.board_4()
-    elif type_ == "push":
-        render = table.board_1("Cups")
+def get_render_type(table, type_, subtype=None):
+    board_choice = {
+        "attacks": table.board_1("Att"),
+        "defenses": table.board_1("Def"),
+        "donations": table.board_2("Don", "Rec"),
+        "trophies": table.board_1("Cups"),
+        "besttrophies": table.board_1("Cups"),
+        "bhtrophies": table.board_1("vsCups"),
+        "warstars": table.board_1("Stars"),
+        "games": table.board_1("Points"),
+        "townhalls": table.board_3(),
+        "builderhalls": table.board_4(),
+        "push": table.board_1("Cups"),
+        "th": table.board_2("Cups", "Pts"),
+        "diff": table.board_1("Diff")
+    }
+    if not subtype:
+        render = board_choice.get(type_, table.board_1())
     else:
-        render = table.board_1("")
+        render = board_choice.get(subtype, table.board_1())
 
     return render
 
@@ -167,7 +165,8 @@ class TablePaginator(Pages):
         self.title = title
         self.message = None
         self.ctx = ctx
-        self.type_ = ctx.command.root_parent
+        self.type_ = ctx.command.root_parent or ctx.command.name
+        self.subtype = ctx.command.name
 
     async def get_page(self, page):
         entry = self.entries[page - 1]
@@ -188,9 +187,13 @@ class TablePaginator(Pages):
             row = [data[0], data[1][0], data[1][1], data[1][2]]
         elif self.type_ in ("townhalls",
                             "builderhalls",
-                            "builderhalls",
                             ):
             row = [data[1][0], data[1][1]]
+        elif self.type_ == "push":
+            if self.subtype == "th":
+                row = [data[0], f"{data[1][0]}({data[1][1]})", data[1][2]]
+            else:
+                row = [data[0], data[1][0], data[1][1]]
         else:
             row = [data[0], data[1][0], data[1][1]]
 
@@ -203,7 +206,8 @@ class TablePaginator(Pages):
         for n in data:
             self.create_row(n)
 
-        render = get_render_type(self.type_, self.table)
+        print(f"{self.type_}-{self.subtype}")
+        render = get_render_type(self.table, self.type_, self.subtype)
         return render
 
     async def get_embed(self, entries, page, *, first=False):
@@ -264,7 +268,7 @@ class TopTenPaginator(TablePaginator):
         for n in data:
             self.create_row(n)
 
-        render = get_render_type(self.type_, self.table)
+        render = get_render_type(self.table, self.type_)
         return render
 
     async def get_embed(self, entries, page, *, first=False):
