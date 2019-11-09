@@ -12,6 +12,7 @@ from datetime import datetime
 
 class Push(commands.Cog):
     """Cog for RCS trophy push"""
+
     def __init__(self, bot):
         self.bot = bot
         self.title = "2019 RCS Turkey Day Trophy Push"
@@ -83,7 +84,10 @@ class Push(commands.Cog):
         top_score = fetch[0][0]
         data = []
         for row in fetch:
-            data.append([top_score - row[0], row[1]])
+            if row[0] == top_score:
+                data.append([f"{top_score:.0f}", row[1]])
+            else:
+                data.append([f"-{top_score - row[0]:.0f}", row[1]])
         page_count = math.ceil(len(fetch) / 20)
         title = "RCS Push Ranking Differentials"
         ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
@@ -108,9 +112,9 @@ class Push(commands.Cog):
             return await ctx.send("You have not provided a valid town hall level.")
         with Sql() as cursor:
             cursor.execute(f"SELECT TOP 100 currentTrophies, CAST(clanPoints AS DECIMAL(5,2)), "
-                           f"playerName + ' (' + clanName + ')'"
+                           f"playerName + ' (' + altName + ')'"
                            f"FROM rcspush_vwClanPoints "
-                           f"WHERE thLevel = {th_level} "
+                           f"WHERE currentThLevel = {th_level} "
                            f"ORDER BY clanPoints DESC")
             fetch = cursor.fetchall()
         page_count = math.ceil(len(fetch) / 20)
@@ -170,7 +174,7 @@ class Push(commands.Cog):
                     cursor.execute(sql, (player.tag[1:], tag, player.trophies, player.trophies,
                                          player.best_trophies, player.town_hall, coc_clan.name))
         await msg.delete()
-        await ctx.send(f"All members added. Elapsed time: {(time.perf_counter() - start)/60:.2f} minutes")
+        await ctx.send(f"All members added. Elapsed time: {(time.perf_counter() - start) / 60:.2f} minutes")
 
 
 def setup(bot):

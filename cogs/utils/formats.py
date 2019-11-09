@@ -7,26 +7,30 @@ from config import emojis
 
 def get_render_type(table, type_, subtype=None):
     board_choice = {
-        "attacks": table.board_1("Att"),
-        "defenses": table.board_1("Def"),
-        "donations": table.board_2("Don", "Rec"),
-        "trophies": table.board_1("Cups"),
-        "besttrophies": table.board_1("Cups"),
-        "bhtrophies": table.board_1("vsCups"),
-        "warstars": table.board_1("Stars"),
-        "games": table.board_1("Points"),
-        "townhalls": table.board_3(),
-        "builderhalls": table.board_4(),
-        "push": table.board_1("Cups"),
-        "th": table.board_2("Cups", "Pts"),
-        "diff": table.board_1("Diff")
+        "attacks": (table.board_1, "Att"),
+        "defenses": (table.board_1, "Def"),
+        "donations": (table.board_2, "Don", "Rec"),
+        "trophies": (table.board_1, "Cups"),
+        "besttrophies": (table.board_1, "Cups"),
+        "bhtrophies": (table.board_1, "vsCups"),
+        "warstars": (table.board_1, "Stars"),
+        "games": (table.board_1, "Points"),
+        "townhalls": table.board_3,
+        "builderhalls": table.board_4,
+        "push": (table.board_1, "Cups"),
+        "th": (table.board_2, "Cups", "Pts"),
+        "diff": (table.board_1, "Diff")
     }
     if not subtype:
-        render = board_choice.get(type_, table.board_1())
+        render = board_choice.get(type_, table.board_1)
     else:
-        render = board_choice.get(subtype, table.board_1())
+        render = board_choice.get(subtype, table.board_1)
 
-    return render
+    if len(render) == 1:
+        return render()
+    if len(render) == 2:
+        return render[0](render[1])
+    return render[0](render[1], render[2])
 
 
 class plural:
@@ -183,19 +187,17 @@ class TablePaginator(Pages):
         return self.entries[page - 1]
 
     def create_row(self, data):
-        if self.type_ in ("donations",):
-            row = [data[0], data[1][0], data[1][1], data[1][2]]
+        row = [data[0], data[1][0], data[1][1]]
+        print(self.type_)
+        if self.type_ == "push":
+            if self.subtype == "th":
+                row = [data[0], data[1][0], data[1][1], data[1][2]]
         elif self.type_ in ("townhalls",
                             "builderhalls",
                             ):
             row = [data[1][0], data[1][1]]
-        elif self.type_ == "push":
-            if self.subtype == "th":
-                row = [data[0], f"{data[1][0]}({data[1][1]})", data[1][2]]
-            else:
-                row = [data[0], data[1][0], data[1][1]]
-        else:
-            row = [data[0], data[1][0], data[1][1]]
+        elif self.type_ in ("donations",):
+            row = [data[0], data[1][0], data[1][1], data[1][2]]
 
         self.table.add_row(row)
 
@@ -203,10 +205,11 @@ class TablePaginator(Pages):
         self.table.clear_rows()
         base = (page - 1) * self.rows_per_table
         data = self.data[base:base + self.rows_per_table]
+        print(self.type_)
+        print(self.subtype)
         for n in data:
             self.create_row(n)
 
-        print(f"{self.type_}-{self.subtype}")
         render = get_render_type(self.table, self.type_, self.subtype)
         return render
 
