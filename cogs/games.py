@@ -3,6 +3,7 @@ import math
 import re
 
 from discord.ext import commands
+from cogs.utils.checks import is_leader_or_mod_or_council
 from cogs.utils.converters import ClanConverter, PlayerConverter
 from cogs.utils.db import Sql
 from cogs.utils import formats
@@ -73,6 +74,7 @@ class Games(commands.Cog):
         `++games clan #CVCJR89`
         `++games clan Pi`
         """
+        # TODO Fix speed issue on this command
         async with ctx.typing():
             with Sql(as_dict=True) as cursor:
                 cursor.execute("SELECT TOP 1 playerPoints, startTime "
@@ -106,15 +108,13 @@ class Games(commands.Cog):
                     else:
                         data.append([member['points'], player.name])
         page_count = math.ceil(len(data) / 25)
-        title = f"{clan.name} Points {clan_total}"
+        title = f"{clan.name} Points {clan_total} ({clan_average} avg)"
         ctx.icon = "https://cdn.discordapp.com/emojis/639623355770732545.png"
         p = formats.TablePaginator(ctx, data=data, title=title, page_count=page_count)
         await p.paginate()
 
     @games.command(name="add", aliases=["games+", "ga"], hidden=True)
-    @commands.has_any_role(settings['rcs_roles']['council'],
-                           settings['rcs_roles']['chat_mods'],
-                           settings['rcs_roles']['leaders'])
+    @is_leader_or_mod_or_council()
     async def games_add(self, ctx, player: PlayerConverter = None, clan: ClanConverter = None, games_points: int = 0):
         """Add player who missed the initial pull
 

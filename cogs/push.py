@@ -17,7 +17,7 @@ class Push(commands.Cog):
         self.bot = bot
         self.title = "2019 RCS Turkey Day Trophy Push"
         self.start_time = datetime(2019, 11, 15, 5, 0)
-        self.end_time = datetime(2019, 11, 24, 5, 0)
+        self.end_time = datetime(2019, 11, 24, 4, 50)
 
     @commands.group(name="push", invoke_without_command=True)
     async def push(self, ctx):

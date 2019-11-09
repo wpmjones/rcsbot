@@ -3,10 +3,11 @@ import math
 
 from discord.ext import commands
 from cogs.utils.db import Sql
+from cogs.utils.checks import is_mod_or_council
 from cogs.utils.converters import PlayerConverter, ClanConverter
 from cogs.utils.constants import cwl_league_names, cwl_league_order
 from cogs.utils import formats
-from config import settings, emojis
+from config import settings
 
 
 class General(commands.Cog):
@@ -276,9 +277,7 @@ class General(commands.Cog):
         await p.paginate()
 
     @commands.command(name="link")
-    @commands.has_any_role(settings['rcs_roles']['council'],
-                           settings['rcs_roles']['chat_mods'],
-                           settings['rcs_roles']['leaders'])
+    @is_mod_or_council()
     async def link(self, ctx, member: discord.Member, player: PlayerConverter = None):
         if not player:
             self.bot.logger.error(f"{ctx.author} provided some bad info for the link command.")

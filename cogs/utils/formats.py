@@ -15,11 +15,14 @@ def get_render_type(table, type_, subtype=None):
         "bhtrophies": (table.board_1, "vsCups"),
         "warstars": (table.board_1, "Stars"),
         "games": (table.board_1, "Points"),
-        "townhalls": table.board_3,
-        "builderhalls": table.board_4,
+        "average": (table.board_1, "Avg"),
+        "clan": (table.board_1, "Points"),
+        "townhalls": (table.board_3, ),
+        "builderhalls": (table.board_4, ),
         "push": (table.board_1, "Cups"),
-        "th": (table.board_2, "Cups", "Pts"),
-        "diff": (table.board_1, "Diff")
+        "th": (table.board_5, "Cups", "Pts"),
+        "diff": (table.board_1, "Diff"),
+        "gain": (table.board_1, "Gain")
     }
     if not subtype:
         render = board_choice.get(type_, table.board_1)
@@ -27,7 +30,7 @@ def get_render_type(table, type_, subtype=None):
         render = board_choice.get(subtype, table.board_1)
 
     if len(render) == 1:
-        return render()
+        return render[0]()
     if len(render) == 2:
         return render[0](render[1])
     return render[0](render[1], render[2])
@@ -158,6 +161,14 @@ class CLYTable:
             fmt += f"{emojis['th'][int(v[0])]}`⠀{str(v[1]):\u00A0<27.27}⠀`\n"
         return fmt
 
+    def board_5(self, category_1, category_2):
+        fmt = f"{emojis['other']['num']}`⠀{category_1:\u00A0>4.4}⠀` `⠀{category_2:\u00A0>5.5}⠀` `⠀{'Name':\u00A0>18.18}⠀`\n"
+        for v in self._rows:
+            index = int(v[0]) + 1
+            index = emojis['level'][index]  # if index <= 100 else misc['idle']
+            fmt += f"{index}`⠀{str(v[1]):\u00A0>4.4}⠀` `⠀{str(v[2]):\u00A0>5.5}⠀` `⠀{str(v[3]):\u00A0>18.18}⠀`\n"
+        return fmt
+
 
 class TablePaginator(Pages):
     def __init__(self, ctx, data, title=None, page_count=1, rows_per_table=25):
@@ -169,7 +180,10 @@ class TablePaginator(Pages):
         self.title = title
         self.message = None
         self.ctx = ctx
-        self.type_ = ctx.command.root_parent or ctx.command.name
+        if ctx.command.root_parent:
+            self.type_ = ctx.command.root_parent.name
+        else:
+            self.type_ = ctx.command.name
         self.subtype = ctx.command.name
 
     async def get_page(self, page):
@@ -188,9 +202,8 @@ class TablePaginator(Pages):
 
     def create_row(self, data):
         row = [data[0], data[1][0], data[1][1]]
-        print(self.type_)
-        if self.type_ == "push":
-            if self.subtype == "th":
+        if "push" in self.type_:
+            if "th" in self.subtype:
                 row = [data[0], data[1][0], data[1][1], data[1][2]]
         elif self.type_ in ("townhalls",
                             "builderhalls",
@@ -205,8 +218,6 @@ class TablePaginator(Pages):
         self.table.clear_rows()
         base = (page - 1) * self.rows_per_table
         data = self.data[base:base + self.rows_per_table]
-        print(self.type_)
-        print(self.subtype)
         for n in data:
             self.create_row(n)
 

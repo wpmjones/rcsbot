@@ -49,7 +49,7 @@ class ClanConverter(commands.Converter):
             return argument
 
         tag = coc.utils.correct_tag(argument)
-        name = argument.strip()
+        name = argument.strip().lower()
         clans = rcs_names_tags()
 
         # If tag is valid, use the tag

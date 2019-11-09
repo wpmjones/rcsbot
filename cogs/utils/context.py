@@ -1,7 +1,8 @@
-from discord.ext import commands
-import asyncio
 import discord
+import asyncio
 import io
+
+from discord.ext import commands
 
 
 class _ContextDBAcquire:
@@ -249,7 +250,8 @@ class Context(commands.Context):
         else:
             return await self.send(content)
 
-    async def send_text(self, channel, text, block=None):
+    @staticmethod
+    async def send_text(channel, text, block=None):
         """ Sends text to channel, splitting if necessary
         Discord has a 2000 character limit
         """
@@ -270,3 +272,26 @@ class Context(commands.Context):
                     coll = ""
                 coll += line
             await channel.send(coll)
+
+    @staticmethod
+    async def send_embed(channel, header, footer, text, color=discord.Color.red()):
+        """ Sends embed to channel, splitting if necessary """
+        if len(text) < 1000:
+            embed = discord.Embed(color=color)
+            embed.add_field(name=header, value=text, inline=False)
+            embed.set_footer(text=footer)
+            await channel.send(embed=embed)
+        else:
+            coll = ""
+            for line in text.splitlines(keepends=True):
+                if len(coll) + len(line) > 1000:
+                    embed = discord.Embed(color=color)
+                    embed.add_field(name=header, value=coll, inline=False)
+                    await channel.send(embed=embed)
+                    header = "Continued..."
+                    coll = ""
+                coll += line
+            embed = discord.Embed(color=color)
+            embed.add_field(name=header, value=coll, inline=False)
+            embed.set_footer(text=footer)
+            await channel.send(embed=embed)

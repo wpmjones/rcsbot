@@ -5,6 +5,7 @@ import re
 import requests
 
 from discord.ext import commands
+from cogs.utils.checks import is_council, is_mod_or_council, is_leader_or_mod_or_council
 from cogs.utils.converters import ClanConverter
 from cogs.utils.db import Sql
 from cogs.utils import helper
@@ -17,7 +18,7 @@ class CouncilCog(commands.Cog):
         self.bot = bot
 
     @commands.command(name="form", aliases=["magic"], hidden=True)
-    @commands.has_role(settings['rcs_roles']['council'])
+    @is_council()
     async def magic_form(self, ctx):
         link = "https://docs.google.com/forms/d/e/1FAIpQLScnSCYr2-qA7OHxrf-z0BZFjDr8aRvvHzIM6bIMTLVtlO16GA/viewform"
         # TODO mark bot spam channel as safe (Better way to check this?)
@@ -29,7 +30,7 @@ class CouncilCog(commands.Cog):
             await channel.send(link)
 
     @commands.command(name="userinfo", aliases=["ui"], hidden=True)
-    @commands.has_any_role(settings['rcs_roles']['council'], settings['rcs_roles']['chat_mods'])
+    @is_mod_or_council()
     async def user_info(self, ctx, user: discord.Member):
         """Command to retreive join date and other info for Discord user."""
         today = datetime.now()
@@ -57,7 +58,7 @@ class CouncilCog(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(name="addClan", aliases=["clanAdd", "newClan", "add_clan", "new_clan"], hidden=True)
-    @commands.has_role(settings['rcs_roles']['council'])
+    @is_council()
     async def add_clan(self, ctx, *, clan_tag: str = "x"):
         """Command to add a new verified clan to the RCS Database."""
         def check_author(m):
@@ -253,7 +254,7 @@ class CouncilCog(commands.Cog):
         self.bot.logger.info(f"{ctx.command} issued by {ctx.author} for {clan.name} (Channel: {ctx.channel})")
 
     @commands.command(name="removeClan", aliases=["clanRemove", "remove_clan"], hidden=True)
-    @commands.has_role(settings['rcs_roles']['council'])
+    @is_council()
     async def remove_clan(self, ctx, *, clan: ClanConverter = None):
         """Command to remove a verified clan from the RCS database."""
         if not clan:
@@ -294,9 +295,10 @@ class CouncilCog(commands.Cog):
                        f"you will need to remove them manually.")
 
     @commands.command(name="in_war", aliases=["inwar"], hidden=True)
-    @commands.has_any_role("Admin1", "Leaders", "Council")
+    @is_mod_or_council()
     async def in_war(self, ctx):
         async with ctx.typing():
+            msg = await ctx.send("Loading...")
             with Sql(as_dict=True) as cursor:
                 cursor.execute("SELECT '#' + clanTag AS tag, isWarLogPublic FROM rcs_data "
                                "WHERE classification <> 'feeder' ORDER BY clanName")
@@ -304,31 +306,42 @@ class CouncilCog(commands.Cog):
             tags = [clan['tag'] for clan in clans if clan['isWarLogPublic'] == 1]
             in_prep = ""
             in_war = ""
+            in_cwl = ""
             async for war in self.bot.coc.get_current_wars(tags):
                 try:
                     if war.state == "preparation":
                         in_prep += (f"{war.clan.name} ({war.clan.tag}) has "
                                     f"{war.start_time.seconds_until // 3600:.0f} hours until war.\n")
                     if war.state == "inWar":
-                        in_war += (f"{war.clan.name} ({war.clan.tag}) has "
-                                   f"{war.end_time.seconds_until // 3600:.0f} hours left in war.\n")
+                        if war.type == "cwl":
+                            in_cwl += (f"{war.clan.name} ({war.clan.tag}) has "
+                                       f"{war.end_time.seconds_until // 3600:.0f} hours left in war.\n")
+                        else:
+                            in_war += (f"{war.clan.name} ({war.clan.tag}) has "
+                                       f"{war.end_time.seconds_until // 3600:.0f} hours left in war.\n")
                 except Exception as e:
                     self.bot.logger.exception("get war state")
+            await msg.delete()
             await ctx.send_embed(ctx.channel,
                                  "RCS Clan War Status",
-                                 "This does not include CWL wars.",
+                                 "This includes CWL wars.",
                                  in_prep,
                                  discord.Color.dark_gold())
-            await ctx.send_embed(ctx.channel,
-                                 "RCS Clan War Status",
-                                 "This does not include CWL wars.",
-                                 in_war,
-                                 discord.Color.dark_red())
+            if in_war != "":
+                await ctx.send_embed(ctx.channel,
+                                     "RCS Clan War Status",
+                                     "This does not include CWL wars.",
+                                     in_war,
+                                     discord.Color.dark_red())
+            if in_cwl != "":
+                await ctx.send_embed(ctx.channel,
+                                     "RCS CWL War Status",
+                                     "These are CWL wars.",
+                                     in_cwl,
+                                     discord.Color.dark_red())
 
     @commands.command(name="leader", hidden=True)
-    @commands.has_any_role(settings['rcs_roles']['council'],
-                           settings['rcs_roles']['chat_mods'],
-                           settings['rcs_roles']['leaders'])
+    @is_council()
     async def leader(self, ctx, *, clan: ClanConverter = None):
         """Command to find the leader for the selected clan.
 
@@ -361,9 +374,7 @@ class CouncilCog(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.group(invoke_without_command=True, hidden=True)
-    @commands.has_any_role(settings['rcs_roles']['council'],
-                           settings['rcs_roles']['chat_mods'],
-                           settings['rcs_roles']['leaders'])
+    @is_leader_or_mod_or_council()
     async def alts(self, ctx):
         """[Group] Command to handle alt accounts of RCS leaders"""
         if ctx.invoked_subcommand is None:
@@ -412,7 +423,7 @@ class CouncilCog(commands.Cog):
                 await ctx.send(f"{alt} has been removed as an alt for the leader of {clan[0].name}.")
 
     @commands.group(invoke_without_subcommand=True, hidden=True)
-    @commands.has_role(settings['rcs_roles']['council'])
+    @is_council()
     async def dm(self, ctx):
         """Group command to send DMs to various roles in the RCS Discord Server"""
         if ctx.invoked_subcommand is None:
@@ -460,104 +471,49 @@ class CouncilCog(commands.Cog):
         await msg.edit(f"Message sent to {counter} RCS DJs.")
 
     @commands.command(name="find", aliases=["search"], hidden=True)
+    @is_mod_or_council()
     async def find(self, ctx, *, arg: str = "help"):
-        """Command to to find a search string in Discord user names"""
+        """Returns any Discord member of the RCS server with the search sting in the name
+
+        Example:
+        ++find speed
+        """
         # TODO Figure out the None response on some names
         # TODO add regex or option to only search for string in clan name
-        if is_authorized(ctx.author.roles) or 440585276042248192 in ctx.author.roles:
-            if arg == "help":
-                embed = discord.Embed(title="rcs-bot Help File", 
-                                      description="Help for the find/search command", 
-                                      color=color_pick(15, 250, 15))
-                embed.add_field(name="Commands:", value="-----------")
-                help_text = "Used to find Discord names with the specified string."
-                embed.add_field(name="++find <search string>", value=help_text)
-                embed.set_footer(icon_url="https://openclipart.org/image/300px/svg_to_png/122449/1298569779.png", 
-                                 text="rcs-bot proudly maintained by TubaKid.")
-                await ctx.send(embed=embed)
-                return
-            # if not help, code picks up here
-            member_role = "296416358415990785"
-            guild = str(settings['discord']['rcsGuildId'])
+        if arg == "help":
+            embed = discord.Embed(title="rcs-bot Help File",
+                                  description="Help for the find/search command",
+                                  color=color_pick(15, 250, 15))
+            embed.add_field(name="Commands:", value="-----------")
+            help_text = "Used to find Discord names with the specified string."
+            embed.add_field(name="++find <search string>", value=help_text)
+            embed.set_footer(icon_url="https://openclipart.org/image/300px/svg_to_png/122449/1298569779.png",
+                             text="rcs-bot proudly maintained by TubaKid.")
+            await ctx.send(embed=embed)
+            return
+        # if not help, code picks up here
+        rcs_guild = ctx.bot.get_guild(settings['discord']['rcsguild_id'])
+        member_role = rcs_guild.get_role(settings['rcs_roles']['members'])
 
-            headers = {"Accept": "application/json", "Authorization": "Bot " + settings['discord']['rcsbotToken']}
-            # List first 1000 RCS Discord members
-            url = f"https://discordapp.com/api/guilds/{guild}/members?limit=1000"
-            r = requests.get(url, headers=headers)
-            data1 = r.json()
-            # List second 1000 RCS Discord members
-            url += "&after=" + data1[999]['user']['id']
-            r = requests.get(url, headers=headers)
-            data2 = r.json()
-            data = data1 + data2
+        members = rcs_guild.members
 
-            regex = r"{}".format(arg)
-            members = []
-            for item in data:
-                discord_name, discord_flag = get_discord_name(item)
-                if re.search(regex, discord_name, re.IGNORECASE) is not None:
-                    report_name = f"""@{item['user']['username']}#{item['user']['discriminator']} - 
-                        <@{item['user']['id']}>""" if discord_flag == 1 \
-                        else f"@{item['nick']} - <@{item['user']['id']}>"
-                    if member_role in item['roles']:
-                        report_name += " (Members role)"
-                    members.append(report_name)
-            if len(members) == 0:
-                await ctx.send("No users with that text in their name.")
-                return
-            content = f"**{arg} Users**\nDiscord users with {arg} in their name.\n\n**Discord names:**\n"
-            content += "\n".join(members)
-            await self.send_text(ctx.channel, content)
-        else:
-            print(f"{datetime.now()} - ERROR: {ctx.author} from {ctx.guild} tried to use the ++find command "
-                  "but does not have the leader or council role.")
-            await ctx.send(f"You have found the secret command!  Unfortunately, you are not an RCS "
-                           "Leader/Council member.  Climb the ladder, then try again!")
-
-
-def get_discord_name(item):
-    try:
-        if "nick" in item and item['nick'] is not None:
-            return item['nick'].lower(), 1
-        else:
-            return item['user']['username'].lower(), 0
-    except:
-        print(item)
-
-
-def is_authorized(user_roles):
-    for role in user_roles:
-        if role.id in [settings['rcs_roles']['leaders'],
-                       settings['rcs_roles']['rcs_leaders'],
-                       settings['rcs_roles']['council'],
-                       ]:
-            return True
-    return False
-
-
-def is_council(user_roles):
-    for role in user_roles:
-        if role.id == settings['rcs_roles']['council']:
-            return True
-    return False
-
-
-def is_chat_mod(user_roles):
-    for role in user_roles:
-        if role.id == settings['rcs_roles']['chat_mods']:
-            return True
-    return False
-
-
-def is_discord_user(guild, discord_id):
-    try:
-        user = guild.get_member(discord_id)
-        if user is None:
-            return False, None
-        else:
-            return True, user
-    except:
-        return False, None
+        regex = r"{}".format(arg)
+        report = []
+        for member in members:
+            if isinstance(member, str):
+                print(member)
+            discord_name = f"{member.name}|{member.display_name}"
+            if re.search(regex, discord_name, re.IGNORECASE) is not None:
+                report_name = member.display_name
+                if member_role in member.roles:
+                    report_name += " (Members role)"
+                report.append(report_name)
+        if len(report) == 0:
+            await ctx.send("No users with that text in their name.")
+            return
+        content = f"**{arg} Users**\nDiscord users with {arg} in their name.\n\n**Discord names:**\n"
+        content += "\n".join(report)
+        await ctx.send_text(ctx.channel, content)
 
 
 def setup(bot):

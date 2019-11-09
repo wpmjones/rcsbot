@@ -1,5 +1,4 @@
 import discord
-import psutil
 
 from discord.ext import commands
 from cogs.utils.db import Sql
@@ -105,13 +104,6 @@ class OwnerCog(commands.Cog):
         helper.get_clan.cache_clear()
         content += "Caches cleared"
         await ctx.send(content)
-
-    @commands.command(hidden=True)
-    @commands.is_owner()
-    async def process(self, ctx):
-        memory_usage = self.process.memory_full_info().uss / 1024 ** 2
-        cpu_usage = self.process.cpu_percent() / psutil.cpu_count()
-        await ctx.send(f'{memory_usage:.2f} MiB\n{cpu_usage:.2f}% CPU')
 
 
 def setup(bot):

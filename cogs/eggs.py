@@ -1,6 +1,5 @@
 import discord
 import requests
-import traceback
 import season as coc_season
 import pathlib
 
@@ -171,10 +170,9 @@ class Eggs(commands.Cog):
             return await ctx.send("I would much prefer it if you waited until the season ends to change the dates.")
         try:
             coc_season.update_season(arg)
-        except ValueError as ex:
-            return await ctx.send(log_traceback(ex))
-        except Exception as ex:
-            return await ctx.send(log_traceback(ex))
+        except:
+            self.bot.logger.exception("season change")
+            return
         response = await ctx.send(f"File updated.  The new season ends in {coc_season.get_days_left()} days.")
         self.bot.messages[ctx.message.id] = response
 
@@ -188,53 +186,6 @@ class Eggs(commands.Cog):
         embed.set_thumbnail(url="http://www.mayodev.com/images/clock.png")
         response = await ctx.send(embed=embed)
         self.bot.messages[ctx.message.id] = response
-
-    async def send_embed(self, channel, header, footer, text, embed_color):
-        """ Sends embed to channel, splitting if necessary """
-        self.bot.logger.debug(f"Content is {len(text)} characters long.")
-        if len(text) < 1000:
-            embed = discord.Embed(color=embed_color)
-            embed.add_field(name=header, value=text, inline=False)
-            embed.set_footer(text=footer)
-            await channel.send(embed=embed)
-        else:
-            coll = ""
-            for line in text.splitlines(keepends=True):
-                if len(coll) + len(line) > 1000:
-                    embed = discord.Embed(color=embed_color)
-                    embed.add_field(name=header, value=coll, inline=False)
-                    await channel.send(embed=embed)
-                    header = "Continued..."
-                    coll = ""
-                coll += line
-            embed = discord.Embed(color=embed_color)
-            embed.add_field(name=header, value=coll, inline=False)
-            embed.set_footer(text=footer)
-            await channel.send(embed=embed)
-
-
-def is_council(user_roles):
-    for role in user_roles:
-        if role.id == settings['rcsRoles']['council']:
-            return True
-    return False
-
-
-def is_discord_user(guild, discord_id):
-    try:
-        user = guild.get_member(discord_id)
-        if user is None:
-            return False, None
-        else:
-            return True, user
-    except:
-        return False, None
-
-
-def log_traceback(ex):
-    tb_lines = traceback.format_exception(ex.__class__, ex, ex.__traceback__)
-    tb_text = "".join(tb_lines)
-    return tb_text
 
 
 def setup(bot):

@@ -11,8 +11,8 @@ def rcs_names_tags():
         fetch = cursor.fetchall()
     clans = {}
     for clan in fetch:
-        clans[clan['clanName']] = clan['clanTag']
-        clans[clan['altName']] = clan['clanTag']
+        clans[clan['clanName'].lower()] = clan['clanTag']
+        clans[clan['altName'].lower()] = clan['clanTag']
     return clans
 
 
