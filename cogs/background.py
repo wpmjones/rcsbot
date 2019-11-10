@@ -4,6 +4,7 @@ import random
 from discord.ext import commands, tasks
 from cogs.utils.constants import league_badges
 from cogs.utils.db import Sql
+from cogs.utils.helper import rcs_tags
 from datetime import datetime, date, timedelta, time
 from random import randint
 from config import settings
@@ -19,6 +20,7 @@ class Background(commands.Cog):
         self.bot.coc.add_events(on_clan_war_win_streak_change,
                                 on_clan_level_change,
                                 on_clan_war_win_change)
+        self.bot.coc.add_clan_update(rcs_tags())
         self.bot.coc.start_updates("clan")
 
     def cog_unload(self):
