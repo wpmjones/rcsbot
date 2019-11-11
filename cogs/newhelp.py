@@ -39,22 +39,22 @@ class NewHelp(commands.Cog):
     @commands.command()
     async def feedback(self, ctx, *, content):
         """Give feedback on the bot."""
-        e = discord.Embed(title="Feedback", color=discord.Color.green())
+        embed = discord.Embed(title="Feedback", color=discord.Color.green())
         channel = self.bot.get_channel(640755164004745235)
         if channel is None:
             return
 
-        e.set_author(name=str(ctx.author), icon_url=ctx.author.avatar_url)
-        e.description = content
-        e.timestamp = ctx.message.created_at
+        embed.set_author(name=str(ctx.author), icon_url=ctx.author.avatar_url)
+        embed.description = content
+        embed.timestamp = ctx.message.created_at
 
         if ctx.guild is not None:
-            e.add_field(name="Guild", value=f"{ctx.guild.name} (ID: {ctx.guild.id})", inline=False)
+            embed.add_field(name="Guild", value=f"{ctx.guild.name} (ID: {ctx.guild.id})", inline=False)
 
-        e.add_field(name="Channel", value=f"{ctx.channel} (ID: {ctx.channel.id})", inline=False)
-        e.set_footer(text=f"Author ID: {ctx.author.id}")
+        embed.add_field(name="Channel", value=f"{ctx.channel} (ID: {ctx.channel.id})", inline=False)
+        embed.set_footer(text=f"Author ID: {ctx.author.id}")
 
-        await channel.send(embed=e)
+        await channel.send(embed=embed)
         await ctx.send(f"{ctx.tick(True)} Successfully sent feedback")
 
 
@@ -97,7 +97,7 @@ class HelpPaginator(Pages):
             sig = f'{self.help_command.get_command_signature(command=entry)}'
             fmt = f"{emojis['other']['green']}{entry.short_doc}"
             if entry.short_doc.startswith('[Group]'):
-                fmt += f"\n:idle: Use `{self.prefix}help {entry.name}` for subcommands."
+                fmt += f"\n{emojis['other']['yellow']} Use `{self.prefix}help {entry.name}` for subcommands."
             if not entry._can_run:
                 fmt += f"\n{emojis['other']['red']} You don't have the required permissions to run this command."
 

@@ -97,6 +97,7 @@ class Push(commands.Cog):
     @push.command(name="top")
     async def push_top(self, ctx):
         """Returns list of top 10 players for each TH level."""
+        # TODO change author icon with TH
         with Sql() as cursor:
             cursor.execute("SELECT currentTrophies, playerName "
                            "FROM rcspush_vwTopTenByTh "

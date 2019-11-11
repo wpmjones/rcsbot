@@ -18,7 +18,11 @@ class General(commands.Cog):
 
     @commands.command(name="attacks", aliases=["att", "attack", "attackwin", "attackwins"])
     async def attacks(self, ctx, *, clan: ClanConverter = None):
-        """Attack wins for the whole clan"""
+        """Attack wins for the whole clan
+
+        **Example:**
+        ++attacks Reddit Example
+        """
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         async with ctx.typing():
@@ -36,7 +40,11 @@ class General(commands.Cog):
     @commands.command(name="defenses", aliases=["defences", "def", "defense", "defence", "defends",
                                                 "defend", "defensewins", "defencewins"])
     async def defenses(self, ctx, *, clan: ClanConverter = None):
-        """Defense wins for the whole clan"""
+        """Defense wins for the whole clan
+
+        **Example:**
+        ++def Reddit Example
+        """
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         async with ctx.typing():
@@ -53,7 +61,11 @@ class General(commands.Cog):
 
     @commands.command(name="donations", aliases=["don", "dons", "donate", "donates", "donation"])
     async def donations(self, ctx, *, clan: ClanConverter = None):
-        """Donations for the whole clan"""
+        """Donations for the whole clan
+
+        **Example:**
+        ++don Reddit Example
+        """
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         with Sql() as cursor:
@@ -70,7 +82,11 @@ class General(commands.Cog):
 
     @commands.command(name="trophies", aliases=["trophy"])
     async def trophies(self, ctx, *, clan: ClanConverter = None):
-        """Trophy count for the whole clan"""
+        """Trophy count for the whole clan
+
+        **Example:**
+        ++trophies Reddit Example
+        """
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         async with ctx.typing():
@@ -87,7 +103,11 @@ class General(commands.Cog):
 
     @commands.command(name="bhtrophies", aliases=["bhtrophy", "bh_trophies"])
     async def bh_trophies(self, ctx, *, clan: ClanConverter = None):
-        """Trophy count for the whole clan"""
+        """Trophy count for the whole clan
+
+        **Example:**
+        ++bhtrophies Reddit Example
+        """
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         async with ctx.typing():
@@ -104,7 +124,11 @@ class General(commands.Cog):
 
     @commands.command(name="besttrophies", aliases=["besttrophy", "mosttrophies"])
     async def besttrophies(self, ctx, *, clan: ClanConverter = None):
-        """Best trophy count for the whole clan"""
+        """Best trophy count for the whole clan
+
+        **Example:**
+        ++besttrophies Reddit Example
+        """
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         async with ctx.typing():
@@ -121,7 +145,11 @@ class General(commands.Cog):
 
     @commands.command(name="townhalls", aliases=["townhall", "th"])
     async def townhalls(self, ctx, *, clan: ClanConverter = None):
-        """List of clan members by town hall level"""
+        """List of clan members by town hall level
+
+        **Example:**
+        ++th Reddit Example
+        """
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         async with ctx.typing():
@@ -140,7 +168,11 @@ class General(commands.Cog):
 
     @commands.command(name="builderhalls", aliases=["builderhall", "bh"])
     async def builderhalls(self, ctx, *, clan: ClanConverter = None):
-        """List of clan members by builder hall level"""
+        """List of clan members by builder hall level
+
+        **Example:**
+        ++bh Reddit Example
+        """
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         async with ctx.typing():
@@ -159,7 +191,11 @@ class General(commands.Cog):
 
     @commands.command(name="warstars", aliases=["stars"])
     async def warstars(self, ctx, *, clan: ClanConverter = None):
-        """List of clan members by war stars earned"""
+        """List of clan members by war stars earned
+
+        **Example:**
+        ++stars Reddit Example
+        """
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         async with ctx.typing():
@@ -186,13 +222,15 @@ class General(commands.Cog):
 
     @commands.group()
     async def top(self, ctx):
-        """[Group] Lists top ten (type "++help top" for more information)
-        (warstars, attacks, defenses, trophies, bhtrophies, donations, games)"""
+        """[Group] Lists top ten
+        (warstars, attacks, defenses, trophies, bhtrophies, donations, games)
+        """
         if ctx.invoked_subcommand is None:
             return await ctx.send_help(ctx.command)
 
     @top.command(name="attacks", aliases=["att", "attack", "attackwin", "attackwins"])
     async def top_attacks(self, ctx):
+        """Displays top ten attack win totals for all of the RCS"""
         async with ctx.typing():
             data = self.get_member_list("attackWins")
             title = "RCS Top Ten for Attack Wins"
@@ -203,6 +241,7 @@ class General(commands.Cog):
     @top.command(name="defenses", aliases=["defences", "def", "defense", "defence", "defends",
                                            "defend", "defensewins", "defencewins"])
     async def top_defenses(self, ctx):
+        """Displays top ten defense win totals for all of the RCS"""
         async with ctx.typing():
             data = self.get_member_list("defenceWins")
             title = "RCS Top Ten for Defense Wins"
@@ -212,6 +251,7 @@ class General(commands.Cog):
 
     @top.command(name="donations", aliases=["donate", "donates", "donation"])
     async def top_donations(self, ctx):
+        """Displays top ten donation totals for all of the RCS"""
         async with ctx.typing():
             data = self.get_member_list("donations")
             title = "RCS Top Ten for Donations"
@@ -221,6 +261,7 @@ class General(commands.Cog):
 
     @top.command(name="trophies", aliases=["trophy"])
     async def top_trophies(self, ctx):
+        """Displays top ten trophy counts for all of the RCS"""
         async with ctx.typing():
             data = self.get_member_list("trophies")
             title = "RCS Top Ten for Trophies"
@@ -230,6 +271,7 @@ class General(commands.Cog):
 
     @top.command(name="bhtrophies", aliases=["bhtrophy", "bh_trophies"])
     async def top_bh_trophies(self, ctx):
+        """Displays top ten vs trophy counts for all of the RCS"""
         async with ctx.typing():
             data = self.get_member_list("vsTrophies")
             title = "RCS Top Ten for Builder Trophies"
@@ -239,6 +281,7 @@ class General(commands.Cog):
 
     @top.command(name="besttrophies", aliases=["besttrophy", "mosttrophies"])
     async def top_best_trophies(self, ctx):
+        """Displays top ten best trophy counts for all of the RCS"""
         async with ctx.typing():
             data = self.get_member_list("bestTrophies")
             title = "RCS Top Ten for Best Trophies"
@@ -248,6 +291,7 @@ class General(commands.Cog):
 
     @top.command(name="warstars", aliases=["stars"])
     async def top_warstars(self, ctx):
+        """Displays top ten war star totals for all of the RCS"""
         async with ctx.typing():
             data = self.get_member_list("warStars")
             title = "RCS Top Ten for War Stars"
@@ -257,6 +301,7 @@ class General(commands.Cog):
 
     @top.command(name="games")
     async def top_games(self, ctx):
+        """Displays top ten clan games points for all of the RCS (current or most recent games)"""
         async with ctx.typing():
             with Sql() as cursor:
                 temp_table = ("CREATE TABLE #rcs_players (playerTag varchar(15), playerName nvarchar(50)) "
@@ -279,6 +324,7 @@ class General(commands.Cog):
     @commands.command(name="link")
     @is_mod_or_council()
     async def link(self, ctx, member: discord.Member, player: PlayerConverter = None):
+        """Allows Chat mods or Council to link a Discord member to an in-game player tag"""
         if not player:
             self.bot.logger.error(f"{ctx.author} provided some bad info for the link command.")
             return await ctx.send("I don't particularly care for that player. Wanna try again?")
@@ -299,7 +345,7 @@ class General(commands.Cog):
 
     @commands.command(name="reddit", aliases=["subreddit"])
     async def reddit(self, ctx, *, clan: ClanConverter = None):
-        """Return link to specified clan's subreddit"""
+        """Displays a link to specified clan's subreddit"""
         if not clan:
             return await ctx.send("You must provide an RCS clan name or tag.")
         with Sql(as_dict=True) as cursor:
@@ -312,7 +358,7 @@ class General(commands.Cog):
 
     @commands.command(name="discord")
     async def discord(self, ctx, *, clan: ClanConverter = None):
-        """Return link to specified clan's Discord server"""
+        """Displays a link to specified clan's Discord server"""
         if not clan:
             return await ctx.send("You must provide an RCS clan name or tag.")
         with Sql(as_dict=True) as cursor:
@@ -325,6 +371,12 @@ class General(commands.Cog):
 
     @commands.command(name="cwl")
     async def cwl(self, ctx, *args):
+        """Allows for specifying what CWL league your clan is in.
+
+        **Example:**
+        ++cwl list - Shows list of RCS clans in their leagues
+        ++cwl Reddit Example Master II - assigns your clan to the specified league
+        """
         # Respond with list
         if args[0] in ["all", "list"]:
             with Sql(as_dict=True) as cursor:
@@ -355,7 +407,7 @@ class General(commands.Cog):
             league_num = "I"
             if args[-1].lower() in ["3", "iii", "three"]:
                 league_num = "III"
-            if args[-1] in ["2", "ii", "two"]:
+            if args[-1].lower() in ["2", "ii", "two"]:
                 league_num = "II"
             if len(args) == 4:
                 clan = f"{args[0]} {args[1]}"

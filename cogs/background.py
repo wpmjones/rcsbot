@@ -28,6 +28,10 @@ class Background(commands.Cog):
                                    self.on_clan_level_change,
                                    self.on_clan_war_win_change)
 
+    @property
+    def event_channel(self):
+        return self.guild.get_channel(settings['log_channels']['events'])
+
     async def on_clan_war_win_streak_change(self, old_streak, new_streak, clan):
         """Watch for changes in war win streak and report to media/stats channel"""
         self.bot.logger.debug("Start war win streak change")

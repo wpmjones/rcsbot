@@ -25,15 +25,11 @@ def get_render_type(table, type_, subtype=None):
         "gain": (table.board_1, "Gain")
     }
     if not subtype:
-        render = board_choice.get(type_, table.board_1)
+        func, *args = board_choice.get(type_, (table.board_1, ))
     else:
-        render = board_choice.get(subtype, table.board_1)
+        func, *args = board_choice.get(subtype, (table.board_1, ))
 
-    if len(render) == 1:
-        return render[0]()
-    if len(render) == 2:
-        return render[0](render[1])
-    return render[0](render[1], render[2])
+    return func(*args)
 
 
 class plural:

@@ -1,10 +1,12 @@
 import discord
 import requests
+
 from discord.ext import commands
-from config import settings
+from cogs.utils.checks import is_council
 from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
+from config import settings
 
 # Connect to Google Sheets
 scope = "https://www.googleapis.com/auth/spreadsheets.readonly"
@@ -18,252 +20,310 @@ service = build("sheets", "v4", http=creds.authorize(Http()), cache_discovery=Fa
 sheet = service.spreadsheets()
 
 
-class Contact(commands.Cog):
+class Tasks(commands.Cog):
     """Cog for handling Council Tasks"""
     def __init__(self, bot):
         self.bot = bot
+        self.guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
+        # TODO Set up DM for assigned action items
 
-    @commands.command(name="tasks", aliases=["task", "tasklist", "list"], hidden=True)
-    async def task_list(self, ctx, cmd: str = ""):
-        if await self.is_council(ctx.author.id):
-            guild = self.bot.get_guild(settings['discord']['rcs_guild_id'])
-            if cmd.lower() == "all":
-                if ctx.channel.id == settings['rcs_channels']['council']:
-                    await ctx.send("This is a long list. I'm going to send it to your DM. To view items "
-                                   "in the Council Chat, please request them individually (`++tasks suggestions`).")
-                # Suggestions
-                result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Suggestions!A2:I").execute()
-                values = result.get("values", [])
-                embed = discord.Embed(title="RCS Council Suggestions", color=discord.Color.blurple())
-                flag = 0
-                for row in values:
-                    if len(row) < 9:
-                        embed.add_field(name=f"Suggestion from {row[1]}\n{row[7]}",
-                                        value=f"{row[3][:500]}\nDated {row[0]}",
-                                        inline=False)
-                embed.set_footer(text="Use ++done <Task ID> to complete a task")
-                if len(embed.fields) > 0:
-                    flag = 1
-                    await ctx.author.send(embed=embed)
-                # Council Nominations
-                result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Council!A2:J").execute()
-                values = result.get("values", [])
-                embed = discord.Embed(title="RCS Council Nominations", color=discord.Color.dark_gold())
-                for row in values:
-                    if row[8] == "":
-                        embed.add_field(name=f"Council Nomination for {row[3]}\n{row[9]}",
-                                        value=f"Submitted by {row[1]}\nDated {row[0]}",
-                                        inline=False)
-                embed.set_footer(text="Use ++done <Task ID> to complete a task")
-                if len(embed.fields) > 0:
-                    flag = 1
-                    await ctx.author.send(embed=embed)
-                # Verification Requests
-                result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Verification!A2:I").execute()
-                values = result.get("values", [])
-                embed = discord.Embed(title="RCS Council Verification Requests", color=discord.Color.dark_blue())
-                for row in values:
-                    if len(row) < 9 or row[8] in ("1", "2", "3", "4"):
-                        status = "has not been addressed"
-                        try:
-                            if row[8] == "1": status = " is awaiting a scout"
-                            if row[8] == "2": status = " is currently being scouted"
-                            if row[8] == "3": status = " is awaiting the post-scout survey"
-                            if row[8] == "4": status = " is awaiting a decision by Council"
-                        except:
-                            self.bot.logger.debug("row is shorter than 9")
-                        embed.add_field(name=f"Verification for {row[1]} {status}.\n{row[7]}",
-                                        value=f"Leader: {row[3]}\nDated {row[0]}",
-                                        inline=False)
-                embed.set_footer(text="User ++verification <Task ID> to change the status.")
-                if len(embed.fields) > 0:
-                    flag = 1
-                    await ctx.author.send(embed=embed)
-                # Other Submissions
-                result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Other!A2:I").execute()
-                values = result.get("values", [])
-                embed = discord.Embed(title="RCS Council Other Items", color=discord.Color.gold())
-                for row in values:
-                    if len(row) < 9:
-                        if len(row[6]) > 1:
-                            assigned_to = f"Assigned to: {guild.get_member(int(row[6])).display_name}"
-                        else:
-                            assigned_to = "Unassigned"
-                        embed.add_field(name=f"Other Comment from {row[1]}\n{row[7]}",
-                                        value=(f"{row[3][:500]}\n{assigned_to}\n"
-                                               f"Dated {row[0]}"),
-                                        inline=False)
-                embed.set_footer(text="Use ++done <Task ID> to complete a task")
-                if len(embed.fields) > 0:
-                    flag = 1
-                    await ctx.author.send(embed=embed)
-                # Tasks (Individual Action Items)
-                result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Tasks!A2:I").execute()
-                values = result.get("values", [])
-                embed = discord.Embed(title="RCS Council Action Items", color=discord.Color.dark_magenta())
-                for row in values:
-                    if len(row) < 9:
-                        if len(row[6]) > 1:
-                            assigned_to = f"Assigned to: {guild.get_member(int(row[6])).display_name}"
-                        else:
-                            assigned_to = "Unassigned"
-                        embed.add_field(name=f"{assigned_to}\n{row[7]}",
-                                        value=f"{row[1]}\nDated: {row[0]}",
-                                        inline=False)
-                embed.set_footer(text="Use ++done <Task ID> to complete a task")
-                if len(embed.fields) > 0:
-                    flag = 1
-                    await ctx.author.send(embed=embed)
-                if flag == 0:
-                    await ctx.send("No incomplete tasks at this time! Well done!")
-            if cmd.lower() in ("suggestions", "suggest", "suggestion", "sugg", "sug"):
-                result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Suggestions!A2:I").execute()
-                values = result.get("values", [])
-                embed = discord.Embed(title="RCS Council Suggestions", color=discord.Color.blurple())
-                for row in values:
-                    if len(row) < 9:
-                        embed.add_field(name=f"Suggestion from {row[1]}\n{row[7]}\nDated {row[0]}",
-                                        value=row[3][:1023],
-                                        inline=True)
-                embed.set_footer(text="Use ++done <Task ID> to complete a task")
-                if len(embed.fields) > 0:
-                    await ctx.send(embed=embed)
-                else:
-                    await ctx.send("No incomplete suggestions at this time.")
-            if cmd.lower() in ("council", "nomination", "nominations", "nomi", "coun"):
-                result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Council!A2:J").execute()
-                values = result.get("values", [])
-                embed = discord.Embed(title="RCS Council Nominations", color=discord.Color.dark_gold())
-                for row in values:
-                    if row[8] == "":
-                        embed.add_field(name=f"Council Nomination for {row[3]}\n{row[9]}\nDated {row[0]}",
-                                        value=f"Submitted by {row[1]}",
-                                        inline=True)
-                embed.set_footer(text="Use ++done <Task ID> to complete a task")
-                if len(embed.fields) > 0:
-                    await ctx.send(embed=embed)
-                else:
-                    await ctx.send("No incomplete Council nominations at this time.")
-            if cmd.lower() in ("verification", "verifications", "veri"):
-                result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Verification!A2:I").execute()
-                values = result.get("values", [])
-                embed = discord.Embed(title="RCS Council Verification Requests", color=discord.Color.dark_blue())
-                for row in values:
-                    if len(row) < 9 or row[8] in ("1", "2", "3", "4"):
-                        status = "has not been addressed"
-                        if row[8] == "1": status = "is awaiting a scout"
-                        if row[8] == "2": status = "is currently being scouted"
-                        if row[8] == "3": status = "is awaiting the post-scout survey"
-                        if row[8] == "4": status = "is awaiting a decision by Council"
-                        embed.add_field(name=f"Verification for {row[1]} {status}.\n{row[7]}\nDated {row[0]}",
-                                        value=f"Leader: {row[3]}",
-                                        inline=True)
-                embed.set_footer(text="To change status, use ++veri <task ID> <new status> (e.g. ++veri V128 3)")
-                if len(embed.fields) > 0:
-                    await ctx.send(embed=embed)
-            if cmd.lower() in ("other", "oth", "othe"):
+    @commands.group(name="tasks", aliases=["task"], hidden=True)
+    @is_council()
+    async def tasks(self, ctx):
+        """[Group] Task Manager for RCS Council
+
+        **Permissions:**
+        Council
+        """
+        if ctx.invoked_subcommand is None:
+            return await ctx.send_help(ctx.command)
+
+    @tasks.command(name="all")
+    @is_council()
+    async def tasks_all(self, ctx):
+        """Sends all incomplete tasks to requestor via DM"""
+        if isinstance(ctx.channel, discord.TextChannel):
+            await ctx.send("This is a long list. I'm going to send it to your DM. To view items "
+                           "in the Council Chat, please request them individually (`++tasks suggestions`).")
+        # Suggestions
+        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Suggestions!A2:I").execute()
+        values = result.get("values", [])
+        embed = discord.Embed(title="RCS Council Suggestions", color=discord.Color.blurple())
+        flag = 0
+        for row in values:
+            if len(row) < 9:
+                embed.add_field(name=f"Suggestion from {row[1]}\n{row[7]}",
+                                value=f"{row[3][:500]}\nDated {row[0]}",
+                                inline=False)
+        embed.set_footer(text="Use ++done <Task ID> to complete a task")
+        if len(embed.fields) > 0:
+            flag = 1
+            await ctx.author.send(embed=embed)
+        # Council Nominations
+        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Council!A2:J").execute()
+        values = result.get("values", [])
+        embed = discord.Embed(title="RCS Council Nominations", color=discord.Color.dark_gold())
+        for row in values:
+            if row[8] == "":
+                embed.add_field(name=f"Council Nomination for {row[3]}\n{row[9]}",
+                                value=f"Submitted by {row[1]}\nDated {row[0]}",
+                                inline=False)
+        embed.set_footer(text="Use ++done <Task ID> to complete a task")
+        if len(embed.fields) > 0:
+            flag = 1
+            await ctx.author.send(embed=embed)
+        # Verification Requests
+        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Verification!A2:I").execute()
+        values = result.get("values", [])
+        embed = discord.Embed(title="RCS Council Verification Requests", color=discord.Color.dark_blue())
+        for row in values:
+            if len(row) < 9 or row[8] in ("1", "2", "3", "4"):
+                status = "has not been addressed"
                 try:
-                    result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Other!A2:I").execute()
-                    values = result.get("values", [])
-                    embed = discord.Embed(title="RCS Council Other Items", color=discord.Color.gold())
-                    for row in values:
-                        if len(row) < 9:
-                            if len(row[6]) > 1:
-                                assigned_to = f"Assigned to: {guild.get_member(int(row[6])).display_name}"
-                            else:
-                                assigned_to = "Unassigned"
-                            embed.add_field(name=f"Other Comment from {row[1]}\n{row[7]}",
-                                            value=f"{row[3][:1000]}\n{assigned_to}\nDated: {row[0]}",
-                                            inline=False)
-                    embed.set_footer(text="Use ++done <Task ID> to complete a task")
-                    if len(embed.fields) > 0:
-                        await ctx.send(embed=embed)
-                    else:
-                        await ctx.send("No tasks in the Other category at this time.")
+                    if row[8] == "1": status = " is awaiting a scout"
+                    if row[8] == "2": status = " is currently being scouted"
+                    if row[8] == "3": status = " is awaiting the post-scout survey"
+                    if row[8] == "4": status = " is awaiting a decision by Council"
                 except:
-                    self.bot.logger.exception("++tasks other failed")
-            if cmd.lower() in ("tasks", "task", "action", "agenda", "act"):
-                result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Tasks!A2:I").execute()
-                values = result.get("values", [])
-                embed = discord.Embed(title="RCS Council Action Items", color=discord.Color.dark_magenta())
-                for row in values:
-                    if len(row) < 9:
-                        if len(row[6]) > 1:
-                            assigned_to = f"Assigned to: {guild.get_member(int(row[6])).display_name}"
-                        else:
-                            assigned_to = "Unassigned"
-                        embed.add_field(name=f"{assigned_to}\n{row[7]}",
-                                        value=f"{row[1]}\nDated: {row[0]}",
-                                        inline=False)
-                embed.set_footer(text="Use ++done <Task ID> to complete a task")
-                if len(embed.fields):
-                    await ctx.send(embed=embed)
+                    self.bot.logger.debug("row is shorter than 9")
+                embed.add_field(name=f"Verification for {row[1]} {status}.\n{row[7]}",
+                                value=f"Leader: {row[3]}\nDated {row[0]}",
+                                inline=False)
+        embed.set_footer(text="User ++verification <Task ID> to change the status.")
+        if len(embed.fields) > 0:
+            flag = 1
+            await ctx.author.send(embed=embed)
+        # Other Submissions
+        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Other!A2:I").execute()
+        values = result.get("values", [])
+        embed = discord.Embed(title="RCS Council Other Items", color=discord.Color.gold())
+        for row in values:
+            if len(row) < 9:
+                if len(row[6]) > 1:
+                    assigned_to = f"Assigned to: {self.guild.get_member(int(row[6])).display_name}"
                 else:
-                    await ctx.send("No incomplete action items at this time.")
-            if cmd.lower() == "":
-                await ctx.author.send("In the future, this command will send you a DM with tasks assigned to you. "
-                                      "For now, please use `++tasks all` to see all task items.")
-        else:
-            await ctx.send("This very special and important command is reserved for #council-chat only!")
+                    assigned_to = "Unassigned"
+                embed.add_field(name=f"Other Comment from {row[1]}\n{row[7]}",
+                                value=(f"{row[3][:500]}\n{assigned_to}\n"
+                                       f"Dated {row[0]}"),
+                                inline=False)
+        embed.set_footer(text="Use ++done <Task ID> to complete a task")
+        if len(embed.fields) > 0:
+            flag = 1
+            await ctx.author.send(embed=embed)
+        # Tasks (Individual Action Items)
+        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Tasks!A2:I").execute()
+        values = result.get("values", [])
+        embed = discord.Embed(title="RCS Council Action Items", color=discord.Color.dark_magenta())
+        for row in values:
+            if len(row) < 9:
+                if len(row[6]) > 1:
+                    assigned_to = f"Assigned to: {self.guild.get_member(int(row[6])).display_name}"
+                else:
+                    assigned_to = "Unassigned"
+                embed.add_field(name=f"{assigned_to}\n{row[7]}",
+                                value=f"{row[1]}\nDated: {row[0]}",
+                                inline=False)
+        embed.set_footer(text="Use ++done <Task ID> to complete a task")
+        if len(embed.fields) > 0:
+            flag = 1
+            await ctx.author.send(embed=embed)
+        if flag == 0:
+            await ctx.send("No incomplete tasks at this time! Well done!")
 
-    @commands.command(name="add", aliases=["new", "newtask", "addtask"], hidden=True)
-    async def add_task(self, ctx, user: discord.Member, *task):
-        if await self.is_council(ctx.author.id):
-            if await self.is_council(user.id):
-                url = (f"{settings['google']['comm_log']}?call=addtask&task={' '.join(task)}&"
-                       f"discord={user.id}")
-                r = requests.get(url)
-                if r.status_code == requests.codes.ok:
-                    await ctx.send(f"Action Item {r.text} - {' '.join(task)} added for {user.display_name}")
-                    await user.send(f"Action Item {r.text} - {' '.join(task)} was assigned "
+    @tasks.command(name="suggestions", aliases=["sug", "sugg", "suggest", "suggestion"])
+    @is_council()
+    async def tasks_suggestions(self, ctx):
+        """Displays all incomplete suggestion tasks"""
+        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Suggestions!A2:I").execute()
+        values = result.get("values", [])
+        embed = discord.Embed(title="RCS Council Suggestions", color=discord.Color.blurple())
+        for row in values:
+            if len(row) < 9:
+                embed.add_field(name=f"Suggestion from {row[1]}\n{row[7]}\nDated {row[0]}",
+                                value=row[3][:1023],
+                                inline=True)
+        embed.set_footer(text="Use ++done <Task ID> to complete a task")
+        if len(embed.fields) > 0:
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send("No incomplete suggestions at this time.")
+
+    @tasks.command(name="council", aliases=["nomination", "nominations", "nomi", "coun"])
+    @is_council()
+    async def tasks_council(self, ctx):
+        """Displays all incomplete council nominations"""
+        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Council!A2:J").execute()
+        values = result.get("values", [])
+        embed = discord.Embed(title="RCS Council Nominations", color=discord.Color.dark_gold())
+        for row in values:
+            if row[8] == "":
+                embed.add_field(name=f"Council Nomination for {row[3]}\n{row[9]}\nDated {row[0]}",
+                                value=f"Submitted by {row[1]}",
+                                inline=True)
+        embed.set_footer(text="Use ++done <Task ID> to complete a task")
+        if len(embed.fields) > 0:
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send("No incomplete Council nominations at this time.")
+
+    @tasks.command(name="verification", aliases=["verifications", "ver", "veri"])
+    @is_council()
+    async def tasks_verification(self, ctx):
+        """Displays all incomplete RCS clan verification requests"""
+        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Verification!A2:I").execute()
+        values = result.get("values", [])
+        embed = discord.Embed(title="RCS Council Verification Requests", color=discord.Color.dark_blue())
+        for row in values:
+            if len(row) < 9 or row[8] in ("1", "2", "3", "4"):
+                status = "has not been addressed"
+                if row[8] == "1": status = "is awaiting a scout"
+                if row[8] == "2": status = "is currently being scouted"
+                if row[8] == "3": status = "is awaiting the post-scout survey"
+                if row[8] == "4": status = "is awaiting a decision by Council"
+                embed.add_field(name=f"Verification for {row[1]} {status}.\n{row[7]}\nDated {row[0]}",
+                                value=f"Leader: {row[3]}",
+                                inline=True)
+        embed.set_footer(text="To change status, use ++veri <task ID> <new status> (e.g. ++veri V128 3)")
+        if len(embed.fields) > 0:
+            await ctx.send(embed=embed)
+
+    @tasks.command(name="other", aliases=["oth", "othe"])
+    @is_council()
+    async def tasks_other(self, ctx):
+        """Displays all incomplete tasks from the Other category"""
+        try:
+            result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Other!A2:I").execute()
+            values = result.get("values", [])
+            embed = discord.Embed(title="RCS Council Other Items", color=discord.Color.gold())
+            for row in values:
+                if len(row) < 9:
+                    if len(row[6]) > 1:
+                        assigned_to = f"Assigned to: {self.guild.get_member(int(row[6])).display_name}"
+                    else:
+                        assigned_to = "Unassigned"
+                    embed.add_field(name=f"Other Comment from {row[1]}\n{row[7]}",
+                                    value=f"{row[3][:1000]}\n{assigned_to}\nDated: {row[0]}",
+                                    inline=False)
+            embed.set_footer(text="Use ++done <Task ID> to complete a task")
+            if len(embed.fields) > 0:
+                await ctx.send(embed=embed)
+            else:
+                await ctx.send("No tasks in the Other category at this time.")
+        except:
+            self.bot.logger.exception("++tasks other failed")
+
+    @tasks.command(name="action", aliases=["act"])
+    @is_council()
+    async def tasks_action(self, ctx):
+        """Displays all incomplete Action Items"""
+        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Tasks!A2:I").execute()
+        values = result.get("values", [])
+        embed = discord.Embed(title="RCS Council Action Items", color=discord.Color.dark_magenta())
+        for row in values:
+            if len(row) < 9:
+                if len(row[6]) > 1:
+                    assigned_to = f"Assigned to: {self.guild.get_member(int(row[6])).display_name}"
+                else:
+                    assigned_to = "Unassigned"
+                embed.add_field(name=f"{assigned_to}\n{row[7]}",
+                                value=f"{row[1]}\nDated: {row[0]}",
+                                inline=False)
+        embed.set_footer(text="Use ++done <Task ID> to complete a task")
+        if len(embed.fields):
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send("No incomplete action items at this time.")
+
+    @tasks.command(name="add", aliases=["new"])
+    @is_council()
+    async def tasks_add(self, ctx, user: discord.Member, *, task):
+        """Adds a new action item and assigns it to the specified Discord user
+
+        **Example:**
+        ++task add @zig Don't forget to feed the cats!
+        """
+        if await self.is_council(user.id):
+            url = (f"{settings['google']['comm_log']}?call=addtask&task={task}&"
+                   f"discord={user.id}")
+            async with ctx.session.get(url) as r:
+                if r.status == 200:
+                    async for line in r.content:
+                        task_id = line.decode("utf-8")
+                    await ctx.send(f"Action Item {task_id} - {task} added for {user.display_name}")
+                    await user.send(f"Action Item {task_id} - {task} was assigned "
                                     f"to you by {ctx.author.display_name}.")
                 else:
                     await ctx.send(f"Something went wrong. Here's an error code for you to play with.\n"
-                                   f"Add Task Error: {r.text}")
-            else:
-                await ctx.send("You are trying to assign this task to a non-council member and I'm not real "
-                               "comfortable doing that!")
+                                   f"Add Task Error: {r.status} - {r.reason}")
         else:
-            await ctx.send("This very special and important command is reserved for council members only!")
+            await ctx.send("You are trying to assign this task to a non-council member and I'm not real "
+                           "comfortable doing that!")
 
-    @commands.command(name="assign", hidden=True)
-    async def assign_task(self, ctx, user: discord.Member, task_id):
-        if await self.is_council(ctx.author.id):
-            if task_id[:1].lower() in ("c", "v"):
-                await ctx.send("Tasks in this category cannot be assigned to an individual.")
-                return
-            url = f"{settings['google']['comm_log']}?call=assigntask&task={task_id}&discord={user.id}"
-            r = requests.get(url)
-            if r.status_code == requests.codes.ok and r.text != "-1":
-                if r.text == "1":
-                    await ctx.send(f"{task_id} assigned to {user.name}")
-                    await user.send(f"{task_id} was assigned to you by {ctx.author.display_name}.")
-                if r.text == "2":
-                    await ctx.send(f"It would appear that tasks has already been completed!")
+    @tasks.command(name="assign")
+    @is_council()
+    async def tasks_assign(self, ctx, user: discord.Member, task_id):
+        """Assigns the specified tasks to the Discord user provided
+
+        **Example:**
+        ++task assign @Elocuencia Oth035
+
+        **Notes:**
+        Tasks that can be assigned include Suggestions, Other, and Action Items.
+        Council Nominations and Clan Verifications cannot be assigned to an individual.
+        """
+        if task_id[:1].lower() in ("c", "v"):
+            return await ctx.send("Tasks in this category cannot be assigned to an individual.")
+        url = f"{settings['google']['comm_log']}?call=assigntask&task={task_id}&discord={user.id}"
+        async with ctx.session.get(url) as r:
+            if r.status == 200:
+                async for line in r.content:
+                    response = line.decode("utf-8")
+                if response != "-1":
+                    if response == "1":
+                        await ctx.send(f"{task_id} assigned to {user.name}")
+                        await user.send(f"{task_id} was assigned to you by {ctx.author.display_name}.")
+                    if response == "2":
+                        await ctx.send(f"It would appear that tasks has already been completed!")
+                else:
+                    await ctx.send(f"I'm having a little trouble finding the row for that tasks. You might"
+                                   f"want to hop on sheets and check the row manually.\n"
+                                   f"{settings['google']['comm_log']}")
             else:
                 await ctx.send(f"That didn't work, but here's an error code to chew on.\n"
-                               f"Assign Task Error: {r.text}")
-        else:
-            await ctx.send("This very special and important command is reserved for council members only!")
+                               f"Assign Task Error: {r.status} - {r.reason}")
 
-    @commands.command(name="change", aliases=["modify", "alter"], hidden=True)
-    async def change_task(self, ctx, task_id, *new_task):
-        if await self.is_council(ctx.author.id):
-            if task_id[:1].lower() != "a":
-                await ctx.send("Only action items can be modified. Please try again with the proper Task ID.")
-                return
-            url = f"{settings['google']['comm_log']}?call=changetask&task={task_id}&newtask={'%20'.join(new_task)}"
-            r = requests.get(url)
-            if r.status_code == requests.codes.ok and r.text != "-1":
-                if r.text == "1":
-                    await ctx.send(f"Action Item {task_id} changed.")
-                if r.text == "2":
-                    await ctx.send("I'd rather not change a task that is already complete.")
+    @tasks.command(name="change", aliases=["modify", "alter"])
+    @is_council()
+    async def tasks_change(self, ctx, task_id, *, new_task):
+        """Change an existing action item
+
+        **Example:**
+        ++task change Oth103 This is my new task.
+
+        **Notes:**
+        Only action items can be modified/changed.
+        """
+        if task_id[:1].lower() != "a":
+            await ctx.send("Only action items can be modified. Please try again with the proper Task ID.")
+            return
+        url = f"{settings['google']['comm_log']}?call=changetask&task={task_id}&newtask={new_task}"
+        async with ctx.session.get(url) as r:
+            if r.status == 200:
+                async for line in r.content:
+                    response = line.decode("utf-8")
+                if response != "-1":
+                    if response == "1":
+                        await ctx.send(f"Action Item {task_id} changed.")
+                    if response == "2":
+                        await ctx.send("I'd rather not change a task that is already complete.")
+                else:
+                    await ctx.send(f"I'm having a little trouble finding the row for that tasks. Make sure that "
+                                   f"you have the correct ID.  You might want to hop on sheets and "
+                                   f"check the row manually.\n{settings['google']['comm_log']}")
             else:
                 await ctx.send("That action item was not found in the sheet. Make sure you have the "
                                "correct Task ID. Use `++tasks action` if you are unsure.")
-        else:
-            await ctx.send("This very special and important command is reserved for council members only!")
 
     @commands.command(name="verification", aliases=["veri", "verifications", "veris"], hidden=True)
     async def veri(self, ctx, task_id, new_status: int = 9):
@@ -372,8 +432,7 @@ class Contact(commands.Cog):
             await channel.send(coll)
 
     async def is_council(self, user_id):
-        rcs_guild = self.bot.get_guild(settings['discord']['rcs_guild_id'])
-        council_role = rcs_guild.get_role(settings['rcs_roles']['council'])
+        council_role = self.guild.get_role(settings['rcs_roles']['council'])
         council_members = [member.id for member in council_role.members]
         if user_id in council_members:
             return True
@@ -381,4 +440,4 @@ class Contact(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(Contact(bot))
+    bot.add_cog(Tasks(bot))

@@ -1,10 +1,12 @@
+import discord
 import traceback
 import os
 import git
 import coc
 import sys
+import aiohttp
 import asyncio
-import discord
+
 
 from cogs.utils import context, category
 from cogs.utils.db import Psql
@@ -90,6 +92,7 @@ class RcsBot(commands.Bot):
         self.client_id = settings['discord']['rcs_client_id']
         self.messages = {}
         self.categories = {}
+        self.session = aiohttp.ClientSession(loop=self.loop)
 
         coc_client.add_events(self.on_event_error)
 

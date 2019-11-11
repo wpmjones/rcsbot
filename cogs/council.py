@@ -20,19 +20,30 @@ class CouncilCog(commands.Cog):
     @commands.command(name="form", aliases=["magic"], hidden=True)
     @is_council()
     async def magic_form(self, ctx):
+        """Displays a link to the Council Magic Form
+
+        **Permissions:**
+        Council
+
+        **Notes:**
+        If the command is executed anywhere other than #council-chat or #council-bot-spam, the output will be
+        redirected to #council-bot-spam."""
         link = "https://docs.google.com/forms/d/e/1FAIpQLScnSCYr2-qA7OHxrf-z0BZFjDr8aRvvHzIM6bIMTLVtlO16GA/viewform"
-        # TODO mark bot spam channel as safe (Better way to check this?)
-        if ctx.channel.id == settings['rcs_channels']['council']:
+        if ctx.channel.id in (settings['rcs_channels']['council'], settings['rcs_channels']['council_spam']):
             await ctx.send(link)
         else:
             await ctx.send("I think I'll respond in the private council channel.")
-            channel = self.bot.get_channel(settings['rcsChannels']['council'])
+            channel = self.bot.get_channel(settings['rcs_channels']['council_spam'])
             await channel.send(link)
 
     @commands.command(name="userinfo", aliases=["ui"], hidden=True)
     @is_mod_or_council()
     async def user_info(self, ctx, user: discord.Member):
-        """Command to retreive join date and other info for Discord user."""
+        """Command to retreive join date and other info for Discord user.
+
+        **Permissions:**
+        Chat Mods
+        Council"""
         today = datetime.now()
         create_date = user.created_at.strftime("%d %b %Y")
         create_delta = (today - user.created_at).days
@@ -60,7 +71,22 @@ class CouncilCog(commands.Cog):
     @commands.command(name="addClan", aliases=["clanAdd", "newClan", "add_clan", "new_clan"], hidden=True)
     @is_council()
     async def add_clan(self, ctx, *, clan_tag: str = "x"):
-        """Command to add a new verified clan to the RCS Database."""
+        """Interactive command to add a new verified clan to the RCS Database.
+
+        **Permissions:**
+        Council
+
+        **Notes:**
+        Make sure you have the following information before beginning:
+        Clan Tag
+        Short Names (possibilities for use in Discord nicknames)
+        Social Media links
+        Clan notes (how the clan wants to be described on the wiki)
+        Classification
+        Subreddit link (optional)
+        Leader's Reddit Username
+        Leader's Discord Tag
+        """
         def check_author(m):
             return m.author == ctx.author
 
@@ -223,9 +249,9 @@ class CouncilCog(commands.Cog):
         await ctx.send(f"**Next Steps:**\nSend mod invite for META\nUpdate clan directory in META\n"
                        f"Announce the new clan in Discord")
         # Add leader roles
-        guild = ctx.bot.get_guild(settings['discord']['rcs_guild_id'])
-        is_user, user = is_discord_user(guild, int(discord_tag))
-        if not is_user:
+        guild = ctx.bot.get_guild(settings['discord']['rcsguild_id'])
+        user = guild.get_member(int(discord_tag))
+        if not user:
             await ctx.send(f"{discord_tag} does not seem to be a valid tag for {leader} or they are not on "
                            "the RCS server yet. You will need to add roles manually.")
         else:
@@ -256,24 +282,27 @@ class CouncilCog(commands.Cog):
     @commands.command(name="removeClan", aliases=["clanRemove", "remove_clan"], hidden=True)
     @is_council()
     async def remove_clan(self, ctx, *, clan: ClanConverter = None):
-        """Command to remove a verified clan from the RCS database."""
+        """Interactive command to remove a verified clan from the RCS database.
+
+        **Permissions:**
+        Council"""
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         with Sql(as_dict=True) as cursor:
             cursor.execute(f"SELECT clanName, clanTag FROM rcs_data WHERE feeder = '{clan.name}'")
-            fetched = cursor.fetchone()
-            if fetched is not None:
+            fetch = cursor.fetchone()
+            if fetch is not None:
                 self.bot.logger.info(f"Removing family clan for {clan.name}. Issued by {ctx.author} in {ctx.channel}")
-                cursor.execute(f"DELETE FROM rcs_data WHERE clanTag = '{fetched['clanTag']}'")
-                await ctx.send(f"{fetched['clanName']} (feeder for {clan.name}) has been removed.")
+                cursor.execute(f"DELETE FROM rcs_data WHERE clanTag = '{fetch['clanTag']}'")
+                await ctx.send(f"{fetch['clanName']} (feeder for {clan.name}) has been removed.")
             self.bot.logger.info(f"Removing {clan.name}. Issued by {ctx.author} in {ctx.channel}")
             cursor.execute(f"SELECT leaderReddit, discordTag FROM rcs_data WHERE clanTag = '{clan.tag}'")
-            fetched = cursor.fetchone()
+            fetch = cursor.fetchone()
             cursor.execute(f"DELETE FROM rcs_data WHERE clanTag = '{clan.tag}'")
         # remove leader's roles
-        guild = ctx.bot.get_guild(settings['discord']['rcsGuildId'])
-        is_user, user = is_discord_user(guild, int(fetched['discordTag']))
-        if is_user:
+        guild = ctx.bot.get_guild(settings['discord']['rcsguild_id'])
+        user = guild.get_member(int(fetch['discordTag']))
+        if user:
             role_obj = guild.get_role(int(settings['rcs_roles']['leaders']))
             await user.remove_roles(role_obj,
                                     reason=f"Leaders role removed by ++removeClan command of rcs-bot.")
@@ -289,14 +318,20 @@ class CouncilCog(commands.Cog):
         helper.rcs_names_tags.clear_cache()
         helper.get_clan.clear_cache()
         await ctx.send("<@251150854571163648> Please recycle the bot so we aren't embarassed with old data!")
-        await ctx.send(f"Please don't forget to remove {fetched['leaderReddit'][22:]} as a mod from META and "
+        await ctx.send(f"Please don't forget to remove {fetch['leaderReddit'][22:]} as a mod from META and "
                        f"update the META clan directory.  I've removed the Leaders, RCS Leaders, and Clan "
-                       f"Recruiters role from <@{fetched['discordTag']}>. If they have any other roles, "
+                       f"Recruiters role from <@{fetch['discordTag']}>. If they have any other roles, "
                        f"you will need to remove them manually.")
 
     @commands.command(name="in_war", aliases=["inwar"], hidden=True)
     @is_mod_or_council()
     async def in_war(self, ctx):
+        """Displays the current war status of RCS clans (prep and in war only)
+        This command takes a minute to gather all its information
+
+        **Permissions:**
+        Chat Mods
+        Council"""
         async with ctx.typing():
             msg = await ctx.send("Loading...")
             with Sql(as_dict=True) as cursor:
@@ -341,11 +376,16 @@ class CouncilCog(commands.Cog):
                                      discord.Color.dark_red())
 
     @commands.command(name="leader", hidden=True)
-    @is_council()
+    @is_mod_or_council()
     async def leader(self, ctx, *, clan: ClanConverter = None):
         """Command to find the leader for the selected clan.
 
-        Usage: ++leader Reddit Tau
+        **Permissions:**
+        Chat Mods
+        Council
+
+        **Example:**
+        ++leader Reddit Tau
         """
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
@@ -376,14 +416,24 @@ class CouncilCog(commands.Cog):
     @commands.group(invoke_without_command=True, hidden=True)
     @is_leader_or_mod_or_council()
     async def alts(self, ctx):
-        """[Group] Command to handle alt accounts of RCS leaders"""
+        """[Group] Command to handle alt accounts of RCS leaders
+
+        **Permissions:**
+        Chat Mods
+        Council
+        Leaders
+        """
         if ctx.invoked_subcommand is None:
             return await ctx.show_help(ctx.command)
 
     @alts.command(name="list")
     async def alts_list(self, ctx, *, clan: ClanConverter = None):
         """List alts for the specified clan.
-            ++alts list Clan Name
+
+        **Example:**
+        ++alts list Clan Name
+        ++alts list #CLANTAG
+        ++alts list ShortName (you can omit the word Reddit)
         """
         if clan:
             await ctx.invoke(self.leader, clan=clan)
@@ -393,7 +443,13 @@ class CouncilCog(commands.Cog):
     @alts.command(name="add")
     async def alts_add(self, ctx, clan: ClanConverter = None, *, new_alt: str = None):
         """Adds new leader alt for the specified clan
-            ++alts add "Clan Name" alt name
+        Quotes are required for clans with a space in their name
+        Feel free to use the short name (omit the word Reddit) if that is easier
+
+        **Example:**
+        ++alts add "Clan Name" alt name
+        ++alts add #CLANTAG alt name
+        ++alts add ShortName alt name
         """
         if not new_alt:
             return await ctx.send("Please provide the name of the new alt account.")
@@ -408,10 +464,17 @@ class CouncilCog(commands.Cog):
     @alts.command(name="remove", aliases=["delete", "del", "rem"])
     async def alts_remove(self, ctx, clan: ClanConverter = None, *, alt: str = None):
         """Remove Leader alt for the specified clan
-            ++alts remove "Clan Name" alt name
+        Quotes are required for clans with a space in their name
+        Feel free to use the short name (omit the word Reddit_ if that is easier
+
+        **Exmaple:**
+        ++alts remove "Clan Name" alt name
+        ++alts delete #CLANTAG alt name
+        ++alts del ShortName alt name
+        ++alts del "Clan Name" all *(this removes all alts for this clan)*
         """
         if not alt:
-            return await ctx.send("Please provide the name of the alt account to be removed.")
+            return await ctx.send("Please provide the name of the alt account to be removed or specify all.")
         with Sql() as cursor:
             if alt == "all":
                 sql = f"DELETE FROM rcs_alts WHERE clanTag = {clan[0].tag[1:]}"
@@ -425,13 +488,25 @@ class CouncilCog(commands.Cog):
     @commands.group(invoke_without_subcommand=True, hidden=True)
     @is_council()
     async def dm(self, ctx):
-        """Group command to send DMs to various roles in the RCS Discord Server"""
+        """[Group] Commands to send DMs to various roles in the RCS Discord Server
+
+        **Permissions:**
+        Council"""
         if ctx.invoked_subcommand is None:
             await ctx.send_help(ctx.command)
 
     @dm.command(name="leaders", aliases=["leader", "rcsleaders"])
     async def dm_leaders(self, ctx, *, message):
-        """Sends message as a DM to all RCS leaders"""
+        """Sends message as a DM to all RCS leaders
+
+        **Example:**
+        ++dm leaders Here is a free DM to all leaders
+
+        **Notes:**
+        It takes a minute to complete this command.
+        When the command is complete, it will let
+        you know how many people received a DM.
+        """
         if not message:
             return await ctx.send("I'm not going to send a blank message you goofball!")
         msg = await ctx.send("One moment while I track down these leaders...")
@@ -453,7 +528,16 @@ class CouncilCog(commands.Cog):
 
     @dm.command(name="ayedj", aliases=["dj", "djs"])
     async def dm_djs(self, ctx, *, message):
-        """Sends message as a DM to all RCS DJs"""
+        """Sends message as a DM to all RCS DJs
+
+        **Example:**
+        ++dm djs Here is a free DM to all music DJs
+
+        **Notes:**
+        It takes a minute to complete this command.
+        When the command is complete, it will let
+        you know how many people received a DM.
+        """
         if not message:
             return await ctx.send("I don't think the DJs will be impressed with a blank message!")
         msg = await ctx.send("One moment while I spin the turntables...")
@@ -475,28 +559,16 @@ class CouncilCog(commands.Cog):
     async def find(self, ctx, *, arg: str = "help"):
         """Returns any Discord member of the RCS server with the search sting in the name
 
-        Example:
+        **Permissions:**
+        Chat Mods
+        Council
+
+        **Example:**
         ++find speed
         """
-        # TODO Figure out the None response on some names
-        # TODO add regex or option to only search for string in clan name
-        if arg == "help":
-            embed = discord.Embed(title="rcs-bot Help File",
-                                  description="Help for the find/search command",
-                                  color=color_pick(15, 250, 15))
-            embed.add_field(name="Commands:", value="-----------")
-            help_text = "Used to find Discord names with the specified string."
-            embed.add_field(name="++find <search string>", value=help_text)
-            embed.set_footer(icon_url="https://openclipart.org/image/300px/svg_to_png/122449/1298569779.png",
-                             text="rcs-bot proudly maintained by TubaKid.")
-            await ctx.send(embed=embed)
-            return
-        # if not help, code picks up here
-        rcs_guild = ctx.bot.get_guild(settings['discord']['rcsguild_id'])
-        member_role = rcs_guild.get_role(settings['rcs_roles']['members'])
-
-        members = rcs_guild.members
-
+        guild = ctx.bot.get_guild(settings['discord']['rcsguild_id'])
+        member_role = guild.get_role(settings['rcs_roles']['members'])
+        members = guild.members
         regex = r"{}".format(arg)
         report = []
         for member in members:
@@ -504,7 +576,7 @@ class CouncilCog(commands.Cog):
                 print(member)
             discord_name = f"{member.name}|{member.display_name}"
             if re.search(regex, discord_name, re.IGNORECASE) is not None:
-                report_name = member.display_name
+                report_name = f"{member.display_name} - {member.mention}"
                 if member_role in member.roles:
                     report_name += " (Members role)"
                 report.append(report_name)

@@ -10,7 +10,7 @@ class OwnerCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="clear")
+    @commands.command(name="clear", hidden=True)
     @commands.is_owner()
     async def clear(self, ctx):
         async for message in ctx.channel.history():
@@ -40,7 +40,7 @@ class OwnerCog(commands.Cog):
         await self.bot.change_presence(status=discord.Status.online, activity=activity)
         print(f"{datetime.now()} - {ctx.author} changed the bot presence to {msg}")
 
-    @commands.command(name="emojis")
+    @commands.command(name="emojis", hidden=True)
     @commands.is_owner()
     async def emoji_list(self, ctx):
         def get_key(item):
@@ -58,9 +58,11 @@ class OwnerCog(commands.Cog):
             content = f"**{guild.name}** {index} emoji" + content
             await ctx.send_text(ctx.channel, content)
 
-    @commands.command(name="server")
+    @commands.command(name="server", hidden=True)
     @commands.is_owner()
     async def server_list(self, ctx):
+        """Displays a list of all guilds on which the bot is installed
+        Bot owner only"""
         guild_list = []
         for guild in self.bot.guilds:
             guild_list.extend(f"{guild.name} - {guild.id}")
@@ -69,6 +71,8 @@ class OwnerCog(commands.Cog):
     @commands.command(name="getroles", hidden=True)
     @commands.is_owner()
     async def getroles(self, ctx, guild_id):
+        """Displays all roles for the guild ID specified
+        Bot owner only"""
         try:
             guild = self.bot.get_guild(int(guild_id))
             role_list = f"**Roles for {guild.name}**\n"
@@ -81,7 +85,8 @@ class OwnerCog(commands.Cog):
     @commands.command(name="new_games", hidden=True)
     @commands.is_owner()
     async def new_games(self, ctx, start_date, games_length: int = 6, ind_points: int = 4000, clan_points: int = 50000):
-        """Command to add new Clan Games dates to SQL database"""
+        """Command to add new Clan Games dates to SQL database
+        Bot owner only"""
         with Sql(as_dict=True) as cursor:
             start_day = int(start_date[8:9])
             end_day = str(start_day+games_length)
@@ -90,9 +95,27 @@ class OwnerCog(commands.Cog):
             row = cursor.fetchone()
             event_id = row['eventId'] + 1
             sql = (f"INSERT INTO rcs_events (eventId, eventType, startTime, endTime, playerPoints, clanPoints) "
-                   f"VALUES ({event_id}, 5, '{start_date}', '{end_date}', {ind_points}, {clan_points})")
-            cursor.execute(sql)
+                   f"VALUES (%d, %d, %s, %s, %d, %d)")
+            cursor.execute(sql, (event_id, 5, start_date, end_date, ind_points, clan_points))
         await ctx.send(f"New games info added to database.")
+
+    @commands.command(name="new_cwl", hidden=True)
+    @commands.is_owner()
+    async def new_cwl(self, ctx, start_date, cwl_length: int = 9):
+        """Command to add new CWL dates to SQL database
+        Bot owner only"""
+        with Sql(as_dict=True) as cursor:
+            start_day = int(start_date[8:9])
+            end_day = str(start_day + cwl_length)
+            end_date = start_date[:9] + end_day
+            season = start_date[:7]
+            cursor.execute("SELECT MAX(eventId) as eventId FROM rcs_events WHERE eventType = 11")
+            row = cursor.fetchone()
+            event_id = row['eventId'] + 1
+            sql = (f"INSERT INTO rcs_events (eventId, eventType, startTime, endTime, season) "
+                   f"VALUES (%d, %d, %s, %s, %s)")
+            cursor.execute(sql, (event_id, 11, start_date, end_date, season))
+        await ctx.send(f"New cwl info added to database.")
 
     @commands.command(name="cc", hidden=True)
     @commands.is_owner()
