@@ -80,17 +80,15 @@ class DiscordCheck(commands.Cog):
             except coc.NotFound:
                 self.bot.logger.warning(f"Exception on tag: {tag}")
             # Add to task log
-            conn = self.bot.pool
             sql = ("INSERT INTO rcs_task_log (log_type, log_date, argument) "
                    "VALUES ($1, $2, $3)")
             try:
-                await conn.execute(sql,
-                                   log_types['danger'],
-                                   date.today(),
-                                   f"{len(ban_list)} tags processed")
+                await self.bot.pool.execute(sql,
+                                            log_types['danger'],
+                                            date.today(),
+                                            f"{len(ban_list)} tags processed")
             except:
                 self.bot.logger.exception("RCS Task Log insert error")
-            await conn.close()
 
     @tasks.loop(time=time(hour=12, minute=10))
     async def discord_check(self):
@@ -129,17 +127,15 @@ class DiscordCheck(commands.Cog):
             else:
                 await botdev_channel.send(f"No members for {clan['clan_name']}")
         # Add to task log
-        conn = self.bot.pool
         sql = ("INSERT INTO rcs_task_log (log_type, log_date, argument) "
                "VALUES ($1, $2, $3)")
         try:
-            await conn.execute(sql,
-                               log_types['discord_check'],
-                               date.today(),
-                               f"{len(daily_clans)} clans processed")
+            await self.bot.pool.execute(sql,
+                                        log_types['discord_check'],
+                                        date.today(),
+                                        f"{len(daily_clans)} clans processed")
         except:
             self.bot.logger.exception("RCS Task Log insert fail")
-        await conn.close()
 
     @tasks.loop(hours=24)
     async def no_clan(self):
@@ -177,17 +173,15 @@ class DiscordCheck(commands.Cog):
         else:
             log_message = "All members have a happy home with a clan in their name."
         # Add to task log
-        conn = self.bot.pool
         sql = ("INSERT INTO rcs_task_log (log_type, log_date, argument) "
                "VALUES ($1, $2, $3)")
         try:
-            await conn.execute(sql,
-                               log_types['no_clan'],
-                               date.today(),
-                               log_message)
+            await self.bot.pool.execute(sql,
+                                        log_types['no_clan'],
+                                        date.today(),
+                                        log_message)
         except:
             self.bot.logger.exception("RCS Task Log insert fail")
-        await conn.close()
 
     @staticmethod
     async def send_embed(channel, header, text):

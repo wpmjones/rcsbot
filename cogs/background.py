@@ -19,18 +19,27 @@ class Background(commands.Cog):
 
         self.bot.coc.add_events(self.on_clan_war_win_streak_change,
                                 self.on_clan_level_change,
-                                self.on_clan_war_win_change)
+                                self.on_clan_war_win_change,
+                                self.on_clan_member_join,
+                                )
         self.bot.coc.add_clan_update(rcs_tags())
         self.bot.coc.start_updates("clan")
 
     def cog_unload(self):
         self.bot.coc.remove_events(self.on_clan_war_win_streak_change,
                                    self.on_clan_level_change,
-                                   self.on_clan_war_win_change)
+                                   self.on_clan_war_win_change,
+                                   self.on_clan_member_join,
+                                   )
 
     @property
     def event_channel(self):
         return self.guild.get_channel(settings['log_channels']['events'])
+
+    async def on_clan_member_join(self, member, clan):
+        self.bot.logger.debug("Start clan member join")
+        ch = self.bot.get_channel(628008799663292436)
+        await ch.send(f"{member.name} has joined {clan.name} with {member.trophies} cups.")
 
     async def on_clan_war_win_streak_change(self, old_streak, new_streak, clan):
         """Watch for changes in war win streak and report to media/stats channel"""
