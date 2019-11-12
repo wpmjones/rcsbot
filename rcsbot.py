@@ -7,7 +7,7 @@ import sys
 import aiohttp
 import asyncio
 
-from cogs.utils import context, category
+from cogs.utils import context
 from cogs.utils.db import Psql
 from cogs.utils.helper import rcs_names_tags
 from discord.ext import commands
@@ -109,17 +109,14 @@ class RcsBot(commands.Bot):
     def log_channel(self):
         return self.get_channel(settings['log_channels']['rcs'])
 
-    def get_category(self, name) -> category.Category:
-        return self.categories.get(name)
-
-    def send_log(self, message):
-        asyncio.ensure_future(self.send_message(message))
-
     async def send_message(self, message):
         if len(message) < 2000:
             await self.log_channel.send(f"`{message}`")
         else:
             await self.log_channel.send(f"`{message[:1950]}`")
+
+    def send_log(self, message):
+        asyncio.ensure_future(self.send_message(message))
 
     async def on_message(self, message):
         if message.author.bot:
@@ -195,15 +192,6 @@ class RcsBot(commands.Bot):
     async def close(self):
         await super().close()
         await self.coc.close()
-
-    async def send_message(self, message):
-        if len(message) < 2000:
-            await self.log_channel.send(f"`{message}`")
-        else:
-            await self.log_channel.send(f"`{message[:1950]}`")
-
-    def send_log(self, message):
-        asyncio.ensure_future(self.send_message(message))
 
     async def after_ready(self):
         await bot.wait_until_ready()
