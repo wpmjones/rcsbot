@@ -7,7 +7,6 @@ from cogs.utils.checks import is_leader_or_mod_or_council
 from cogs.utils.converters import ClanConverter, PlayerConverter
 from cogs.utils.db import Sql
 from cogs.utils import formats
-from config import settings
 
 tag_validator = re.compile("^#?[PYLQGRJCUV0289]+$")
 
@@ -28,7 +27,7 @@ class Games(commands.Cog):
         else:
             await ctx.invoke(self.games_clan, clan=clan)
 
-    @games.command(name="all")
+    @games.command(name="games_all", aliases=["all"])
     async def games_all(self, ctx):
         """Returns clan points for all RCS clans"""
         with Sql(as_dict=True) as cursor:

@@ -59,9 +59,9 @@ class Push(commands.Cog):
                              icon_url="https://cdn.discordapp.com/emojis/641101630342692884.png")
         await ctx.send(embed=embed)
 
-    @push.command(name="all")
+    @push.command(name="push_all", aliases=["all"])
     async def push_all(self, ctx):
-        """Returns list of all clans ranked by score (only top 30 trophies contribute to the score."""
+        """Returns list of all clans ranked by score (only top 30 trophies contribute to the score)."""
         with Sql() as cursor:
             cursor.execute("SELECT SUM(clanPoints) AS totals, clanName FROM rcspush_vwClanPointsTop30 "
                            "GROUP BY clanName "
@@ -142,7 +142,7 @@ class Push(commands.Cog):
             return await ctx.send("Please provide a valid clan name/tag when using this command.")
         with Sql() as cursor:
             cursor.execute(f"SELECT CAST(clanPoints as decimal(4,2)), "
-                           f"playerName + ' (TH' + CAST(thLevel as varchar(2)) + ')' "
+                           f"playerName + ' (TH' + CAST(currentThLevel as varchar(2)) + ')' "
                            f"FROM rcspush_vwClanPoints "
                            f"WHERE clanName = %s "
                            f"ORDER BY clanPoints DESC",

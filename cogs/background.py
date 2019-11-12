@@ -20,26 +20,15 @@ class Background(commands.Cog):
         self.bot.coc.add_events(self.on_clan_war_win_streak_change,
                                 self.on_clan_level_change,
                                 self.on_clan_war_win_change,
-                                self.on_clan_member_join,
                                 )
-        self.bot.coc.add_clan_update(rcs_tags())
+        self.bot.coc.add_clan_update(rcs_tags(prefix=True))
         self.bot.coc.start_updates("clan")
 
     def cog_unload(self):
         self.bot.coc.remove_events(self.on_clan_war_win_streak_change,
                                    self.on_clan_level_change,
                                    self.on_clan_war_win_change,
-                                   self.on_clan_member_join,
                                    )
-
-    @property
-    def event_channel(self):
-        return self.guild.get_channel(settings['log_channels']['events'])
-
-    async def on_clan_member_join(self, member, clan):
-        self.bot.logger.debug("Start clan member join")
-        ch = self.bot.get_channel(628008799663292436)
-        await ch.send(f"{member.name} has joined {clan.name} with {member.trophies} cups.")
 
     async def on_clan_war_win_streak_change(self, old_streak, new_streak, clan):
         """Watch for changes in war win streak and report to media/stats channel"""
@@ -60,8 +49,8 @@ class Background(commands.Cog):
 
     async def on_clan_war_win_change(self, old_wins, new_wins, clan):
         """Watch for war wins divisible by 50 and report to media/stats channel"""
-        self.bot.logger.debug("Start war win div 50 change")
         if new_wins % 50 == 0:
+            self.bot.logger.debug("Start war win div 50 change")
             prefix = random.choice(["Holy smokes, that is a lot of wins! ",
                                     "Check this out! ",
                                     "Milestone! ",
@@ -125,32 +114,32 @@ class Background(commands.Cog):
                                  icon_url="https://coc.guide/static/imgs/gear_up.png")
                 await council_chat.send(embed=embed)
 
-    # @commands.Cog.listener()
-    # async def on_message(self, message):
-    #     """Awards random points to members when posting messages"""
-    #     if isinstance(message.channel, discord.DMChannel) and message.author != self.bot.user:
-    #         return
-    #     if message.author.bot or message.guild.id != settings['discord']['rcsGuildId']:
-    #         return
-    #     if settings['rcsRoles']['members'] not in [role.id for role in message.author.roles]:
-    #         return
-    #     conn = self.bot.pool
-    #     row = await conn.fetchrow(f"SELECT * FROM rcs_discord WHERE discord_id = {message.author.id}")
-    #     points = randint(7, 14)
-    #     if row:
-    #         if datetime.now() > row['last_message'] + timedelta(minutes=1):
-    #             await conn.execute(f"UPDATE rcs_discord "
-    #                                f"SET message_points = {row['message_points']+points}, "
-    #                                f"last_message = '{datetime.now()}', "
-    #                                f"message_count = {row['message_count']+1} "
-    #                                f"WHERE discord_id = {message.author.id}")
-    #         else:
-    #             await conn.execute(f"UPDATE rcs_discord "
-    #                                f"SET last_message = '{datetime.now()}' "
-    #                                f"WHERE discord_id = {message.author.id}")
-    #     else:
-    #         await conn.execute(f"INSERT INTO rcs_discord "
-    #                            f"VALUES ({message.author.id}, {points}, 0, '{datetime.now()}', 1)")
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        """Awards random points to members when posting messages"""
+        if isinstance(message.channel, discord.DMChannel) and message.author != self.bot.user:
+            return
+        if message.author.bot or message.guild.id != settings['discord']['rcsGuildId']:
+            return
+        if settings['rcsRoles']['members'] not in [role.id for role in message.author.roles]:
+            return
+        conn = self.bot.pool
+        row = await conn.fetchrow(f"SELECT * FROM rcs_discord WHERE discord_id = {message.author.id}")
+        points = randint(7, 14)
+        if row:
+            if datetime.now() > row['last_message'] + timedelta(minutes=1):
+                await conn.execute(f"UPDATE rcs_discord "
+                                   f"SET message_points = {row['message_points']+points}, "
+                                   f"last_message = '{datetime.now()}', "
+                                   f"message_count = {row['message_count']+1} "
+                                   f"WHERE discord_id = {message.author.id}")
+            else:
+                await conn.execute(f"UPDATE rcs_discord "
+                                   f"SET last_message = '{datetime.now()}' "
+                                   f"WHERE discord_id = {message.author.id}")
+        else:
+            await conn.execute(f"INSERT INTO rcs_discord "
+                               f"VALUES ({message.author.id}, {points}, 0, '{datetime.now()}', 1)")
 
 
 def setup(bot):

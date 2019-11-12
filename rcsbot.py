@@ -7,7 +7,6 @@ import sys
 import aiohttp
 import asyncio
 
-
 from cogs.utils import context, category
 from cogs.utils.db import Psql
 from cogs.utils.helper import rcs_names_tags
@@ -16,39 +15,39 @@ from datetime import datetime
 from config import settings
 from loguru import logger
 
-enviro = "LIVE"
+enviro = "home"
 
 if enviro == "LIVE":
     token = settings['discord']['rcsbot_token']
     prefix = "++"
     log_level = "INFO"
     coc_names = "vps"
-    initial_extensions = ["cogs.general",
-                          "cogs.push",
+    initial_extensions = ["cogs.admin",
                           "cogs.background",
-                          "cogs.discordcheck",
-                          "cogs.games",
-                          "cogs.newhelp",
                           "cogs.council",
+                          "cogs.discordcheck",
+                          "cogs.eggs",
+                          "cogs.games",
+                          "cogs.general",
+                          "cogs.newhelp",
                           "cogs.owner",
                           "cogs.pfp",
-                          "cogs.admin",
+                          "cogs.push",
                           "cogs.tasks",
-                          "cogs.eggs",
                           ]
 elif enviro == "home":
     token = settings['discord']['test_token']
     prefix = ">"
     log_level = "DEBUG"
     coc_names = "ubuntu"
-    initial_extensions = ["cogs.general",
-                          "cogs.games",
-                          "cogs.newhelp",
+    initial_extensions = ["cogs.admin",
                           "cogs.council",
                           "cogs.eggs",
-                          "cogs.push",
+                          "cogs.games",
+                          "cogs.general",
+                          "cogs.newhelp",
                           "cogs.owner",
-                          "cogs.admin",
+                          "cogs.push",
                           "cogs.tasks",
                           ]
 else:
@@ -56,13 +55,14 @@ else:
     prefix = ">"
     log_level = "DEBUG"
     coc_names = "dev"
-    initial_extensions = ["cogs.general",
-                          "cogs.games",
-                          "cogs.newhelp",
+    initial_extensions = ["cogs.admin",
                           "cogs.council",
                           "cogs.eggs",
+                          "cogs.games",
+                          "cogs.general",
+                          "cogs.newhelp",
                           "cogs.owner",
-                          "cogs.admin",
+                          "cogs.push",
                           "cogs.tasks",
                           ]
 
@@ -77,7 +77,8 @@ There are easter eggs. Feel free to try and find them!"""
 coc_client = coc.login(settings['supercell']['user'],
                        settings['supercell']['pass'],
                        client=coc.EventsClient,
-                       key_names=coc_names)
+                       key_names=coc_names,
+                       correct_tags=True)
 
 
 class RcsBot(commands.Bot):
@@ -153,18 +154,19 @@ class RcsBot(commands.Bot):
             await ctx.send(error)
 
     async def on_event_error(self, event_name, *args, **kwargs):
-        e = discord.Embed(title="COC Event Error", colour=0xa32952)
-        e.add_field(name="Event", value=event_name)
-        e.description = f"```py\n{traceback.format_exc()}\n```"
-        e.timestamp = datetime.utcnow()
+        embed = discord.Embed(title="COC Event Error", colour=0xa32952)
+        embed.add_field(name="Event", value=event_name)
+        embed.description = f"```py\n{traceback.format_exc()}\n```"
+        embed.timestamp = datetime.utcnow()
 
         args_str = ["```py"]
         for index, arg in enumerate(args):
             args_str.append(f"[{index}]: {arg!r}")
         args_str.append("```")
-        e.add_field(name="Args", value="\n".join(args_str), inline=False)
+        embed.add_field(name="Args", value="\n".join(args_str), inline=False)
         try:
-            self.log_channel.send(embed=e)
+            event_channel = self.get_channel(settings['log_channels']['events'])
+            await event_channel.send(embed=embed)
         except:
             pass
 
@@ -180,7 +182,7 @@ class RcsBot(commands.Bot):
         args_str.append("```")
         e.add_field(name="Args", value="\n".join(args_str), inline=False)
         try:
-            await self.log_channel.send(embed=e)
+            self.log_channel.send(embed=e)
         except:
             pass
 

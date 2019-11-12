@@ -17,15 +17,19 @@ def rcs_names_tags():
 
 
 @lru_cache(maxsize=2)
-def rcs_tags():
+def rcs_tags(prefix=False):
     """Retrieve and cache clan tags for all RCS clans"""
+    if prefix:
+        field = "'#' + clanTag as tag"
+    else:
+        field = "clanTag as tag"
     with Sql(as_dict=True) as cursor:
-        sql = "SELECT clanTag FROM rcs_data ORDER BY clanName"
+        sql = f"SELECT {field} FROM rcs_data ORDER BY clanName"
         cursor.execute(sql)
         fetch = cursor.fetchall()
     clans = []
     for clan in fetch:
-        clans.append(clan['clanTag'])
+        clans.append(clan['tag'])
     return clans
 
 

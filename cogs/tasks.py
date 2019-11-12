@@ -27,7 +27,7 @@ class Tasks(commands.Cog):
         self.guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
         # TODO Set up DM for assigned action items
 
-    @commands.group(name="tasks", aliases=["task"], hidden=True)
+    @commands.group(name="tasks", aliases=["task", "veri"], hidden=True)
     @is_council()
     async def tasks(self, ctx):
         """[Group] Task Manager for RCS Council
@@ -325,12 +325,27 @@ class Tasks(commands.Cog):
                 await ctx.send("That action item was not found in the sheet. Make sure you have the "
                                "correct Task ID. Use `++tasks action` if you are unsure.")
 
-    @commands.command(name="verification", aliases=["veri", "verifications", "veris"], hidden=True)
-    async def veri(self, ctx, task_id, new_status: int = 9):
+    @tasks.command(name="update")
+    async def tasks_update(self, ctx, task_id, new_status: int = None):
+        """Change the status of an existing clan verification
+
+        If you don't provide a new status code, it will prompt you for the new status.
+
+        **Example:**
+        ++tasks veri Ver78 3
+        ++tasks veri Ver78
+
+        **Status Codes:**
+        1 - is awaiting a scout
+        2 - is currently being scouted
+        3 - is awaiting the post-scout surveys
+        4 - is awaiting a decision by Council
+        """
         if await self.is_council(ctx.author.id):
             if task_id[:1].lower() != "v":
                 await ctx.send("This command only works on Verification tasks.")
                 return
+            # Fix for user providing Veri107 instead of Ver107
             if len(task_id) == 7:
                 task_id = task_id[:3] + task_id[4:]
             result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Verification!A2:I").execute()
@@ -339,7 +354,7 @@ class Tasks(commands.Cog):
             found = 0
             for row in values:
                 row_num += 1
-                if row[7] == task_id:
+                if row[7].lower() == task_id.lower():
                     task_row = row_num
                     clan_name = row[1]
                     leader = row[3]
@@ -349,54 +364,77 @@ class Tasks(commands.Cog):
                         cur_status_num = 0
                     found = 1
             if found == 0:
-                await ctx.send(f"I could not find {task_id} in the Verification tab. Are you sure that's the "
-                               f"right ID?")
-                return
+                return await ctx.send(f"I could not find {task_id} in the Verification tab. Are you sure that's the "
+                                      f"right ID?")
             cur_status_text = " has not been addressed"
+            # TODO Move statuses to constants.py so you can respond in English on line 400
             if cur_status_num == "1": cur_status_text = "is awaiting a scout"
             if cur_status_num == "2": cur_status_text = "is currently being scouted"
             if cur_status_num == "3": cur_status_text = "is awaiting the post-scout survey"
             if cur_status_num == "4": cur_status_text = "is awaiting a decision by Council"
-            await ctx.send(f"Verification for {clan_name} {cur_status_text}\nLeader: {leader}")
-            if new_status == 9:
-                prompt = await ctx.prompt(f"Please select a new status:\n"
-                                            f":one: Awaiting a scout\n"
-                                            f":two: Being scouted\n"
-                                            f":three: Awaiting the post-scout surveys\n"
-                                            f":four: Awaiting a decision by Council\n"
-                                            f":five: Mark complete",
-                                            additional_options=5)
-            if prompt == 5:
-                prompt = await ctx.prompt("Did this clan get verified?", delete_after=False)
-                if prompt:
-                    new_status = 5
-                else:
-                    new_status = 6
-            else:
-                new_status = prompt
-            url = f"{settings['google']['comm_log']}?call=verification&status={new_status}&row={task_row}"
-            r = requests.get(url)
-            if r.status_code == requests.codes.ok:
-                if r.text == "1":
-                    if new_status <= 4:
-                        await ctx.send(f"Verification for {clan_name} has been changed to {new_status}.")
-                    elif new_status == 5:
-                        await ctx.send(f"Verification for {clan_name} has been changed to Verified.")
+            msg = await ctx.send(f"Verification for {clan_name} {cur_status_text}\nLeader: {leader}\n"
+                                 f"Update in progress...")
+            async with ctx.typing():
+                if not new_status:
+                    prompt = await ctx.prompt(f"Please select a new status:\n"
+                                              f":one: Awaiting a scout\n"
+                                              f":two: Being scouted\n"
+                                              f":three: Awaiting the post-scout surveys\n"
+                                              f":four: Awaiting a decision by Council\n"
+                                              f":five: Mark complete",
+                                              additional_options=5)
+                    if prompt == 5:
+                        prompt = await ctx.prompt("Did this clan get verified?")
+                        if prompt:
+                            new_status = 5
+                        else:
+                            new_status = 6
                     else:
-                        await ctx.send(f"Verification for {clan_name} has been changed to 'Heck No!' :wink:")
-            else:
-                await ctx.send(f"Whoops! Something went sideways!\nVerification Error: {r.text}")
+                        new_status = prompt
+                url = f"{settings['google']['comm_log']}?call=verification&status={new_status}&row={task_row}"
+                # TODO ditch requests for aiohttp.clientsession
+                r = requests.get(url)
+                if r.status_code == requests.codes.ok:
+                    if r.text == "1":
+                        if new_status <= 4:
+                            return await msg.edit(content=f"Verification for {clan_name} "
+                                                          f"has been changed to {new_status}.\n"
+                                                          f"Leader: {leader}")
+                        elif new_status == 5:
+                            return await msg.edit(content=f"Verification for {clan_name} "
+                                                          f"has been changed to Verified.\n"
+                                                          f"Leader: {leader}")
+                        else:
+                            return await msg.edit(content=f"Verification for {clan_name} "
+                                                          f"has been changed to 'Heck No!' :wink:\n"
+                                                          f"Leader: {leader}")
+                else:
+                    await ctx.send(f"Whoops! Something went sideways!\nVerification Error: {r.text}")
         else:
             await ctx.send("This very special and important command is reserved for council members only!")
 
-    @commands.command(name="complete", aliases=["done", "finished", "x"], hidden=True)
-    async def complete_task(self, ctx, task_id):
+    @tasks.command(name="complete", aliases=["done", "finished", "x"])
+    async def tasks_complete(self, ctx, task_id):
+        """Marks the specified task complete.
+        Works for all task categories.
+
+        **Example:**
+        ++tasks done Act15
+        ++tasks done Ver134
+        ++tasks done Sug109
+
+        **Notes:**
+        If you are marking a clan verification complete,
+        it will prompt you for a new status.  Select 5,
+        then specify whether or not the clan was verified.
+        """
         if await self.is_council(ctx.author.id):
             if task_id[:1].lower() not in ("s", "v", "c", "o", "a"):
                 return await ctx.send("Please provide a valid task ID (Sug123, Cou123, Oth123, Act123).")
             if task_id[:1].lower() == "v":
-                return await ctx.invoke(self.veri, task_id=task_id, new_status=9)
+                return await ctx.invoke(self.tasks_update, task_id=task_id, new_status=None)
             url = f"{settings['google']['comm_log']}?call=completetask&task={task_id}"
+            # TODO ditch requests for aiohttp.clientsession
             r = requests.get(url)
             if r.status_code == requests.codes.ok:
                 if r.text == "1":
@@ -408,28 +446,6 @@ class Tasks(commands.Cog):
                                f"Complete Task Error: {r.text}")
         else:
             await ctx.send("This very special and important command is reserved for council members only!")
-
-    async def send_text(self, channel, text, block=None):
-        """ Sends text to channel, splitting if necessary
-        Discord has a 2000 character limit
-        """
-        if len(text) < 2000:
-            if block:
-                await channel.send(f"```{text}```")
-            else:
-                await channel.send(text)
-        else:
-            coll = ""
-            for line in text.splitlines(keepends=True):
-                if len(coll) + len(line) > 1994:
-                    # if collection is going to be too long, send  what you have so far
-                    if block:
-                        await channel.send(f"```{coll}```")
-                    else:
-                        await channel.send(coll)
-                    coll = ""
-                coll += line
-            await channel.send(coll)
 
     async def is_council(self, user_id):
         council_role = self.guild.get_role(settings['rcs_roles']['council'])

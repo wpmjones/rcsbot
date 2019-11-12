@@ -1,15 +1,15 @@
 import discord
 import requests
-import season as coc_season
 import pathlib
 
+from discord.ext import commands
+from cogs.utils import season as coc_season
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
 from io import BytesIO
 from random import randint
 from datetime import datetime
-from discord.ext import commands
 from config import settings
 
 
@@ -162,7 +162,7 @@ class Eggs(commands.Cog):
             response = await ctx.send(embed=embed)
             self.bot.messages[ctx.message.id] = response
 
-    @season.command(name="change")
+    @season.command(name="change", hidden=True)
     @commands.is_owner()
     async def change(self, ctx, arg: str = ""):
         """Command to modify the season information"""

@@ -1,3 +1,5 @@
+import discord
+
 from discord.ext import commands, tasks
 from cogs.utils.constants import log_types
 from datetime import timedelta, date
@@ -9,6 +11,9 @@ class ProfilePics(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.send_request.start()
+        self.global_webhook = discord.Webhook.partial(id=settings['rcs_hooks']['global_id'],
+                                                      token=settings['rcs_hooks']['global_token'],
+                                                      adapter=discord.AsyncWebhookAdapter(session=self.bot.session))
 
     def cog_unload(self):
         self.send_request.cancel()
@@ -28,12 +33,10 @@ class ProfilePics(commands.Cog):
                 msg = (f"It's time for {member.display_name} to change their profile picture. If you're the "
                        f"first person to DM {member.mention} with an appropriate image, {member.display_name} will "
                        f"use it for their profile pic for the next week!")
-                global_chat = guild.get_channel(settings['rcs_channels']['global'])
-                await global_chat.send(msg)
+                await self.global_webhook.send(msg)
                 sql = ("INSERT INTO rcs_task_log (log_type, log_date, argument) "
                        "VALUES ($1, $2, $3)")
                 await conn.execute(sql, log_types['pfp'], date.today().strftime('%Y-%m-%d'), member.id)
-        await conn.close()
 
 
 def setup(bot):
