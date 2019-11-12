@@ -1,14 +1,17 @@
+import discord
 import traceback
 import os
 import git
 import coc
 import sys
+import aiohttp
 import asyncio
-import discord
 
 from discord.ext import commands
 from cogs.utils import context
-from cogs.utils.db import RcsDB
+from cogs.utils.db import Psql
+from cogs.utils.helper import rcs_names_tags
+from discord.ext import commands
 from datetime import datetime
 from config import settings
 from loguru import logger
@@ -16,49 +19,52 @@ from loguru import logger
 enviro = "LIVE"
 
 if enviro == "LIVE":
-    token = settings['discord']['rcsbotToken']
+    token = settings['discord']['rcsbot_token']
     prefix = "++"
     log_level = "INFO"
     coc_names = "vps"
-    initial_extensions = ["cogs.general",
-                          "cogs.push",
+    initial_extensions = ["cogs.admin",
                           "cogs.background",
-                          "cogs.discordcheck",
-                          "cogs.games",
-                          "cogs.newhelp",
                           "cogs.council",
+                          "cogs.discordcheck",
+                          "cogs.eggs",
+                          "cogs.games",
+                          "cogs.general",
+                          "cogs.newhelp",
                           "cogs.owner",
                           "cogs.pfp",
-                          "cogs.admin",
-                          "cogs.draft",
+                          "cogs.push",
                           "cogs.tasks",
-                          "cogs.eggs",
                           ]
 elif enviro == "home":
-    token = settings['discord']['testToken']
+    token = settings['discord']['test_token']
     prefix = ">"
     log_level = "DEBUG"
     coc_names = "ubuntu"
-    initial_extensions = ["cogs.general",
-                          "cogs.games",
-                          "cogs.newhelp",
+    initial_extensions = ["cogs.admin",
                           "cogs.council",
                           "cogs.eggs",
+                          "cogs.games",
+                          "cogs.general",
+                          "cogs.newhelp",
                           "cogs.owner",
-                          "cogs.admin",
+                          "cogs.push",
+                          "cogs.tasks",
                           ]
 else:
-    token = settings['discord']['testToken']
+    token = settings['discord']['test_token']
     prefix = ">"
     log_level = "DEBUG"
     coc_names = "dev"
-    initial_extensions = ["cogs.general",
-                          "cogs.games",
-                          "cogs.newhelp",
+    initial_extensions = ["cogs.admin",
                           "cogs.council",
                           "cogs.eggs",
+                          "cogs.games",
+                          "cogs.general",
+                          "cogs.newhelp",
                           "cogs.owner",
-                          "cogs.admin",
+                          "cogs.push",
+                          "cogs.tasks",
                           ]
 
 description = """Multi bot to serve the RCS - by TubaKid
@@ -72,7 +78,8 @@ There are easter eggs. Feel free to try and find them!"""
 coc_client = coc.login(settings['supercell']['user'],
                        settings['supercell']['pass'],
                        client=coc.EventsClient,
-                       key_names=coc_names)
+                       key_names=coc_names,
+                       correct_tags=True)
 
 
 class RcsBot(commands.Bot):
@@ -82,10 +89,12 @@ class RcsBot(commands.Bot):
                          case_insensitive=True)
         self.remove_command("help")
         self.coc = coc_client
+        self.rcs_names_tags = rcs_names_tags()
         self.color = discord.Color.dark_red()
-        self.logger = logger
         self.client_id = settings['discord']['rcs_client_id']
         self.messages = {}
+        self.categories = {}
+        self.session = aiohttp.ClientSession(loop=self.loop)
 
         coc_client.add_events(self.on_event_error)
 
@@ -99,16 +108,16 @@ class RcsBot(commands.Bot):
 
     @property
     def log_channel(self):
-        return self.get_channel(settings['logChannels']['rcs'])
-
-    def send_log(self, message):
-        asyncio.ensure_future(self.send_message(message))
+        return self.get_channel(settings['log_channels']['rcs'])
 
     async def send_message(self, message):
         if len(message) < 2000:
             await self.log_channel.send(f"`{message}`")
         else:
             await self.log_channel.send(f"`{message[:1950]}`")
+
+    def send_log(self, message):
+        asyncio.ensure_future(self.send_message(message))
 
     async def on_message(self, message):
         if message.author.bot:
@@ -143,18 +152,19 @@ class RcsBot(commands.Bot):
             await ctx.send(error)
 
     async def on_event_error(self, event_name, *args, **kwargs):
-        e = discord.Embed(title="COC Event Error", colour=0xa32952)
-        e.add_field(name="Event", value=event_name)
-        e.description = f"```py\n{traceback.format_exc()}\n```"
-        e.timestamp = datetime.utcnow()
+        embed = discord.Embed(title="COC Event Error", colour=0xa32952)
+        embed.add_field(name="Event", value=event_name)
+        embed.description = f"```py\n{traceback.format_exc()}\n```"
+        embed.timestamp = datetime.utcnow()
 
         args_str = ["```py"]
         for index, arg in enumerate(args):
             args_str.append(f"[{index}]: {arg!r}")
         args_str.append("```")
-        e.add_field(name="Args", value="\n".join(args_str), inline=False)
+        embed.add_field(name="Args", value="\n".join(args_str), inline=False)
         try:
-            self.log_channel.send(embed=e)
+            event_channel = self.get_channel(settings['log_channels']['events'])
+            await event_channel.send(embed=embed)
         except:
             pass
 
@@ -170,32 +180,34 @@ class RcsBot(commands.Bot):
         args_str.append("```")
         e.add_field(name="Args", value="\n".join(args_str), inline=False)
         try:
-            await self.log_channel.send(embed=e)
+            self.log_channel.send(embed=e)
         except:
             pass
 
     async def on_ready(self):
-        self.logger.add(self.send_log, level=log_level)
-        self.logger.info("rcs-bot has started")
+        logger.info("rcs-bot has started")
         activity = discord.Game("Clash of Clans")
         await self.change_presence(status=discord.Status.online, activity=activity)
         self.logger.info(f'Ready: {self.user} (ID: {self.user.id})')
-
-    async def on_resumed(self):
-        self.logger.info("resumed...")
 
     async def close(self):
         await super().close()
         await self.coc.close()
 
+    async def after_ready(self):
+        await bot.wait_until_ready()
+        logger.add(self.send_log, level=log_level)
+
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     try:
-        pool = loop.run_until_complete(RcsDB.create_pool())
+        pool = loop.run_until_complete(Psql.create_pool())
         bot = RcsBot()
         bot.repo = git.Repo(os.getcwd())
         bot.pool = pool
+        bot.logger = logger
+        bot.loop = loop
         bot.run(token, reconnect=True)
     except:
         traceback.print_exc()

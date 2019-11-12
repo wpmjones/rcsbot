@@ -1,31 +1,48 @@
-from cogs.utils.db import conn_sql
+from cogs.utils.db import Sql
 from functools import lru_cache
 
 
 @lru_cache(maxsize=4)
-def rcs_clans():
+def rcs_names_tags():
     """Retrieve and cache all RCS clan names and tags"""
-    conn = conn_sql()
-    cursor = conn.cursor(as_dict=True)
-    sql = "SELECT clanName, clanTag FROM rcs_data ORDER BY clanName"
-    cursor.execute(sql)
-    fetch = cursor.fetchall()
-    conn.close()
+    with Sql(as_dict=True) as cursor:
+        sql = "SELECT clanName, clanTag, altName FROM rcs_data ORDER BY clanName"
+        cursor.execute(sql)
+        fetch = cursor.fetchall()
     clans = {}
     for clan in fetch:
-        clans[clan['clanName']] = clan['clanTag']
+        clans[clan['clanName'].lower()] = clan['clanTag']
+        clans[clan['altName'].lower()] = clan['clanTag']
+    return clans
+
+
+@lru_cache(maxsize=2)
+def rcs_tags(prefix=False):
+    """Retrieve and cache clan tags for all RCS clans"""
+    if prefix:
+        field = "'#' + clanTag as tag"
+    else:
+        field = "clanTag as tag"
+    with Sql(as_dict=True) as cursor:
+        sql = f"SELECT {field} FROM rcs_data ORDER BY clanName"
+        cursor.execute(sql)
+        fetch = cursor.fetchall()
+    clans = []
+    for clan in fetch:
+        clans.append(clan['tag'])
     return clans
 
 
 @lru_cache(maxsize=64)
 def get_clan(tag):
-    """Retrieve the details of a specific clan"""
-    conn = conn_sql()
-    cursor = conn.cursor(as_dict=True)
-    sql = "SELECT clanName, subReddit, clanLeader, cwlLeague, discordServer FROM rcs_data WHERE clanTag = %s"
-    cursor.execute(sql, tag)
-    clan = cursor.fetchone()
-    conn.close()
+    """Retrieve the details of a specific clan (provide clan tag without hashtag)"""
+    with Sql(as_dict=True) as cursor:
+        sql = ("SELECT clanName, subReddit, clanLeader, cwlLeague, discordServer, feeder, "
+               "classification, discordTag as leaderTag "
+               "FROM rcs_data "
+               "WHERE clanTag = %s")
+        cursor.execute(sql, tag)
+        clan = cursor.fetchone()
     return clan
 
 

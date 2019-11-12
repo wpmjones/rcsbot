@@ -1,8 +1,8 @@
-from discord.ext import commands
-import asyncio
 import discord
+import asyncio
 import io
-import coc
+
+from discord.ext import commands
 
 
 class _ContextDBAcquire:
@@ -253,3 +253,49 @@ class Context(commands.Context):
             return await self.send(file=discord.File(fp, filename='message_too_long.txt'), **kwargs)
         else:
             return await self.send(content)
+
+    @staticmethod
+    async def send_text(channel, text, block=None):
+        """ Sends text to channel, splitting if necessary
+        Discord has a 2000 character limit
+        """
+        if len(text) < 1994:
+            if block:
+                await channel.send(f"```{text}```")
+            else:
+                await channel.send(text)
+        else:
+            coll = ""
+            for line in text.splitlines(keepends=True):
+                if len(coll) + len(line) > 1994:
+                    # if collecting is going to be too long, send  what you have so far
+                    if block:
+                        await channel.send(f"```{coll}```")
+                    else:
+                        await channel.send(coll)
+                    coll = ""
+                coll += line
+            await channel.send(coll)
+
+    @staticmethod
+    async def send_embed(channel, header, footer, text, color=discord.Color.red()):
+        """ Sends embed to channel, splitting if necessary """
+        if len(text) < 1000:
+            embed = discord.Embed(color=color)
+            embed.add_field(name=header, value=text, inline=False)
+            embed.set_footer(text=footer)
+            await channel.send(embed=embed)
+        else:
+            coll = ""
+            for line in text.splitlines(keepends=True):
+                if len(coll) + len(line) > 1000:
+                    embed = discord.Embed(color=color)
+                    embed.add_field(name=header, value=coll, inline=False)
+                    await channel.send(embed=embed)
+                    header = "Continued..."
+                    coll = ""
+                coll += line
+            embed = discord.Embed(color=color)
+            embed.add_field(name=header, value=coll, inline=False)
+            embed.set_footer(text=footer)
+            await channel.send(embed=embed)

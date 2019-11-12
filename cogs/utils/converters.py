@@ -2,8 +2,7 @@ import coc
 import re
 
 from discord.ext import commands
-from cogs.utils.db import conn_sql
-from cogs.utils.helper import rcs_clans, get_clan
+from cogs.utils.helper import rcs_names_tags
 
 tag_validator = re.compile("^#?[PYLQGRJCUV0289]+$")
 
@@ -25,6 +24,7 @@ class PlayerConverter(commands.Converter):
                                            'If you didn\'t pass in a tag, '
                                            'please drop the owner a message.'
                                            )
+        # TODO clean this up for RCS specific info
         guild_clans = await ctx.get_clans()
         for g in guild_clans:
             if g.name == name or g.tag == tag:
@@ -49,8 +49,8 @@ class ClanConverter(commands.Converter):
             return argument
 
         tag = coc.utils.correct_tag(argument)
-        name = argument.strip()
-        clans = rcs_clans()
+        name = argument.strip().lower()
+        clans = rcs_names_tags()
 
         # If tag is valid, use the tag
         if tag_validator.match(tag):

@@ -13,7 +13,7 @@ import time
 import subprocess
 
 from discord.ext import commands
-from cogs.utils.db import conn_sql
+from cogs.utils.db import Sql
 from contextlib import redirect_stdout
 from typing import Optional
 from .utils.formats import TabularData, plural
@@ -371,10 +371,9 @@ class Admin(commands.Cog):
 
         try:
             start = time.perf_counter()
-            conn = conn_sql()
-            cursor = conn.cursor(as_dict=True)
-            cursor.execute(query)
-            results = cursor.fetchall()
+            with Sql(as_dict=True) as cursor:
+                cursor.execute(query)
+                results = cursor.fetchall()
             dt = (time.perf_counter() - start) * 1000.0
         except Exception:
             return await ctx.send(f'```py\n{traceback.format_exc()}\n```')
@@ -389,7 +388,7 @@ class Admin(commands.Cog):
         table.add_rows(list(r.values()) for r in results)
         render = table.render()
 
-        fmt = f'```\n{render}\n```\n*Returned {plural(rows):row} in {dt:.2f}ms*'
+        fmt = f'```{query}\n\n{render}\n```\n*Returned {plural(rows):row} in {dt:.2f}ms*'
         if len(fmt) > 2000:
             fp = io.BytesIO(fmt.encode('utf-8'))
             await ctx.send('Too many results...', file=discord.File(fp, 'results.txt'))
@@ -426,7 +425,7 @@ class Admin(commands.Cog):
         table.add_rows(list(r.values()) for r in results)
         render = table.render()
 
-        fmt = f'```\n{render}\n```\n*Returned {plural(rows):row} in {dt:.2f}ms*'
+        fmt = f'```{query}\n\n{render}\n```\n*Returned {plural(rows):row} in {dt:.2f}ms*'
         if len(fmt) > 2000:
             fp = io.BytesIO(fmt.encode('utf-8'))
             await ctx.send('Too many results...', file=discord.File(fp, 'results.txt'))

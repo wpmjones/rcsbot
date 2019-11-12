@@ -4,15 +4,6 @@ import pymssql
 from config import settings
 
 
-def conn_sql():
-    conn = pymssql.connect(settings['database']['server'],
-                           settings['database']['username'],
-                           settings['database']['password'],
-                           settings['database']['database'],
-                           autocommit=True)
-    return conn
-
-
 class Sql:
     def __init__(self, as_dict=False):
         self.as_dict = as_dict
@@ -30,7 +21,7 @@ class Sql:
         self.conn.close()
 
 
-class RcsDB:
+class Psql:
     def __init__(self, bot):
         self.bot = bot
 

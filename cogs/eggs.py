@@ -1,18 +1,16 @@
 import discord
 import requests
-import traceback
-import season as coc_season
 import pathlib
 
+from discord.ext import commands
+from cogs.utils import season as coc_season
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
 from io import BytesIO
 from random import randint
 from datetime import datetime
-from discord.ext import commands
-from cogs.utils.db import conn_sql
-from config import settings, emojis, color_pick
+from config import settings
 
 
 class Eggs(commands.Cog):
@@ -23,34 +21,40 @@ class Eggs(commands.Cog):
         self.bot = bot
 
     @commands.command(name="avatar", hidden=True)
-    async def avatar(self, ctx, user: discord.Member):
-        # convert discord mention to user id only
-        if user:
-            embed = discord.Embed(color=discord.Color.blue())
-            embed.add_field(name=f"{user.name}#{user.discriminator}", value=user.display_name, inline=True)
-            embed.add_field(name="Avatar URL", value=user.avatar_url, inline=True)
-            embed.set_image(url=user.avatar_url_as(size=128))
-            embed.set_footer(text=f"Discord ID: {user.id}",
-                             icon_url="https://discordapp.com/assets/2c21aeda16de354ba5334551a883b481.png")
-            response = await ctx.send(embed=embed)
-            self.bot.logger.info(ctx.command, f"avatar for {user.id}", ctx.author)
-        else:
-            response = await ctx.send(emojis['other']['redx'] + """ I don't believe that's a real Discord user. Please 
-                make sure you are using the '@' prefix or give me an ID or something I can work with.""")
+    async def avatar(self, ctx, user: discord.Member = None):
+        """Command to see a larger version of the given member's avatar
+
+        Examples:
+        ++avatar @mention
+        ++avater 123456789
+        ++avatar member#1234
+        """
+        if not user:
+            user = ctx.author
+        embed = discord.Embed(color=discord.Color.blue())
+        embed.add_field(name=f"{user.name}#{user.discriminator}", value=user.display_name, inline=True)
+        embed.add_field(name="Avatar URL", value=user.avatar_url, inline=True)
+        embed.set_image(url=user.avatar_url_as(size=128))
+        embed.set_footer(text=f"Discord ID: {user.id}",
+                         icon_url="https://discordapp.com/assets/2c21aeda16de354ba5334551a883b481.png")
+        response = await ctx.send(embed=embed)
         self.bot.messages[ctx.message.id] = response
 
     @commands.command(name="zag", aliases=["zag-geek", "zaggeek"], hidden=True)
     async def zag(self, ctx):
+        """[Easter Egg] Photo of Zag-geek"""
         response = await ctx.send(file=discord.File("/home/tuba/rcsbot/cogs/zag.jpg"))
         self.bot.messages[ctx.message.id] = response
 
     @commands.command(name="tuba", hidden=True)
     async def tuba(self, ctx):
+        """[Easter Egg] Not a photo of TubaKid"""
         response = await ctx.send(file=discord.File("/home/tuba/rcsbot/cogs/tuba.jpg"))
         self.bot.messages[ctx.message.id] = response
 
     @commands.command(name="password", hidden=True)
     async def password(self, ctx):
+        """[Easter Egg] Information on the RCS password"""
         content = ("https://www.reddit.com/r/RedditClansHistory/wiki/the_history_of_the_reddit_clans"
                    "#wiki_please_find_the_password")
         response = await ctx.send(content)
@@ -58,6 +62,7 @@ class Eggs(commands.Cog):
 
     @commands.command(name="cats", aliases=["cat"], hidden=True)
     async def kitty(self, ctx):
+        """[Easter Egg] Get a photo of a kitty"""
         url = "https://api.thecatapi.com/v1/images/search"
         headers = {
             "Content-Type": "application/json",
@@ -71,6 +76,7 @@ class Eggs(commands.Cog):
 
     @commands.command(name="dogs", aliases=["dog"], hidden=True)
     async def puppy(self, ctx):
+        """[Easter Egg] Get a photo of a puppy"""
         url = "https://api.thedogapi.com/v1/images/search"
         headers = {
             "Content-Type": "application/json",
@@ -84,6 +90,22 @@ class Eggs(commands.Cog):
 
     @commands.command(name="roll")
     async def roll(self, ctx, *args):
+        """Roll a set number of dice providing random results
+
+        **Parameters**
+        Max number on die (one whole number per die)
+
+        **Format**
+        `++roll integer [integer] [integer]...`
+
+        **Example**
+        `++roll 6 6' for two "traditional" dice
+        `++roll 4 6 8 10 12 20` if you're a D&D fan
+        `++roll 25` if you just need a random number 1-25
+        """
+        if not args:
+            return await ctx.send_help(ctx.command)
+
         def get_die(num):
             path = pathlib.Path(f"static/{num}.png")
             if path.exists() and path.is_file():
@@ -95,6 +117,7 @@ class Eggs(commands.Cog):
                 font_size = 54
                 font = ImageFont.truetype("static/sc-magic.ttf", font_size)
                 text_width, text_height = draw.textsize(num, font)
+                # handle different height/width numbers
                 while text_width > 57 or text_height > 57:
                     font_size -= 5
                     font = ImageFont.truetype("static/sc-magic.ttf", font_size)
@@ -113,6 +136,7 @@ class Eggs(commands.Cog):
         for die in args:
             answer = str(randint(1, int(die)))
             dice.append(get_die(answer))
+            # die is 64 wide plus 4 for padding
             final_width += 64 + 4
         final_image = Image.new("RGBA", (final_width, 64), (255, 0, 0, 0))
         current_pos = 0
@@ -126,39 +150,6 @@ class Eggs(commands.Cog):
         # Currently DISABLED - Remove comment to auto-delete response with command
         # self.bot.messages[ctx.message.id] = response
 
-    @commands.command(name="in_war", aliases=["inwar"], hidden=True)
-    @commands.has_any_role("Admin1", "Leaders", "Council")
-    async def in_war(self, ctx):
-        sent_msg = await ctx.send("Retrieving clan war status...")
-        conn = await conn_sql()
-        cursor = conn.cursor(as_dict=True)
-        cursor.execute("SELECT '#' + clanTag AS tag, isWarLogPublic FROM rcs_data "
-                       "WHERE classification <> 'feeder' ORDER BY clanName")
-        clans = cursor.fetchall()
-        conn.close()
-        tags = [clan['tag'] for clan in clans if clan['isWarLogPublic'] == 1]
-        in_prep = ""
-        in_war = ""
-        async for war in self.bot.coc.get_current_wars(tags):
-            try:
-                if war.state == "preparation":
-                    in_prep += f"{war.clan.name} ({war.clan.tag}) has {war.start_time.seconds_until // 3600:.0f} hours until war.\n"
-                if war.state == "inWar":
-                    in_war += f"{war.clan.name} ({war.clan.tag}) has {war.end_time.seconds_until // 3600:.0f} hours left in war.\n"
-            except Exception as e:
-                self.bot.logger.exception("get war state")
-        await sent_msg.delete()
-        await self.send_embed(ctx.channel,
-                              "RCS Clan War Status",
-                              "This does not include CWL wars.",
-                              in_prep,
-                              discord.Color.dark_gold())
-        await self.send_embed(ctx.channel,
-                              "RCS Clan War Status",
-                              "This does not include CWL wars.",
-                              in_war,
-                              discord.Color.dark_red())
-
     @commands.group(invoke_without_subcommands=True)
     async def season(self, ctx):
         """Group of commands to deal with the current COC season"""
@@ -171,7 +162,7 @@ class Eggs(commands.Cog):
             response = await ctx.send(embed=embed)
             self.bot.messages[ctx.message.id] = response
 
-    @season.command(name="change")
+    @season.command(name="change", hidden=True)
     @commands.is_owner()
     async def change(self, ctx, arg: str = ""):
         """Command to modify the season information"""
@@ -179,10 +170,9 @@ class Eggs(commands.Cog):
             return await ctx.send("I would much prefer it if you waited until the season ends to change the dates.")
         try:
             coc_season.update_season(arg)
-        except ValueError as ex:
-            return await ctx.send(log_traceback(ex))
-        except Exception as ex:
-            return await ctx.send(log_traceback(ex))
+        except:
+            self.bot.logger.exception("season change")
+            return
         response = await ctx.send(f"File updated.  The new season ends in {coc_season.get_days_left()} days.")
         self.bot.messages[ctx.message.id] = response
 
@@ -196,53 +186,6 @@ class Eggs(commands.Cog):
         embed.set_thumbnail(url="http://www.mayodev.com/images/clock.png")
         response = await ctx.send(embed=embed)
         self.bot.messages[ctx.message.id] = response
-
-    async def send_embed(self, channel, header, footer, text, embed_color):
-        """ Sends embed to channel, splitting if necessary """
-        self.bot.logger.debug(f"Content is {len(text)} characters long.")
-        if len(text) < 1000:
-            embed = discord.Embed(color=embed_color)
-            embed.add_field(name=header, value=text, inline=False)
-            embed.set_footer(text=footer)
-            await channel.send(embed=embed)
-        else:
-            coll = ""
-            for line in text.splitlines(keepends=True):
-                if len(coll) + len(line) > 1000:
-                    embed = discord.Embed(color=embed_color)
-                    embed.add_field(name=header, value=coll, inline=False)
-                    await channel.send(embed=embed)
-                    header = "Continued..."
-                    coll = ""
-                coll += line
-            embed = discord.Embed(color=embed_color)
-            embed.add_field(name=header, value=coll, inline=False)
-            embed.set_footer(text=footer)
-            await channel.send(embed=embed)
-
-
-def is_council(user_roles):
-    for role in user_roles:
-        if role.id == settings['rcsRoles']['council']:
-            return True
-    return False
-
-
-def is_discord_user(guild, discord_id):
-    try:
-        user = guild.get_member(discord_id)
-        if user is None:
-            return False, None
-        else:
-            return True, user
-    except:
-        return False, None
-
-
-def log_traceback(ex):
-    tb_lines = traceback.format_exception(ex.__class__, ex, ex.__traceback__)
-    tb_text = "".join(tb_lines)
-    return tb_text
 
 
 def setup(bot):

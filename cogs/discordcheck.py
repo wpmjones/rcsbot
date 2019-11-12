@@ -1,88 +1,74 @@
-import pymssql
-import re
 import discord
+import coc
+import re
 import requests
 
-from datetime import datetime, date
 from discord.ext import commands, tasks
-from cogs.utils.db import conn_sql
+from datetime import datetime, time, date
+from cogs.utils.constants import log_types
+from cogs.utils.db import Sql
+from cogs.utils.helper import rcs_tags, get_clan
 from config import settings, color_pick
 
 
 class DiscordCheck(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.main.start()
+        self.guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
+        self.clear_danger.start()
+        self.leader_notes.start()
+        self.discord_check.start()
 
     def cog_unload(self):
-        self.main.cancel()
+        self.clear_danger.cancel()
+        self.leader_notes.cancel()
+        self.discord_check.cancel()
 
-    @tasks.loop(hours=24)
-    async def main(self):
-        conn = self.bot.pool
-        sql = "SELECT log_id FROM rcs_task_log WHERE log_date = $1 AND log_type = $2"
-        result = await conn.fetch(sql, date.today().strftime('%Y-%m-%d'), 1)
-        await conn.close()
-        if not result:
-            guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
-            danger_channel = guild.get_channel(settings['rcsChannels']['dangerBot'])
-            botdev_channel = guild.get_channel(settings['rcsChannels']['botDev'])
-            notes_channel = guild.get_channel(settings['rcsChannels']['leaderNotes'])
-            mods_channel = guild.get_channel(settings['rcsChannels']['mods'])
-            member_role = guild.get_role(settings['rcsRoles']['members'])
-            conn = conn_sql()
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM rcs_vwDiscordClans ORDER BY clanName")
-            fetch = cursor.fetchall()
-            daily_clans = [{"short_name": row[1], "leader_tag": row[2], "clan_name": row[3]} for row in fetch]
-            cursor.execute("SELECT clanName, discordTag FROM rcs_data ORDER BY clanName")
-            fetch = cursor.fetchall()
-            rcs_clans = {}
-            for row in fetch:
-                rcs_clans[row[0]] = row[1]
-            rcs_clans = [{"clan_name": row[0], "leader_tag": row[1]} for row in fetch]
-            cursor.execute("SELECT shortName, clanName FROM rcs_data ORDER BY clanName")
-            fetch = cursor.fetchall()
-            clan_list = []
-            for row in fetch:
-                if "/" in row[0]:
-                    for clan in row[0].split("/"):
-                        clan_list.append(clan)
-                else:
-                    clan_list.append(row[0])
-            self.bot.logger.debug("About the clear messages")
-            async for message in danger_channel.history():
-                await message.delete()
-            self.bot.logger.debug("Messages cleared")
-            # THIS IS THE BEGINNING OF THE LEADER NOTE CHECKS
-            message_list = []
-            async for message in notes_channel.history(limit=None, oldest_first=True):
-                message_list.append(message.content)
-            self.bot.logger.debug("Messages pulled from Leader Notes")
-            messages = " - ".join(message_list)
-            regex = r"[tT]ag:\s[a-zA-Z0-9]+|#[a-zA-Z0-9]{6,}"
-            ban_set = set()
-            for match in re.finditer(regex, messages):
-                if match.group() != "#":
-                    ban_set.add(match.group().upper().replace("TAG: ", "#"))
-                else:
-                    ban_set.add(match.group())
-            ban_list = list(ban_set)
-            self.bot.logger.debug("Starting to loop through ban_list")
-            for tag in ban_list:
-                try:
-                    player = await self.bot.coc.get_player(tag)
-                    if player.clan and player.clan in rcs_clans:
-                        cursor.execute(f"SELECT COUNT(timestamp) AS reported, clanTag, memberTag "
+    @tasks.loop(time=time(hour=12, minute=0))
+    async def clear_danger(self):
+        """Clears the danger-bot channel in preparation for new info"""
+        danger_channel = self.guild.get_channel(settings['rcs_channels']['danger_bot'])
+        async for message in danger_channel.history():
+            await message.delete()
+
+    @tasks.loop(time=time(hour=12, minute=5))
+    async def leader_notes(self):
+        """Check the leader-notes channel and see if any of those players are in an RCS clan"""
+        danger_channel = self.guild.get_channel(settings['rcs_channels']['danger_bot'])
+        notes_channel = self.guild.get_channel(settings['rcs_channels']['leader_notes'])
+
+        messages = ""
+        async for message in notes_channel.history(limit=25, oldest_first=True):
+            if message.content:
+                messages += message.content + " - "
+        regex = r"[tT]ag:\s[PYLQGRJCUV0289]+|#[PYLQGRJCUV0289]{6,}"
+        ban_list = []
+        for match in re.finditer(regex, messages):
+            if not match.group().startswith("#"):
+                new_match = match.group().upper().replace("TAG: ", "#")
+            else:
+                new_match = match.group().upper()
+            if new_match not in ban_list:
+                ban_list.append(new_match)
+        self.bot.logger.debug(f"ban_list has {len(ban_list)} items")
+        for tag in ban_list:
+            if len(tag) < 6:
+                self.bot.logger.debug(f"Short tag: {tag}")
+            try:
+                player = await self.bot.coc.get_player(tag)
+                if player.clan and player.clan in rcs_tags():
+                    with Sql() as cursor:
+                        cursor.execute(f"SELECT COUNT(timestamp) AS reported "
                                        f"FROM rcs_notify "
                                        f"WHERE memberTag = {player.tag[1:]} AND clanTag = {player.clan.tag[1:]} "
                                        f"GROUP BY clanTag, memberTag")
                         row = cursor.fetchone()
                         reported = row[0]
-                        if reported > 3:
+                        if reported < 3:
+                            clan = get_clan(player.clan.tag[1:])
                             embed = discord.Embed(color=discord.Color.dark_red())
                             embed.add_field(name="Leader Note found:",
-                                            value=f"<@{rcs_clans[player.clan.tag[1:]]['leader_tag']}> "
+                                            value=f"<@{clan['leaderTag']}> "
                                             f"{player.name} ({player.tag}) is in {player.clan.name}. Please "
                                             f"search for `in:leader-notes {player.tag}` for details.")
                             embed.set_footer(text="Reminder: This is not a ban list, simply information that this "
@@ -91,119 +77,111 @@ class DiscordCheck(commands.Cog):
                             cursor.execute(f"INSERT INTO rcs_notify "
                                            f"VALUES ({datetime.now().strftime('%m-%d-%Y %H:%M:%S')}, "
                                            f"{player.clan.tag[1:]}, {player.tag[1:]})")
-                            conn.commit()
-                        conn.close()
-                except:
-                    self.bot.logger.warning(f"Exception on tag: {tag}")
-            # THIS IS THE BEGINNING OF THE NAME CHECKS
-            self.bot.logger.debug("Beginning of daily clan check")
-            for clan in daily_clans:
-                self.bot.logger.debug(f"Checking {clan['clan_name']}")
-                report_list = []
-                short_list = clan['short_name'].split("/")
-                for short_name in short_list:
-                    if short_name != "reddit":
-                        regex = r"\W" + short_name + "\W|\W" + short_name + "\Z"
-                    else:
-                        regex = r"\Wreddit[^\s]"
-                    self.bot.logger.debug("Looping through Discord members.")
-                    for member in guild.members:
-                        if member_role in member.roles \
-                                and re.search(regex, member.display_name, re.IGNORECASE) is not None:
-                            report_list.append(member.display_name.replace('||', '|'))
-                self.bot.logger.debug(f"Reviewed all members for {clan['clan_name']}")
-                if report_list:
-                    await danger_channel.send(f"<@{clan['leader_tag']}> Please check the following list of "
-                                              f"members to make sure everyone is still in your clan "
-                                              f"(or feeder).")
-                    clan_header = f"Results for {clan['clan_name']}"
-                    content = ""
-                    for entry in report_list:
-                        content += f"\u2800\u2800{entry}\n"
-                    await self.send_embed(danger_channel, clan_header, content)
-                    if clan['clan_name'] in ["Ninja Killers", "Faceless Ninjas"]:
-                        requests.post(settings['rcsHooks']['ninjas'])
+            except coc.NotFound:
+                self.bot.logger.warning(f"Exception on tag: {tag}")
+            # Add to task log
+            sql = ("INSERT INTO rcs_task_log (log_type, log_date, argument) "
+                   "VALUES ($1, $2, $3)")
+            try:
+                await self.bot.pool.execute(sql,
+                                            log_types['danger'],
+                                            date.today(),
+                                            f"{len(ban_list)} tags processed")
+            except:
+                self.bot.logger.exception("RCS Task Log insert error")
+
+    @tasks.loop(time=time(hour=12, minute=10))
+    async def discord_check(self):
+        """Check members and notify clan leaders to confirm they are still in the clan"""
+        # THIS IS THE BEGINNING OF THE NAME CHECKS
+        danger_channel = self.guild.get_channel(settings['rcs_channels']['danger_bot'])
+        botdev_channel = self.guild.get_channel(settings['rcs_channels']['bot_dev'])
+        member_role = self.guild.get_role(settings['rcs_roles']['members'])
+        with Sql() as cursor:
+            cursor.execute("SELECT shortName, discordTag, clanName FROM rcs_vwDiscordClans ORDER BY clanName")
+            fetch = cursor.fetchall()
+            daily_clans = [{"short_name": row[0], "leader_tag": row[1], "clan_name": row[2]} for row in fetch]
+        for clan in daily_clans:
+            report_list = []
+            short_list = clan['short_name'].split("/")
+            for short_name in short_list:
+                if short_name != "reddit":
+                    regex = r"\W" + short_name + "\W|\W" + short_name + "\Z"
                 else:
-                    await botdev_channel.send(f"No members for {clan['clan_name']}")
-            # THIS SECTION CHECKS FOR MEMBERS WITHOUT ANY CLAN AFFILIATION
-            if date.today().weekday() == 0:
-                errors = []
-                for member in guild.members:
-                    if member_role in member.roles:
-                        test = 0
-                        for short_name in clan_list:
-                            if short_name in member.display_name.lower():
-                                test = 1
-                                continue
-                        if test == 0:
-                            errors.append(f"{member.mention} did not identify with any clan.")
-                            self.bot.logger.info(f"{member.mention} did not identify with any clan.")
-                self.bot.logger.debug(errors)
-                if errors:
-                    embed = discord.Embed(color=color_pick(181, 0, 0))
-                    embed.add_field(name="We found some Members without a clan:",
-                                    value="\n  ".join(errors))
-                    await mods_channel.send(embed=embed)
-            conn.close()
+                    regex = r"\Wreddit[^\s]|\Wreddit$"
+                for member in self.guild.members:
+                    if member_role in member.roles \
+                            and re.search(regex, member.display_name.lower(), re.IGNORECASE) is not None:
+                        report_list.append(member.display_name.replace('||', '|'))
+            if report_list:
+                await danger_channel.send(f"<@{clan['leader_tag']}> Please check the following list of "
+                                          f"members to make sure everyone is still in your clan "
+                                          f"(or feeder).")
+                clan_header = f"Results for {clan['clan_name']}"
+                content = ""
+                for entry in report_list:
+                    content += f"\u2800\u2800{entry}\n"
+                await self.send_embed(danger_channel, clan_header, content)
+                # if clan['clan_name'] in ["Ninja Killers", "Faceless Ninjas"]:
+                #     requests.post(settings['rcsHooks']['ninjas'])
+            else:
+                await botdev_channel.send(f"No members for {clan['clan_name']}")
+        # Add to task log
+        sql = ("INSERT INTO rcs_task_log (log_type, log_date, argument) "
+               "VALUES ($1, $2, $3)")
+        try:
+            await self.bot.pool.execute(sql,
+                                        log_types['discord_check'],
+                                        date.today(),
+                                        f"{len(daily_clans)} clans processed")
+        except:
+            self.bot.logger.exception("RCS Task Log insert fail")
 
-    @main.before_loop
-    async def before_main(self):
-        await self.bot.wait_until_ready()
-
-    @commands.command(name="noclan")
-    @commands.has_any_role(settings['rcsRoles']['council'],
-                           settings['rcsRoles']['chatMods'])
-    async def noclan(self, ctx):
-        async with ctx.typing():
-            guild = self.bot.get_guild(settings['discord']['rcsGuildId'])
-            member_role = guild.get_role(settings['rcsRoles']['members'])
-            conn = pymssql.connect(settings['database']['server'],
-                                   settings['database']['username'],
-                                   settings['database']['password'],
-                                   settings['database']['database'])
-            cursor = conn.cursor()
+    @tasks.loop(hours=24)
+    async def no_clan(self):
+        """Check all discord members to see if they have a clan name in their display name"""
+        if date.today().weekday() != 0:
+            return
+        member_role = self.guild.get_role(settings['rcs_roles']['members'])
+        mods_channel = self.guild.get_channel(settings['rcsChannels']['mods'])
+        with Sql() as cursor:
             cursor.execute("SELECT shortName, clanName FROM rcs_data ORDER BY clanName")
             fetch = cursor.fetchall()
-            clan_list = []
-            for row in fetch:
-                if "/" in row[0]:
-                    for clan in row[0].split("/"):
-                        clan_list.append(clan)
-                else:
-                    clan_list.append(row[0])
-            errors = []
-            for member in guild.members:
-                if member_role in member.roles:
-                    test = 0
-                    for short_name in clan_list:
-                        if short_name in member.display_name.lower():
-                            test = 1
-                            continue
-                    if test == 0:
-                        errors.append(f"{member.mention} did not identify with any clan.")
-            if errors:
-                await self.send_text(ctx.channel, "We found some Members without a clan:\n" + "\n  ".join(errors))
-
-    @staticmethod
-    async def send_text(channel, text, block=None):
-        """ Sends text to channel, splitting if necessary """
-        if len(text) < 2000:
-            if block:
-                await channel.send(f"```{text}```")
+        clan_list = []
+        for row in fetch:
+            if "/" in row[0]:
+                for clan in row[0].split("/"):
+                    clan_list.append(clan)
             else:
-                await channel.send(text)
+                clan_list.append(row[0])
+        no_clan_list = []
+        for member in self.guild.members:
+            if member_role in member.roles:
+                test = 0
+                for short_name in clan_list:
+                    if short_name in member.display_name.lower():
+                        test = 1
+                        break
+                if test == 0:
+                    no_clan_list.append(f"{member.mention} did not identify with any clan.")
+        if no_clan_list:
+            log_message = f"{len(no_clan_list)} members found without a clan"
+            embed = discord.Embed(color=color_pick(181, 0, 0))
+            embed.add_field(name="We found some Members without a clan:",
+                            value="\n  ".join(no_clan_list))
+            await mods_channel.send(embed=embed)
         else:
-            coll = ""
-            for line in text.splitlines(keepends=True):
-                if len(coll) + len(line) > 1994:
-                    # if collecting is going to be too long, send  what you have so far
-                    if block:
-                        await channel.send(f"```{coll}```")
-                    else:
-                        await channel.send(coll)
-                    coll = ""
-                coll += line
-            await channel.send(coll)
+            log_message = "All members have a happy home with a clan in their name."
+        # Add to task log
+        sql = ("INSERT INTO rcs_task_log (log_type, log_date, argument) "
+               "VALUES ($1, $2, $3)")
+        try:
+            await self.bot.pool.execute(sql,
+                                        log_types['no_clan'],
+                                        date.today(),
+                                        log_message)
+        except:
+            self.bot.logger.exception("RCS Task Log insert fail")
 
     @staticmethod
     async def send_embed(channel, header, text):
