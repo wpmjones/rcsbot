@@ -89,6 +89,7 @@ class RcsBot(commands.Bot):
                          case_insensitive=True)
         self.remove_command("help")
         self.coc = coc_client
+        self.logger = logger
         self.rcs_names_tags = rcs_names_tags()
         self.color = discord.Color.dark_red()
         self.client_id = settings['discord']['rcs_client_id']
@@ -206,7 +207,6 @@ if __name__ == "__main__":
         bot = RcsBot()
         bot.repo = git.Repo(os.getcwd())
         bot.pool = pool
-        bot.logger = logger
         bot.loop = loop
         bot.run(token, reconnect=True)
     except:
