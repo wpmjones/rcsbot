@@ -1,3 +1,4 @@
+
 import discord
 import coc
 import asyncio

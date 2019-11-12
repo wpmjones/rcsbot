@@ -184,6 +184,10 @@ class Context(commands.Context):
             return f'{emoji}: {label}'
         return emoji
 
+    async def confirm(self, opt=True):
+        emoji = self.tick(opt)
+        await self.message.add_reaction(emoji)
+
     @property
     def db(self):
         return self._db if self._db else self.pool

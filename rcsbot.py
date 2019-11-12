@@ -7,6 +7,7 @@ import sys
 import aiohttp
 import asyncio
 
+from discord.ext import commands
 from cogs.utils import context
 from cogs.utils.db import Psql
 from cogs.utils.helper import rcs_names_tags
@@ -100,9 +101,9 @@ class RcsBot(commands.Bot):
         for extension in initial_extensions:
             try:
                 self.load_extension(extension)
-                logger.debug(f"{extension} loaded successfully")
+                self.logger.debug(f"{extension} loaded successfully")
             except Exception as extension:
-                logger.error(f"Failed to load extension {extension}.", file=sys.stderr)
+                self.logger.error(f"Failed to load extension {extension}.", file=sys.stderr)
                 traceback.print_exc()
 
     @property
@@ -144,9 +145,9 @@ class RcsBot(commands.Bot):
         elif isinstance(error, commands.CommandInvokeError):
             original = error.original
             if not isinstance(original, discord.HTTPException):
-                logger.error(f"In {ctx.command.qualified_name}:", file=sys.stderr)
+                self.logger.error(f"In {ctx.command.qualified_name}:", file=sys.stderr)
                 traceback.print_tb(original.__traceback__)
-                logger.error(f"{original.__class__.__name__}: {original}", file=sys.stderr)
+                self.logger.error(f"{original.__class__.__name__}: {original}", file=sys.stderr)
         elif isinstance(error, commands.ArgumentParsingError):
             await ctx.send(error)
 
@@ -187,7 +188,7 @@ class RcsBot(commands.Bot):
         logger.info("rcs-bot has started")
         activity = discord.Game("Clash of Clans")
         await self.change_presence(status=discord.Status.online, activity=activity)
-        logger.info(f'Ready: {self.user} (ID: {self.user.id})')
+        self.logger.info(f'Ready: {self.user} (ID: {self.user.id})')
 
     async def close(self):
         await super().close()
