@@ -7,8 +7,8 @@ import sys
 import aiohttp
 import asyncio
 
-from discord.ext import commands, category
-from cogs.utils import context
+from discord.ext import commands
+from cogs.utils import context, category
 from cogs.utils.db import Psql
 from cogs.utils.helper import rcs_names_tags
 from datetime import datetime
