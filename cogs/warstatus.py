@@ -15,14 +15,12 @@ class WarStatus(commands.Cog):
         self.active_wars = self.get_active_wars()
 
         self.bot.coc.add_events(self.on_war_state_change,
-                                self.on_war_attack,
                                 )
         self.bot.coc.add_war_update(rcs_tags(prefix=True))
         self.bot.coc.start_updates("war")
 
     def cog_unload(self):
         self.bot.coc.remove_events(self.on_war_state_change,
-                                   self.on_war_attack,
                                    )
 
     @staticmethod
@@ -36,6 +34,8 @@ class WarStatus(commands.Cog):
             wars[row['tag']] = row['war_id']
         return wars
 
+    # TODO Create command to pull old war logs into DB
+
     async def report_war(self, war):
         """Send war report to #rcs-war-updates"""
         # TODO Use PIL to create image of war report
@@ -47,11 +47,12 @@ class WarStatus(commands.Cog):
             # I don't want to do anything with CWL wars
             return
         if current_state == "preparation":
+            # TODO move add_war elsewhere, use it with inwar/warended if war not in table
             with Sql() as cursor:
                 sql = ("INSERT INTO rcs_wars (clanTag, opponentTag, opponentName, teamSize, warState, endTime) "
-                       "VALUES (%s, %s, %s, %d, %s, %s)")
+                       "VALUES ('{}', '{}', N'{}', {}, '{}', '{}')")
                 cursor.execute(sql, (war.clan.tag, war.opponent.tag, war.opponent.name, war.team_size,
-                                     war.end_time.time))
+                                     war.state, war.end_time.time))
                 self.active_wars[war.clan.tag] = cursor.lastrowid()
             self.bot.logger.info(f"New war added to database for {war.clan.name} "
                                  f"(war_id: {self.active_wars[war.clan.tag]}).")
@@ -64,7 +65,7 @@ class WarStatus(commands.Cog):
             self.bot.logger.info(f"War database updated for {war.clan.name} at the start of war. "
                                  f"(war_id: {self.active_wars[war.clan.tag]})")
         if current_state == "warEnded":
-            await report_war(war)
+            await self.report_war(war)
             with Sql() as cursor:
                 sql = ("UPDATE rcs_wars "
                        "SET clanStars = %d, "
