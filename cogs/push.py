@@ -62,6 +62,8 @@ class Push(commands.Cog):
     @push.command(name="push_all", aliases=["all"])
     async def push_all(self, ctx):
         """Returns list of all clans ranked by score (only top 30 trophies contribute to the score)."""
+        if datetime.utcnow() < self.start_time:
+            return ctx.invoke(self.push_info)
         with Sql() as cursor:
             cursor.execute("SELECT SUM(clanPoints) AS totals, clanName FROM rcspush_vwClanPointsTop30 "
                            "GROUP BY clanName "
@@ -76,6 +78,8 @@ class Push(commands.Cog):
     @push.command(name="diff")
     async def push_diff(self, ctx):
         """Returns list of clans ranked by score, showing the differential to the top clan."""
+        if datetime.utcnow() < self.start_time:
+            return ctx.invoke(self.push_info)
         with Sql() as cursor:
             cursor.execute("SELECT SUM(clanPoints) AS totals, clanName FROM rcspush_vwClanPointsTop30 "
                            "GROUP BY clanName "
@@ -97,6 +101,8 @@ class Push(commands.Cog):
     @push.command(name="top")
     async def push_top(self, ctx):
         """Returns list of top 10 players for each TH level."""
+        if datetime.utcnow() < self.start_time:
+            return ctx.invoke(self.push_info)
         # TODO change author icon with TH
         with Sql() as cursor:
             cursor.execute("SELECT currentTrophies, playerName "
@@ -109,6 +115,9 @@ class Push(commands.Cog):
 
     @push.command(name="th")
     async def push_th(self, ctx, th_level: int):
+        """Returns list of top 100 players at the TH specified (there must be a space between th and the number"""
+        if datetime.utcnow() < self.start_time:
+            return ctx.invoke(self.push_info)
         if (th_level > 12) or (th_level < 6):
             return await ctx.send("You have not provided a valid town hall level.")
         with Sql() as cursor:
@@ -127,6 +136,8 @@ class Push(commands.Cog):
     @push.command(name="gain", aliases=["gains", "increase"])
     async def push_gain(self, ctx):
         """Returns top 25 players based on number of trophies gained."""
+        if datetime.utcnow() < self.start_time:
+            return ctx.invoke(self.push_info)
         with Sql() as cursor:
             cursor.execute("SELECT trophyGain, player FROM rcspush_vwGains ORDER BY trophyGain DESC")
             fetch = cursor.fetchall()
@@ -138,6 +149,9 @@ class Push(commands.Cog):
 
     @push.command(name="clan")
     async def push_clan(self, ctx, clan: ClanConverter = None):
+        """Returns a list of players from the specified clon with their push points"""
+        if datetime.utcnow() < self.start_time:
+            return ctx.invoke(self.push_info)
         if not clan:
             return await ctx.send("Please provide a valid clan name/tag when using this command.")
         with Sql() as cursor:
