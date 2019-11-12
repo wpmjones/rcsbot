@@ -7,11 +7,10 @@ import sys
 import aiohttp
 import asyncio
 
-from discord.ext import commands
+from discord.ext import commands, category
 from cogs.utils import context
 from cogs.utils.db import Psql
 from cogs.utils.helper import rcs_names_tags
-from discord.ext import commands
 from datetime import datetime
 from config import settings
 from loguru import logger
@@ -119,6 +118,9 @@ class RcsBot(commands.Bot):
 
     def send_log(self, message):
         asyncio.ensure_future(self.send_message(message))
+
+    def get_category(self, name) -> category.Category:
+        return self.categories.get(name)
 
     async def on_message(self, message):
         if message.author.bot:
