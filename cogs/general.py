@@ -405,10 +405,10 @@ class General(commands.Cog):
         # Handle user arguments
         with Sql(as_dict=True) as cursor:
             cursor.execute("SELECT clanName, clanTag, discordTag FROM rcs_data ORDER BY clanName")
-            fetched = cursor.fetchall()
+            fetch = cursor.fetchall()
             clans = []
             clans_tag = []
-            for clan in fetched:
+            for clan in fetch:
                 clans.append(clan["clanName"].lower())
                 clans_tag.append([clan["clanTag"], clan["clanName"], clan["discordTag"]])
             leagues = cwl_league_names

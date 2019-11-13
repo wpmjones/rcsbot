@@ -38,6 +38,10 @@ class ProfilePics(commands.Cog):
                        "VALUES ($1, $2, $3)")
                 await conn.execute(sql, log_types['pfp'], date.today().strftime('%Y-%m-%d'), member.id)
 
+    @send_request.before_loop
+    async def before_send_request(self):
+        await self.bot.wait_until_ready()
+
 
 def setup(bot):
     bot.add_cog(ProfilePics(bot))

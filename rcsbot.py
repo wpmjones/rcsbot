@@ -49,6 +49,7 @@ elif enviro == "home":
                           "cogs.owner",
                           "cogs.push",
                           "cogs.tasks",
+                          "cogs.warstatus",
                           ]
 else:
     token = settings['discord']['test_token']
@@ -183,7 +184,7 @@ class RcsBot(commands.Bot):
         args_str.append("```")
         e.add_field(name="Args", value="\n".join(args_str), inline=False)
         try:
-            self.log_channel.send(embed=e)
+            await self.log_channel.send(embed=e)
         except:
             pass
 

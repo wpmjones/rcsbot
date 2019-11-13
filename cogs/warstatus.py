@@ -2,10 +2,12 @@ import discord
 import coc
 
 from discord.ext import commands
+from cogs.utils.converters import ClanConverter
 from cogs.utils.helper import rcs_tags
+from cogs.utils.images import get_random_image
 from cogs.utils.db import Sql
-from PIL import Image, ImageDraw
-from config import settings, color_pick
+from io import BytesIO
+from config import settings
 
 
 class WarStatus(commands.Cog):
@@ -36,50 +38,60 @@ class WarStatus(commands.Cog):
             wars[row['tag']] = row['war_id']
         return wars
 
-    # TODO Create command to pull old war logs into DB
+    @commands.command(name="warstats")
+    async def war_stats(self, ctx, clan: ClanConverter = None):
+        if not clan:
+            return await ctx.send("Please provide a valid RCS clan name or tag.")
+        async with ctx.typing():
+            with Sql(as_dict=True) as cursor:
+                sql = ("SELECT TOP 1 clanStars, clanDestruction, clanAttacks, "
+                       "opponentTag, opponentName, opponentStars, opponentDesctruction, opponentAttacks, "
+                       "teamSize, endTime, warType "
+                       "FROM rcs_wars "
+                       "WHERE clanTag = %s AND warType = 'random' "
+                       "ORDER BY endTime DESC")
+                cursor.execute(sql, clan.tag[1:])
+                last_war = cursor.fetchone()
+                sql = ("SELECT SUM(clanStars) as stars, SUM(teamSize) as size, SUM(clanDestruction) as destruct, "
+                       "COUNT(war_id) as num_wars "
+                       "FROM rcs_wars "
+                       "WHERE clanTag = %s and warType = 'random'")
+                cursor.execute(sql, clan.tag[1:])
+                war_stats = cursor.fetchone()
+            # do stuff with data
 
     @commands.command(name="img")
     async def report_war(self, ctx):
         """Send war report to #rcs-war-updates"""
-        xa = -2.0
-        xb = 1.0
-        ya = -1.5
-        yb = 1.5
-        max_it = 256
-        img_x = 800
-        img_y = 500
-        img = Image.new("RGBA", (img_x, img_y), color_pick(25, 25, 25))
-        for y in range(img_y):
-            cy = y * (yb - ya) / (img_y - 1) + ya
-            for x in range(img_x):
-                cx = x * (xb - xa) / (img_x - 1) + xa
-                c = complex(cx, cy)
-                z = 0
-                for i in range(max_it):
-                    if abs(z) > 2.0: break
-                    z = z * z + c
-                r = i % 4 * 64
-                g = i % 8 * 32
-                b = i % 16 * 16
-                img.putpixel((x, y), b * 65536 + g * 256 + r)
-        img.save("images/fractal.png")
-        await ctx.send(file=discord.File("images/fractal.png"))
+        img = await get_random_image()
+
+        buffer = BytesIO()
+        img.save(buffer, "png")
+        buffer.seek(0)
+        await ctx.send(file=discord.File(buffer, "results.png"))
+
+    async def add_war(self, war):
+        with Sql() as cursor:
+            sql = ("INSERT INTO rcs_wars (clanTag, opponentTag, opponentName, teamSize, warState, endTime) "
+                   "(SELECT %s, %s, N'{}', %d, %s, %s "
+                   "WHERE NOT EXISTS "
+                   "(SELECT war_id FROM rcs_wars WHERE clanTag = %s AND endTime = %s))".format(war.opponent.name))
+            cursor.execute(sql, (war.clan.tag[1:], war.opponent.tag[1:], war.team_size,
+                                 war.state, war.end_time.time, war.clan.tag[1:], war.end_time.time))
+            self.active_wars[war.clan.tag] = cursor.lastrowid()
 
     async def on_war_state_change(self, current_state, war):
         if isinstance(war, coc.LeagueWar):
             # I don't want to do anything with CWL wars
             return
+        self.bot.logger.debug(f"Working on {war.clan.name} ({war.clan.tag})")
         if current_state == "preparation":
-            # TODO move add_war elsewhere, use it with inwar/warended if war not in table
-            with Sql() as cursor:
-                sql = ("INSERT INTO rcs_wars (clanTag, opponentTag, opponentName, teamSize, warState, endTime) "
-                       "VALUES ('{}', '{}', N'{}', {}, '{}', '{}')")
-                cursor.execute(sql, (war.clan.tag, war.opponent.tag, war.opponent.name, war.team_size,
-                                     war.state, war.end_time.time))
-                self.active_wars[war.clan.tag] = cursor.lastrowid()
+            await self.add_war(war)
             self.bot.logger.info(f"New war added to database for {war.clan.name} "
                                  f"(war_id: {self.active_wars[war.clan.tag]}).")
         if current_state == "inWar":
+            if war.clan.tag not in self.active_wars.keys():
+                await self.add_war(war)
             with Sql() as cursor:
                 sql = ("UPDATE rcs_wars "
                        "SET warState = 'inWar' "
@@ -88,6 +100,8 @@ class WarStatus(commands.Cog):
             self.bot.logger.info(f"War database updated for {war.clan.name} at the start of war. "
                                  f"(war_id: {self.active_wars[war.clan.tag]})")
         if current_state == "warEnded":
+            if war.clan.tag not in self.active_wars.keys():
+                await self.add_war(war)
             await self.report_war(war)
             with Sql() as cursor:
                 sql = ("UPDATE rcs_wars "
