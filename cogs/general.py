@@ -1,5 +1,6 @@
 import discord
 import math
+import pathlib
 
 from discord.ext import commands
 from cogs.utils.db import Sql
@@ -7,6 +8,11 @@ from cogs.utils.checks import is_mod_or_council
 from cogs.utils.converters import PlayerConverter, ClanConverter
 from cogs.utils.constants import cwl_league_names, cwl_league_order
 from cogs.utils import formats
+from cogs.utils import season as coc_season
+from PIL import Image, ImageFont, ImageDraw
+from io import BytesIO
+from random import randint
+from datetime import datetime
 from config import settings
 
 
@@ -15,6 +21,7 @@ class General(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         # TODO Add command for ++clan to show all clan info
+        # TODO move non game related commands elsewhere
 
     @commands.command(name="attacks", aliases=["att", "attack", "attackwin", "attackwins"])
     async def attacks(self, ctx, *, clan: ClanConverter = None):
@@ -361,11 +368,12 @@ class General(commands.Cog):
         """Displays a link to specified clan's Discord server"""
         if not clan:
             return await ctx.send("You must provide an RCS clan name or tag.")
-        with Sql(as_dict=True) as cursor:
-            cursor.execute(f"SELECT discordServer FROM rcs_data WHERE clanTag = '{clan.tag[1:]}'")
-            fetched = cursor.fetchone()
-        if fetched['discordServer'] != "":
-            await ctx.send(fetched['discordServer'])
+        async with ctx.typing():
+            with Sql(as_dict=True) as cursor:
+                cursor.execute(f"SELECT discordServer FROM rcs_data WHERE clanTag = '{clan.tag[1:]}'")
+                fetch = cursor.fetchone()
+        if fetch['discordServer'] != "":
+            await ctx.send(fetch['discordServer'])
         else:
             await ctx.send("This clan does not have a Discord server.")
 
@@ -450,6 +458,105 @@ class General(commands.Cog):
             else:
                 return await ctx.send("Please provide a clan name and CWL league in that order. "
                                       "`++cwl Reddit Example Bronze ii`")
+
+    @commands.command(name="roll")
+    async def roll(self, ctx, *args):
+        """Roll a set number of dice providing random results
+
+        **Parameters**
+        Max number on die (one whole number per die)
+
+        **Format**
+        `++roll integer [integer] [integer]...`
+
+        **Example**
+        `++roll 6 6' for two "traditional" dice
+        `++roll 4 6 8 10 12 20` if you're a D&D fan
+        `++roll 25` if you just need a random number 1-25
+        """
+        if not args:
+            return await ctx.send_help(ctx.command)
+
+        def get_die(num):
+            path = pathlib.Path(f"static/{num}.png")
+            if path.exists() and path.is_file():
+                image = Image.open(f"static/{num}.png")
+            else:
+                image = Image.open("static/die-blank.png")
+                draw = ImageDraw.Draw(image)
+                black = (0, 0, 0)
+                font_size = 54
+                font = ImageFont.truetype("static/sc-magic.ttf", font_size)
+                text_width, text_height = draw.textsize(num, font)
+                # handle different height/width numbers
+                while text_width > 57 or text_height > 57:
+                    font_size -= 5
+                    font = ImageFont.truetype("static/sc-magic.ttf", font_size)
+                    text_width, text_height = draw.textsize(num, font)
+                if text_width / text_height > 1.2:
+                    offset = 1
+                else:
+                    offset = 4
+                position = ((64 - text_width) / 2, (64 - text_height) / 2 - offset)
+                draw.text(position, num, black, font=font)
+                image.save(f"static/{num}.png")
+            return image
+
+        dice = []
+        final_width = 0
+        for die in args:
+            answer = str(randint(1, int(die)))
+            dice.append(get_die(answer))
+            # die is 64 wide plus 4 for padding
+            final_width += 64 + 4
+        final_image = Image.new("RGBA", (final_width, 64), (255, 0, 0, 0))
+        current_pos = 0
+        for image in dice:
+            final_image.paste(image, (current_pos, 0))
+            current_pos += 64 + 4
+        final_buffer = BytesIO()
+        final_image.save(final_buffer, "png")
+        final_buffer.seek(0)
+        response = await ctx.send(file=discord.File(final_buffer, "results.png"))
+        # Currently DISABLED - Remove comment to auto-delete response with command
+        # self.bot.messages[ctx.message.id] = response
+
+    @commands.group(invoke_without_subcommands=True)
+    async def season(self, ctx):
+        """Group of commands to deal with the current COC season"""
+        if ctx.invoked_subcommand is None:
+            embed = discord.Embed(title="Season Information", color=discord.Color.green())
+            embed.add_field(name="Season Start", value=coc_season.get_season_start())
+            embed.add_field(name="Season End", value=coc_season.get_season_end())
+            embed.add_field(name="Days Left", value=coc_season.get_days_left())
+            embed.set_thumbnail(url="http://www.mayodev.com/images/clock.png")
+            response = await ctx.send(embed=embed)
+            self.bot.messages[ctx.message.id] = response
+
+    @season.command(name="change", hidden=True)
+    @commands.is_owner()
+    async def change(self, ctx, arg: str = ""):
+        """Command to modify the season information"""
+        if datetime.now() < datetime.strptime(coc_season.get_season_end(), "%Y-%m-%d"):
+            return await ctx.send("I would much prefer it if you waited until the season ends to change the dates.")
+        try:
+            coc_season.update_season(arg)
+        except:
+            self.bot.logger.exception("season change")
+            return
+        response = await ctx.send(f"File updated.  The new season ends in {coc_season.get_days_left()} days.")
+        self.bot.messages[ctx.message.id] = response
+
+    @season.command(name="info")
+    async def season_info(self, ctx):
+        """Command to display the season information"""
+        embed = discord.Embed(title="Season Information", color=discord.Color.green())
+        embed.add_field(name="Season Start", value=coc_season.get_season_start())
+        embed.add_field(name="Season End", value=coc_season.get_season_end())
+        embed.add_field(name="Days Left", value=coc_season.get_days_left())
+        embed.set_thumbnail(url="http://www.mayodev.com/images/clock.png")
+        response = await ctx.send(embed=embed)
+        self.bot.messages[ctx.message.id] = response
 
 
 def setup(bot):
