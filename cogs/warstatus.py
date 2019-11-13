@@ -1,9 +1,11 @@
+import discord
 import coc
 
 from discord.ext import commands
 from cogs.utils.helper import rcs_tags
 from cogs.utils.db import Sql
-from config import settings
+from PIL import Image, ImageDraw
+from config import settings, color_pick
 
 
 class WarStatus(commands.Cog):
@@ -36,11 +38,32 @@ class WarStatus(commands.Cog):
 
     # TODO Create command to pull old war logs into DB
 
-    async def report_war(self, war):
+    @commands.command(name="img")
+    async def report_war(self, ctx):
         """Send war report to #rcs-war-updates"""
-        # TODO Use PIL to create image of war report
-
-        return None
+        xa = -2.0
+        xb = 1.0
+        ya = -1.5
+        yb = 1.5
+        max_it = 256
+        img_x = 800
+        img_y = 500
+        img = Image.new("RGBA", (img_x, img_y), color_pick(25, 25, 25))
+        for y in range(img_y):
+            cy = y * (yb - ya) / (img_y - 1) + ya
+            for x in range(img_x):
+                cx = x * (xb - xa) / (img_x - 1) + xa
+                c = complex(cx, cy)
+                z = 0
+                for i in range(max_it):
+                    if abs(z) > 2.0: break
+                    z = z * z + c
+                r = i % 4 * 64
+                g = i % 8 * 32
+                b = i % 16 * 16
+                img.putpixel((x, y), b * 65536 + g * 256 + r)
+        img.save("images/fractal.png")
+        await ctx.send(file=discord.File("images/fractal.png"))
 
     async def on_war_state_change(self, current_state, war):
         if isinstance(war, coc.LeagueWar):
