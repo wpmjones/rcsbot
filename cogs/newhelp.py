@@ -97,7 +97,7 @@ class HelpPaginator(Pages):
             sig = f'{self.help_command.get_command_signature(command=entry)}'
             fmt = f"{emojis['other']['green']}{entry.short_doc}"
             if entry.short_doc.startswith('[Group]'):
-                fmt += f"\n{emojis['other']['yellow']} Use `{self.prefix}help {entry.name}` for subcommands."
+                fmt += f"\n{emojis['other']['amber']} Use `{self.prefix}help {entry.name}` for subcommands."
             if not entry._can_run:
                 fmt += f"\n{emojis['other']['red']} You don't have the required permissions to run this command."
 
