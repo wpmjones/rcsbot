@@ -10,7 +10,7 @@ import asyncio
 from discord.ext import commands
 from cogs.utils import context, category
 from cogs.utils.db import Psql
-from cogs.utils.helper import rcs_names_tags
+from cogs.utils.helper import rcs_names_tags, get_active_wars
 from datetime import datetime
 from config import settings
 from loguru import logger
@@ -95,6 +95,7 @@ class RcsBot(commands.Bot):
         self.client_id = settings['discord']['rcs_client_id']
         self.messages = {}
         self.categories = {}
+        self.active_wars = get_active_wars()
         self.session = aiohttp.ClientSession(loop=self.loop)
 
         coc_client.add_events(self.on_event_error)

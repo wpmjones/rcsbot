@@ -48,3 +48,14 @@ def get_clan(tag):
 
 def get_emoji_url(emoji_id):
     return f"https://cdn.discordapp.com/emojis/{emoji_id}.png"
+
+
+def get_active_wars():
+    with Sql(as_dict=True) as cursor:
+        sql = "SELECT '#' + clanTag as tag, war_id FROM rcs_wars WHERE warState <> 'warEnded'"
+        cursor.execute(sql)
+        fetch = cursor.fetchall()
+    wars = {}
+    for row in fetch:
+        wars[row['tag']] = row['war_id']
+    return wars
