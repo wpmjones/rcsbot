@@ -23,15 +23,12 @@ if enviro == "LIVE":
     log_level = "INFO"
     coc_names = "vps"
     initial_extensions = ["cogs.admin",
-                          "cogs.background",
                           "cogs.council",
-                          "cogs.discordcheck",
                           "cogs.eggs",
                           "cogs.games",
                           "cogs.general",
                           "cogs.newhelp",
                           "cogs.owner",
-                          "cogs.pfp",
                           "cogs.push",
                           "cogs.tasks",
                           ]
@@ -207,10 +204,10 @@ class RcsBot(commands.Bot):
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     try:
-        pool = loop.run_until_complete(Psql.create_pool())
+        # pool = loop.run_until_complete(Psql.create_pool())
         bot = RcsBot()
         bot.repo = git.Repo(os.getcwd())
-        bot.pool = pool
+        # bot.pool = pool
         bot.loop = loop
         bot.run(token, reconnect=True)
     except:
