@@ -372,7 +372,7 @@ class General(commands.Cog):
             with Sql(as_dict=True) as cursor:
                 cursor.execute(f"SELECT discordServer FROM rcs_data WHERE clanTag = '{clan.tag[1:]}'")
                 fetch = cursor.fetchone()
-        if fetch['discordServer'] != "":
+        if fetch['discordServer']:
             await ctx.send(fetch['discordServer'])
         else:
             await ctx.send("This clan does not have a Discord server.")
