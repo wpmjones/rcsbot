@@ -17,7 +17,7 @@ class Push(commands.Cog):
         self.bot = bot
         self.title = "2019 RCS Turkey Day Trophy Push"
         self.start_time = datetime(2019, 11, 15, 5, 0)
-        self.end_time = datetime(2019, 11, 24, 4, 50)
+        self.end_time = datetime(2019, 11, 25, 4, 50)
 
     @commands.group(name="push", invoke_without_command=True)
     async def push(self, ctx):
@@ -115,7 +115,7 @@ class Push(commands.Cog):
 
     @push.command(name="th")
     async def push_th(self, ctx, th_level: int):
-        """Returns list of top 100 players at the TH specified (there must be a space between th and the number"""
+        """Returns list of top 100 players at the TH specified (there must be a space between th and the number)."""
         if datetime.utcnow() < self.start_time:
             return ctx.invoke(self.push_info)
         if (th_level > 12) or (th_level < 6):
@@ -149,7 +149,7 @@ class Push(commands.Cog):
 
     @push.command(name="clan")
     async def push_clan(self, ctx, clan: ClanConverter = None):
-        """Returns a list of players from the specified clon with their push points"""
+        """Returns a list of players from the specified clan with their push points"""
         if datetime.utcnow() < self.start_time:
             return ctx.invoke(self.push_info)
         if not clan:
