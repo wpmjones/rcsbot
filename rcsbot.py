@@ -9,7 +9,7 @@ import asyncio
 
 from discord.ext import commands
 from cogs.utils import context, category
-from cogs.utils.db import Psql
+# from cogs.utils.db import Psql
 from cogs.utils.helper import rcs_names_tags, get_active_wars
 from datetime import datetime
 from config import settings
