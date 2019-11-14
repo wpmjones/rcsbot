@@ -256,7 +256,7 @@ class General(commands.Cog):
             p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
         await p.paginate()
 
-    @top.command(name="donations", aliases=["donate", "donates", "donation"])
+    @top.command(name="donates", aliases=["donate", "donations", "donation"])
     async def top_donations(self, ctx):
         """Displays top ten donation totals for all of the RCS"""
         async with ctx.typing():

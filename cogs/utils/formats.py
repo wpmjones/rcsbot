@@ -10,6 +10,7 @@ def get_render_type(table, type_, subtype=None):
         "attacks": (table.board_1, "Att"),
         "defenses": (table.board_1, "Def"),
         "donations": (table.board_2, "Don", "Rec"),
+        "donates": (table.board_1, "Don"),
         "trophies": (table.board_1, "Cups"),
         "besttrophies": (table.board_1, "Cups"),
         "bhtrophies": (table.board_1, "vsCups"),
