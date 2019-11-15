@@ -123,7 +123,6 @@ class Background(commands.Cog):
             return
         if settings['rcs_roles']['members'] not in [role.id for role in message.author.roles]:
             return
-        self.bot.logger.debug("New Message")
         conn = self.bot.pool
         row = await conn.fetchrow(f"SELECT * FROM rcs_messages WHERE discord_id = {message.author.id}")
         points = randint(7, 14)

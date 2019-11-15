@@ -24,14 +24,14 @@ class DiscordCheck(commands.Cog):
         self.leader_notes.cancel()
         self.discord_check.cancel()
 
-    @tasks.loop(time=time(hour=12, minute=0))
+    @tasks.loop(time=time(hour=16, minute=20))
     async def clear_danger(self):
         """Clears the danger-bot channel in preparation for new info"""
         danger_channel = self.guild.get_channel(settings['rcs_channels']['danger_bot'])
         async for message in danger_channel.history():
             await message.delete()
 
-    @tasks.loop(time=time(hour=12, minute=5))
+    @tasks.loop(time=time(hour=16, minute=25))
     async def leader_notes(self):
         """Check the leader-notes channel and see if any of those players are in an RCS clan"""
         danger_channel = self.guild.get_channel(settings['rcs_channels']['danger_bot'])
@@ -90,7 +90,7 @@ class DiscordCheck(commands.Cog):
             except:
                 self.bot.logger.exception("RCS Task Log insert error")
 
-    @tasks.loop(time=time(hour=12, minute=10))
+    @tasks.loop(time=time(hour=16, minute=30))
     async def discord_check(self):
         """Check members and notify clan leaders to confirm they are still in the clan"""
         # THIS IS THE BEGINNING OF THE NAME CHECKS
