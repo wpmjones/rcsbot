@@ -121,7 +121,7 @@ class Background(commands.Cog):
             return
         if message.author.bot or message.guild.id != settings['discord']['rcsguild_id']:
             return
-        if settings['rcsRoles']['members'] not in [role.id for role in message.author.roles]:
+        if settings['rcs_roles']['members'] not in [role.id for role in message.author.roles]:
             return
         self.bot.logger.debug("New Message")
         conn = self.bot.pool
