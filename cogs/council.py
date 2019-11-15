@@ -455,11 +455,11 @@ class CouncilCog(commands.Cog):
             return await ctx.send("Please provide the name of the new alt account.")
         with Sql() as cursor:
             sql = (f"INSERT INTO rcs_alts "
-                   f"SELECT {clan[0].tag[1:]}, {new_alt} "
+                   f"SELECT %s, %s "
                    f"EXCEPT "
-                   f"SELECT clanTag, altName FROM rcs_alts WHERE clanTag = {clan[0].tag[1:]} AND altName = {new_alt}")
-            cursor.execute(sql)
-        await ctx.send(f"{new_alt} has been added as an alt account for the leader of {clan[0].name}.")
+                   f"SELECT clanTag, altName FROM rcs_alts WHERE clanTag = %s AND altName = %s")
+            cursor.execute(sql, (clan.tag[1:], new_alt, clan.tag[1:], new_alt))
+        await ctx.send(f"{new_alt} has been added as an alt account for the leader of {clan.name}.")
 
     @alts.command(name="remove", aliases=["delete", "del", "rem"])
     async def alts_remove(self, ctx, clan: ClanConverter = None, *, alt: str = None):
@@ -481,8 +481,8 @@ class CouncilCog(commands.Cog):
                 cursor.execute(sql)
                 await ctx.send(f"All alt accounts for {clan.name} have been removed.")
             else:
-                sql = f"DELETE FROM rcs_alts WHERE clanTag = {clan.tag[1:]} AND altName = {alt}"
-                cursor.execute(sql)
+                sql = f"DELETE FROM rcs_alts WHERE clanTag = %s AND altName = %s"
+                cursor.execute(sql, (clan.tag[1:], alt))
                 await ctx.send(f"{alt} has been removed as an alt for the leader of {clan.name}.")
 
     @commands.group(invoke_without_subcommand=True, hidden=True)
