@@ -6,6 +6,8 @@ from config import emojis
 
 
 def get_render_type(table, type_, subtype=None):
+    print(type_)
+    print(subtype)
     board_choice = {
         "attacks": (table.board_1, "Att"),
         "defenses": (table.board_1, "Def"),
