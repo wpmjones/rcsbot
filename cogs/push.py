@@ -114,7 +114,7 @@ class Push(commands.Cog):
             return await ctx.send("You have not provided a valid town hall level.")
         with Sql() as cursor:
             cursor.execute(f"SELECT TOP 100 currentTrophies, CAST(clanPoints AS DECIMAL(5,2)), "
-                           f"playerName + ' (' + altName + ')'"
+                           f"playerName + ' (' + COALESCE(altName, clanName) + ')'"
                            f"FROM rcspush_vwClanPoints "
                            f"WHERE currentThLevel = {th_level} "
                            f"ORDER BY clanPoints DESC")
@@ -124,6 +124,30 @@ class Push(commands.Cog):
         ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
         p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count, rows_per_table=20)
         await p.paginate()
+
+    @push.command(name="th12", hidden=True)
+    async def push_th12(self, ctx):
+        await ctx.invoke(self.push_th, th_level=12)
+
+    @push.command(name="th11", hidden=True)
+    async def push_th11(self, ctx):
+        await ctx.invoke(self.push_th, th_level=11)
+
+    @push.command(name="th10", hidden=True)
+    async def push_th10(self, ctx):
+        await ctx.invoke(self.push_th, th_level=10)
+
+    @push.command(name="th9", hidden=True)
+    async def push_th9(self, ctx):
+        await ctx.invoke(self.push_th, th_level=9)
+
+    @push.command(name="th8", hidden=True)
+    async def push_th8(self, ctx):
+        await ctx.invoke(self.push_th, th_level=8)
+
+    @push.command(name="th7", hidden=True)
+    async def push_th7(self, ctx):
+        await ctx.invoke(self.push_th, th_level=7)
 
     @push.command(name="gain", aliases=["gains", "increase"])
     async def push_gain(self, ctx):
