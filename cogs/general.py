@@ -3,7 +3,7 @@ import math
 import pathlib
 
 from discord.ext import commands
-from cogs.utils.db import Sql
+from cogs.utils.db import Sql, Psql
 from cogs.utils.checks import is_mod_or_council
 from cogs.utils.converters import PlayerConverter, ClanConverter
 from cogs.utils.constants import cwl_league_names, cwl_league_order
@@ -330,16 +330,19 @@ class General(commands.Cog):
 
     @commands.command(name="link")
     @is_mod_or_council()
-    async def link(self, ctx, member: discord.Member, player: PlayerConverter = None):
+    async def link(self, ctx, member: discord.Member = None, player: PlayerConverter = None):
         """Allows Chat mods or Council to link a Discord member to an in-game player tag"""
         if not player:
             self.bot.logger.error(f"{ctx.author} provided some bad info for the link command.")
             return await ctx.send("I don't particularly care for that player. Wanna try again?")
-        if player.clan.tag[1:] in self.bot.rcs_clans.values():
+        if not member:
+            return await ctx.send("That's not a real Discord user. Try again.")
+        if player.clan.tag[1:] in self.bot.rcs_names_tags.values():
             try:
-                await self.bot.db.link_user(player.tag[1:], member.id)
+                await Psql(self.bot).link_user(player.tag[1:], member.id)
                 emoji = "\u2705"
-                member_role = ctx.guild.get_role(settings['rcs_roles']['members'])
+                rcs_guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
+                member_role = rcs_guild.get_role(settings['rcs_roles']['members'])
                 await member.add_roles(member_role)
                 await ctx.message.add_reaction(emoji)
             except:
