@@ -24,6 +24,12 @@ def get_render_type(table, type_, subtype=None):
         "push": (table.board_1, "Points"),
         "push_all": (table.board_1, "Points"),
         "th": (table.board_5, "Cups", "Pts"),
+        "th12": (table.board_5, "Cups", "Pts"),
+        "th11": (table.board_5, "Cups", "Pts"),
+        "th10": (table.board_5, "Cups", "Pts"),
+        "th9": (table.board_5, "Cups", "Pts"),
+        "th8": (table.board_5, "Cups", "Pts"),
+        "th7": (table.board_5, "Cups", "Pts"),
         "diff": (table.board_1, "Diff"),
         "gain": (table.board_1, "Gain")
     }
