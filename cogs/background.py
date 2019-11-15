@@ -119,7 +119,7 @@ class Background(commands.Cog):
         """Awards random points to members when posting messages"""
         if isinstance(message.channel, discord.DMChannel):
             return
-        if message.author.bot or message.guild.id != settings['discord']['rcsGuildId']:
+        if message.author.bot or message.guild.id != settings['discord']['rcsguild_id']:
             return
         if settings['rcsRoles']['members'] not in [role.id for role in message.author.roles]:
             return
