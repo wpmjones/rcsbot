@@ -23,6 +23,7 @@ def get_render_type(table, type_, subtype=None):
         "builderhalls": (table.board_4, ),
         "push": (table.board_1, "Points"),
         "push_all": (table.board_1, "Points"),
+        "top": (table.board_1, "Cups"),
         "th": (table.board_5, "Cups", "Pts"),
         "th12": (table.board_5, "Cups", "Pts"),
         "th11": (table.board_5, "Cups", "Pts"),
