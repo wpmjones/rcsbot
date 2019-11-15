@@ -27,7 +27,7 @@ class Games(commands.Cog):
         else:
             await ctx.invoke(self.games_clan, clan=clan)
 
-    @games.command(name="games_all", aliases=["all"])
+    @games.command(name="all")
     async def games_all(self, ctx):
         """Returns clan points for all RCS clans"""
         with Sql(as_dict=True) as cursor:

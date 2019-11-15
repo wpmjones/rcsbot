@@ -5,9 +5,7 @@ from loguru import logger
 from config import emojis
 
 
-def get_render_type(table, type_, subtype=None):
-    print(type_)
-    print(subtype)
+def get_render_type(table, type_):
     board_choice = {
         "attacks": (table.board_1, "Att"),
         "defenses": (table.board_1, "Def"),
@@ -18,28 +16,25 @@ def get_render_type(table, type_, subtype=None):
         "bhtrophies": (table.board_1, "vsCups"),
         "warstars": (table.board_1, "Stars"),
         "games": (table.board_1, "Points"),
-        "games_all": (table.board_1, "Points"),
-        "average": (table.board_1, "Avg"),
-        "clan": (table.board_1, "Points"),
+        "games all": (table.board_1, "Points"),
+        "games average": (table.board_1, "Avg"),
+        "games clan": (table.board_1, "Points"),
         "townhalls": (table.board_3, ),
         "builderhalls": (table.board_4, ),
-        "push": (table.board_1, "Points"),
-        "push_all": (table.board_1, "Points"),
-        "top": (table.board_1, "Cups"),
-        "th": (table.board_5, "Cups", "Pts"),
-        "th12": (table.board_5, "Cups", "Pts"),
-        "th11": (table.board_5, "Cups", "Pts"),
-        "th10": (table.board_5, "Cups", "Pts"),
-        "th9": (table.board_5, "Cups", "Pts"),
-        "th8": (table.board_5, "Cups", "Pts"),
-        "th7": (table.board_5, "Cups", "Pts"),
-        "diff": (table.board_1, "Diff"),
-        "gain": (table.board_1, "Gain")
+        "push all": (table.board_1, "Points"),
+        "push diff": (table.board_1, "Diff"),
+        "push top": (table.board_1, "Cups"),
+        "push th": (table.board_5, "Cups", "Pts"),
+        "push th12": (table.board_5, "Cups", "Pts"),
+        "push th11": (table.board_5, "Cups", "Pts"),
+        "push th10": (table.board_5, "Cups", "Pts"),
+        "push th9": (table.board_5, "Cups", "Pts"),
+        "push th8": (table.board_5, "Cups", "Pts"),
+        "push th7": (table.board_5, "Cups", "Pts"),
+        "push gain": (table.board_1, "Gain"),
+        "push clan": (table.board_1, "Points"),
     }
-    if not subtype:
-        func, *args = board_choice.get(type_, (table.board_1, ))
-    else:
-        func, *args = board_choice.get(subtype, (table.board_1, ))
+    func, *args = board_choice.get(type_, (table.board_1, ))
 
     return func(*args)
 
@@ -188,11 +183,7 @@ class TablePaginator(Pages):
         self.title = title
         self.message = None
         self.ctx = ctx
-        if ctx.command.root_parent:
-            self.type_ = ctx.command.root_parent.name
-        else:
-            self.type_ = ctx.command.name
-        self.subtype = ctx.command.name
+        self.type_ = ctx.command.qualified_name
 
     async def get_page(self, page):
         entry = self.entries[page - 1]
@@ -210,9 +201,8 @@ class TablePaginator(Pages):
 
     def create_row(self, data):
         row = [data[0], data[1][0], data[1][1]]
-        if "push" in self.type_:
-            if "th" in self.subtype:
-                row = [data[0], data[1][0], data[1][1], data[1][2]]
+        if self.type_.startswith("push th"):
+            row = [data[0], data[1][0], data[1][1], data[1][2]]
         elif self.type_ in ("townhalls",
                             "builderhalls",
                             ):
@@ -229,7 +219,7 @@ class TablePaginator(Pages):
         for n in data:
             self.create_row(n)
 
-        render = get_render_type(self.table, self.type_, self.subtype)
+        render = get_render_type(self.table, self.type_)
         return render
 
     async def get_embed(self, entries, page, *, first=False):

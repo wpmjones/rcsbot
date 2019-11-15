@@ -59,7 +59,7 @@ class Push(commands.Cog):
                              icon_url="https://cdn.discordapp.com/emojis/641101630342692884.png")
         await ctx.send(embed=embed)
 
-    @push.command(name="push_all", aliases=["all"])
+    @push.command(name="all")
     async def push_all(self, ctx):
         """Returns list of all clans ranked by score (only top 30 trophies contribute to the score)."""
         with Sql() as cursor:
