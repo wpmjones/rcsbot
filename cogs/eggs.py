@@ -18,7 +18,7 @@ class Eggs(commands.Cog):
 
         Examples:
         ++avatar @mention
-        ++avater 123456789
+        ++avatar 123456789
         ++avatar member#1234
         """
         if not user:

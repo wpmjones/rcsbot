@@ -36,37 +36,37 @@ class CouncilCog(commands.Cog):
             channel = self.bot.get_channel(settings['rcs_channels']['council_spam'])
             await channel.send(link)
 
-    # @commands.command(name="userinfo", aliases=["ui"], hidden=True)
-    # @is_mod_or_council()
-    # async def user_info(self, ctx, user: discord.Member):
-    #     """Command to retreive join date and other info for Discord user.
-    #
-    #     **Permissions:**
-    #     Chat Mods
-    #     Council"""
-    #     today = datetime.now()
-    #     create_date = user.created_at.strftime("%d %b %Y")
-    #     create_delta = (today - user.created_at).days
-    #     join_date = user.joined_at.strftime("%d %b %Y")
-    #     join_delta = (today - user.joined_at).days
-    #     conn = self.bot.pool
-    #     sql = "SELECT MAX(last_message) FROM rcs_discord WHERE discord_id = $1"
-    #     row = conn.fetchrow(sql, user.id)
-    #     last_message = row[0]
-    #     user_roles = []
-    #     for role in user.roles:
-    #         if role.name != "@everyone":
-    #             user_roles.append(role.name)
-    #     embed = discord.Embed(title=user.display_name,
-    #                           description=f"{user.name}#{user.discriminator}",
-    #                           color=color_pick(255, 165, 0))
-    #     embed.set_thumbnail(url=user.avatar_url)
-    #     embed.add_field(name="Joined RCS Server on", value=f"{join_date}\n({join_delta} days ago)", inline=True)
-    #     embed.add_field(name="Discord Creation Date", value=f"{create_date}\n({create_delta} days ago)", inline=True)
-    #     embed.add_field(name="Last Message", value=last_message, inline=False)
-    #     embed.add_field(name="Roles", value=", ".join(user_roles), inline=False)
-    #     embed.set_footer(text=f"User ID: {user.id}")
-    #     await ctx.send(embed=embed)
+    @commands.command(name="userinfo", aliases=["ui"], hidden=True)
+    @is_mod_or_council()
+    async def user_info(self, ctx, user: discord.Member):
+        """Command to retreive join date and other info for Discord user.
+
+        **Permissions:**
+        Chat Mods
+        Council"""
+        today = datetime.now()
+        create_date = user.created_at.strftime("%d %b %Y")
+        create_delta = (today - user.created_at).days
+        join_date = user.joined_at.strftime("%d %b %Y")
+        join_delta = (today - user.joined_at).days
+        conn = self.bot.pool
+        sql = "SELECT MAX(last_message) FROM rcs_discord WHERE discord_id = $1"
+        row = conn.fetchrow(sql, user.id)
+        last_message = row[0]
+        user_roles = []
+        for role in user.roles:
+            if role.name != "@everyone":
+                user_roles.append(role.name)
+        embed = discord.Embed(title=user.display_name,
+                              description=f"{user.name}#{user.discriminator}",
+                              color=color_pick(255, 165, 0))
+        embed.set_thumbnail(url=user.avatar_url)
+        embed.add_field(name="Joined RCS Server on", value=f"{join_date}\n({join_delta} days ago)", inline=True)
+        embed.add_field(name="Discord Creation Date", value=f"{create_date}\n({create_delta} days ago)", inline=True)
+        embed.add_field(name="Last Message", value=last_message, inline=False)
+        embed.add_field(name="Roles", value=", ".join(user_roles), inline=False)
+        embed.set_footer(text=f"User ID: {user.id}")
+        await ctx.send(embed=embed)
 
     @commands.command(name="addClan", aliases=["clanAdd", "newClan", "add_clan", "new_clan"], hidden=True)
     @is_council()

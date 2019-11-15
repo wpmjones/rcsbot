@@ -9,7 +9,7 @@ import asyncio
 
 from discord.ext import commands
 from cogs.utils import context, category
-# from cogs.utils.db import Psql
+from cogs.utils.db import Psql
 from cogs.utils.helper import rcs_names_tags, get_active_wars
 from datetime import datetime
 from config import settings
@@ -45,8 +45,6 @@ elif enviro == "home":
                           "cogs.newhelp",
                           "cogs.owner",
                           "cogs.push",
-                          "cogs.tasks",
-                          "cogs.warstatus",
                           ]
 else:
     token = settings['discord']['test_token']
@@ -136,8 +134,8 @@ class RcsBot(commands.Bot):
         ctx = await self.get_context(message, cls=context.Context)
         if ctx.command is None:
             return
-        # async with ctx.acquire():
-        await self.invoke(ctx)
+        async with ctx.acquire():
+            await self.invoke(ctx)
 
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.NoPrivateMessage):
@@ -204,10 +202,10 @@ class RcsBot(commands.Bot):
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     try:
-        # pool = loop.run_until_complete(Psql.create_pool())
+        pool = loop.run_until_complete(Psql.create_pool())
         bot = RcsBot()
         bot.repo = git.Repo(os.getcwd())
-        # bot.pool = pool
+        bot.pool = pool
         bot.loop = loop
         bot.run(token, reconnect=True)
     except:
