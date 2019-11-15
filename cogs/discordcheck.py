@@ -80,7 +80,7 @@ class DiscordCheck(commands.Cog):
             except coc.NotFound:
                 self.bot.logger.warning(f"Exception on tag: {tag}")
             # Add to task log
-            sql = ("INSERT INTO rcs_task_log (log_type, log_date, argument) "
+            sql = ("INSERT INTO rcs_task_log (log_type_id, log_date, argument) "
                    "VALUES ($1, $2, $3)")
             try:
                 await self.bot.pool.execute(sql,
@@ -127,7 +127,7 @@ class DiscordCheck(commands.Cog):
             else:
                 await botdev_channel.send(f"No members for {clan['clan_name']}")
         # Add to task log
-        sql = ("INSERT INTO rcs_task_log (log_type, log_date, argument) "
+        sql = ("INSERT INTO rcs_task_log (log_type_id, log_date, argument) "
                "VALUES ($1, $2, $3)")
         try:
             await self.bot.pool.execute(sql,
@@ -173,7 +173,7 @@ class DiscordCheck(commands.Cog):
         else:
             log_message = "All members have a happy home with a clan in their name."
         # Add to task log
-        sql = ("INSERT INTO rcs_task_log (log_type, log_date, argument) "
+        sql = ("INSERT INTO rcs_task_log (log_type_id, log_date, argument) "
                "VALUES ($1, $2, $3)")
         try:
             await self.bot.pool.execute(sql,

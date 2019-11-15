@@ -117,28 +117,28 @@ class Background(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         """Awards random points to members when posting messages"""
-        if isinstance(message.channel, discord.DMChannel) and message.author != self.bot.user:
+        if isinstance(message.channel, discord.DMChannel):
             return
         if message.author.bot or message.guild.id != settings['discord']['rcsGuildId']:
             return
         if settings['rcsRoles']['members'] not in [role.id for role in message.author.roles]:
             return
         conn = self.bot.pool
-        row = await conn.fetchrow(f"SELECT * FROM rcs_discord WHERE discord_id = {message.author.id}")
+        row = await conn.fetchrow(f"SELECT * FROM rcs_messages WHERE discord_id = {message.author.id}")
         points = randint(7, 14)
         if row:
             if datetime.now() > row['last_message'] + timedelta(minutes=1):
-                await conn.execute(f"UPDATE rcs_discord "
+                await conn.execute(f"UPDATE rcs_messages "
                                    f"SET message_points = {row['message_points']+points}, "
                                    f"last_message = '{datetime.now()}', "
                                    f"message_count = {row['message_count']+1} "
                                    f"WHERE discord_id = {message.author.id}")
             else:
-                await conn.execute(f"UPDATE rcs_discord "
+                await conn.execute(f"UPDATE rcs_messages "
                                    f"SET last_message = '{datetime.now()}' "
                                    f"WHERE discord_id = {message.author.id}")
         else:
-            await conn.execute(f"INSERT INTO rcs_discord "
+            await conn.execute(f"INSERT INTO rcs_messages "
                                f"VALUES ({message.author.id}, {points}, 0, '{datetime.now()}', 1)")
 
 

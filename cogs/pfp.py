@@ -25,7 +25,7 @@ class ProfilePics(commands.Cog):
         conn = self.bot.pool
         for member in pfp_role.members:
             sql = ("SELECT log_date FROM rcs_task_log "
-                   "WHERE log_type = $1 AND argument = $2")
+                   "WHERE log_type_id = $1 AND argument = $2")
             fetch = conn.fetchrow(sql, log_types['pfp'], member.id)
             if fetch[0] < date.today() - timedelta(days=7):
                 await member.send("I hope you're ready for it!  I'm sending out requests now for a new pfp for "
@@ -34,7 +34,7 @@ class ProfilePics(commands.Cog):
                        f"first person to DM {member.mention} with an appropriate image, {member.display_name} will "
                        f"use it for their profile pic for the next week!")
                 await self.global_webhook.send(msg)
-                sql = ("INSERT INTO rcs_task_log (log_type, log_date, argument) "
+                sql = ("INSERT INTO rcs_task_log (log_type_id, log_date, argument) "
                        "VALUES ($1, $2, $3)")
                 await conn.execute(sql, log_types['pfp'], date.today().strftime('%Y-%m-%d'), member.id)
 

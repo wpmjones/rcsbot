@@ -27,7 +27,7 @@ class Psql:
 
     @staticmethod
     async def create_pool():
-        pool = await asyncpg.create_pool(f"{settings['pg']['uri']}/psadmin", max_size=85)
+        pool = await asyncpg.create_pool(f"{settings['pg']['uri']}/postgres", max_size=85)
         return pool
 
     async def link_user(self, player_tag, discord_id):
