@@ -123,6 +123,7 @@ class Background(commands.Cog):
             return
         if settings['rcsRoles']['members'] not in [role.id for role in message.author.roles]:
             return
+        self.bot.logger.debug("New Message")
         conn = self.bot.pool
         row = await conn.fetchrow(f"SELECT * FROM rcs_messages WHERE discord_id = {message.author.id}")
         points = randint(7, 14)
@@ -139,7 +140,7 @@ class Background(commands.Cog):
                                    f"WHERE discord_id = {message.author.id}")
         else:
             await conn.execute(f"INSERT INTO rcs_messages "
-                               f"VALUES ({message.author.id}, {points}, 0, '{datetime.now()}', 1)")
+                               f"VALUES ({message.author.id}, {points}, '{datetime.now()}', 1)")
 
 
 def setup(bot):
