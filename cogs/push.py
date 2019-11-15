@@ -174,6 +174,8 @@ class Push(commands.Cog):
         msg = await ctx.send("Starting process...")
         # start push
         start = time.perf_counter()
+        rcs_tag_list = rcs_tags()
+        rcs_tag_list.append('22L2RY2J9')
         for tag in rcs_tags():
             if tag == "888GPQ0J":  # Change to in list if more than one clan bails
                 continue
