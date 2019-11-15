@@ -477,13 +477,13 @@ class CouncilCog(commands.Cog):
             return await ctx.send("Please provide the name of the alt account to be removed or specify all.")
         with Sql() as cursor:
             if alt == "all":
-                sql = f"DELETE FROM rcs_alts WHERE clanTag = {clan[0].tag[1:]}"
+                sql = f"DELETE FROM rcs_alts WHERE clanTag = {clan.tag[1:]}"
                 cursor.execute(sql)
-                await ctx.send(f"All alt accounts for {clan[0].name} have been removed.")
+                await ctx.send(f"All alt accounts for {clan.name} have been removed.")
             else:
-                sql = f"DELETE FROM rcs_alts WHERE clanTag = {clan[0].tag[1:]} AND altName = {alt}"
+                sql = f"DELETE FROM rcs_alts WHERE clanTag = {clan.tag[1:]} AND altName = {alt}"
                 cursor.execute(sql)
-                await ctx.send(f"{alt} has been removed as an alt for the leader of {clan[0].name}.")
+                await ctx.send(f"{alt} has been removed as an alt for the leader of {clan.name}.")
 
     @commands.group(invoke_without_subcommand=True, hidden=True)
     @is_council()
