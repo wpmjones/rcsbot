@@ -34,10 +34,10 @@ class Background(commands.Cog):
         """Watch for changes in war win streak and report to media/stats channel"""
         self.bot.logger.debug("Start war win streak change")
         if new_streak >= 5:
-            msg = random.choice["And the wins keep coming! ",
-                                "We've got another streak! ",
-                                "Impressive numbers! ",
-                                ]
+            msg = random.choice(["And the wins keep coming! ",
+                                 "We've got another streak! ",
+                                 "Impressive numbers! ",
+                                 ])
             msg += f"**{clan.name}** has just won another one, bringing their streak to {new_streak}."
             await self.media_stats.send(msg)
 
