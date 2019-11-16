@@ -166,8 +166,9 @@ class Push(commands.Cog):
         """Returns a list of players from the specified clan with their push points"""
         if not clan:
             return await ctx.send("Please provide a valid clan name/tag when using this command.")
+        print(clan)
         with Sql() as cursor:
-            cursor.execute(f"SELECT CAST(clanPoints as decimal(4,2)), "
+            cursor.execute(f"SELECT CAST(clanPoints as decimal(5,2)), "
                            f"playerName + ' (TH' + CAST(currentThLevel as varchar(2)) + ')' "
                            f"FROM rcspush_vwClanPoints "
                            f"WHERE clanName = %s "
