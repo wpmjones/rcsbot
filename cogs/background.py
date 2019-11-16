@@ -62,7 +62,7 @@ class Background(commands.Cog):
                                     "You're making us all proud!"
                                     "Go win a few more!"])
             msg = f"{prefix}{clan.name} just hit **{new_wins}** wins! {suffix}"
-            await self.media_stats(msg)
+            await self.media_stats.send(msg)
 
     @tasks.loop(time=time(hour=17))
     async def clan_checks(self):
