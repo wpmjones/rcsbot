@@ -25,6 +25,8 @@ def get_render_type(table, type_):
         "top warstars": (table.board_1, "Stars"),
         "top trophies": (table.board_1, "Cups"),
         "top bhtrophies": (table.board_1, "Cups"),
+        "top besttrophies": (table.board_1, "Cups"),
+        "top games": (table.board_1, "Pts"),
         "townhalls": (table.board_3, ),
         "builderhalls": (table.board_4, ),
         "push all": (table.board_1, "Points"),
