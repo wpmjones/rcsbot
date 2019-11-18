@@ -595,20 +595,22 @@ class CouncilCog(commands.Cog):
         conn = self.bot.pool
         sql = ("SELECT warned_user_id, warning_class, warning, created_by, created_at FROM rcs_warnings "
                "WHERE warn_id = $1")
-        row = conn.fetchrow(sql, warn_id)
+        row = await conn.fetchrow(sql, int(warn_id))
+        if not row:
+            return await ctx.send("There is no warning with that ID.")
         user = self.bot.get_user(row['warned_user_id'])
         warner = self.bot.get_user(row['created_by'])
-        prompt = ctx.prompt(f"Please confirm that this is the warning you would like to remove:\n"
-                            f"Warning ID: {warn_id}\n"
-                            f"Discord Member: {user.display_name}\n"
-                            f"Warning Class: Class {row['warning_class']}\n"
-                            f"Warned by: {warner}\n"
-                            f"Created on: {row['created_at'].strftime('%Y-%m-%d')}",
-                            timeout=30)
+        prompt = await ctx.prompt(f"Please confirm that this is the warning you would like to remove:\n"
+                                  f"Warning ID: {warn_id}\n"
+                                  f"Discord Member: {user.display_name}\n"
+                                  f"Warning Class: Class {row['warning_class']}\n"
+                                  f"Warned by: {warner}\n"
+                                  f"Created on: {row['created_at'].strftime('%Y-%m-%d')}",
+                                  timeout=30)
         if not prompt:
             return await ctx.send("Removal cancelled by user.")
         sql = "DELETE FROM rcs_warnings WHERE warn_id = $1"
-        await conn.execute(sql, warn_id)
+        await conn.execute(sql, int(warn_id))
         await ctx.message.add_reaction('\u2705')
 
     @warn.command(name="list")
