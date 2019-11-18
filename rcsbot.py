@@ -23,7 +23,9 @@ if enviro == "LIVE":
     log_level = "INFO"
     coc_names = "vps"
     initial_extensions = ["cogs.admin",
+                          "cogs.background",
                           "cogs.council",
+                          "cogs.discordcheck",
                           "cogs.eggs",
                           "cogs.games",
                           "cogs.general",

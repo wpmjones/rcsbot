@@ -1,4 +1,3 @@
-
 import discord
 import coc
 import asyncio
@@ -540,6 +539,112 @@ class CouncilCog(commands.Cog):
                 sql = f"DELETE FROM rcs_alts WHERE clanTag = %s AND altName = %s"
                 cursor.execute(sql, (clan.tag[1:], alt))
                 await ctx.send(f"{alt} has been removed as an alt for the leader of {clan.name}.")
+
+    @commands.group(invoke_without_subcommand=True, hidden=True)
+    @is_mod_or_council()
+    async def warn(self, ctx):
+        """[Group] Commands to handle Discord warnings on the RCS Discord Server
+
+        **Permissions:**
+        Council
+        Chat Mods
+        """
+        if ctx.invoked_subcommand is None:
+            await ctx.send_help(ctx.command)
+
+    @warn.command(name="add")
+    async def warn_add(self, ctx, member: discord.Member = None, *, reason=None):
+        """Adds a warning for the specified user"""
+        if not member:
+            return await ctx.send("It would appear that you have not provided a valid Discord user. Please try again.")
+
+        def check_author(m):
+            return m.author == ctx.author
+
+        if not reason:
+            try:
+                await ctx.send(f"Can you tell me why we are warning {member.display_name}?")
+                response = await ctx.bot.wait_for("message", check=check_author, timeout=45)
+                reason = response.content
+            except asyncio.TimeoutError:
+                return await ctx.send("I don't know why you want to warn this person. Please start over when you are "
+                                      "willing to provide a little more information.")
+        prompt = await ctx.prompt("Please specify the class for this infraction:\n"
+                                  ":one: - Class A\n"
+                                  ":two: - Class B\n"
+                                  ":three: - Class C",
+                                  additional_options=3)
+        if prompt == 1:
+            warning_class = "A"
+        elif prompt == 2:
+            warning_class = "B"
+        elif prompt == 3:
+            warning_class = "C"
+        else:
+            return await ctx.send("You must select a valid class for this infraction. Please try again.")
+
+        conn = self.bot.pool
+        sql = ("INSERT INTO rcs_warnings (warned_user_id, warning_class, warning, created_by, created_at) "
+               "VALUES ($1, $2, $3, $4, $5)")
+        await conn.execute(sql, member.id, warning_class, reason, ctx.author.id, ctx.message.created_at)
+        await ctx.message.add_reaction('\u2705')
+
+    @warn.command(name="remove")
+    async def warn_remove(self, ctx, warn_id):
+        """Removes the specified warning"""
+        conn = self.bot.pool
+        sql = ("SELECT warned_user_id, warning_class, warning, created_by, created_at FROM rcs_warnings "
+               "WHERE warn_id = $1")
+        row = conn.fetchrow(sql, warn_id)
+        user = self.bot.get_user(row['warned_user_id'])
+        warner = self.bot.get_user(row['created_by'])
+        prompt = ctx.prompt(f"Please confirm that this is the warning you would like to remove:\n"
+                            f"Warning ID: {warn_id}\n"
+                            f"Discord Member: {user.display_name}\n"
+                            f"Warning Class: Class {row['warning_class']}\n"
+                            f"Warned by: {warner}\n"
+                            f"Created on: {row['created_at'].strftime('%Y-%m-%d')}",
+                            timeout=30)
+        if not prompt:
+            return await ctx.send("Removal cancelled by user.")
+        sql = "DELETE FROM rcs_warnings WHERE warn_id = $1"
+        await conn.execute(sql, warn_id)
+        await ctx.message.add_reaction('\u2705')
+
+    @warn.command(name="list")
+    async def warn_list(self, ctx, member: discord.Member = None):
+        """Lists current warnings for the specified user"""
+        if not member:
+            return await ctx.send("It would appear that you have not provided a valid Discord user. Please try again.")
+        conn = self.bot.pool
+        sql = ("SELECT warn_id, warning_class, warning, created_by, created_at FROM rcs_warnings "
+               "WHERE warned_user_id = $1")
+        fetch = await conn.fetch(sql, member.id)
+        content = ""
+        for row in fetch:
+            warner = self.bot.get_user(row['created_by'])
+            content += (f"Warning ID: {row['warn_id']}\n"
+                        f"Warning Class: Class {row['warning_class']}\n"
+                        f"Warned by: {warner}\n"
+                        f"Created on: {row['created_at'].strftime('%Y-%m-%d')}\n"
+                        f"\n")
+        # Remove extra line at the end of content
+        content = content[:-2]
+        embed = discord.Embed(title=f"Warnings for {member.display_name}",
+                              description=content,
+                              color=discord.Color.dark_red())
+        embed.set_footer(text="To remove a warning, use ++warn remove ##")
+        if ctx.channel.id in (settings['rcs_channels']['council'],
+                              settings['rcs_channels']['council_spam'],
+                              settings['rcs_channels']['mods']):
+            await ctx.send(embed=embed)
+        else:
+            channel = self.bot.get_channel(settings['rcs_channels']['mods'])
+            await channel.send(embed=embed)
+            await ctx.message.delete()
+            await ctx.author.send(f"It's really not wise to use the {ctx.command.name} command in the "
+                                  f"{ctx.channel.name} channel.  I have responded in the "
+                                  f"<#{settings['rcs_channels']['mods']}> channel instead.")
 
     @commands.group(invoke_without_subcommand=True, hidden=True)
     @is_council()

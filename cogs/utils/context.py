@@ -121,7 +121,7 @@ class Context(commands.Context):
 
         if additional_options > 0:
             fmt = f'{message}\n\nReact with 1\N{combining enclosing keycap} for option 1, ' \
-                  f'2\N{combining enclosing keycap} for option 2, etc. or \N{CROSS MARK} to select none.'
+                  f'2\N{combining enclosing keycap} for option 2, etc.'
 
         author_id = author_id or self.author.id
         msg = await self.send(embed=discord.Embed(color=self.bot.color, description=fmt))
