@@ -604,6 +604,7 @@ class CouncilCog(commands.Cog):
                                   f"Warning ID: {warn_id}\n"
                                   f"Discord Member: {user.display_name}\n"
                                   f"Warning Class: Class {row['warning_class']}\n"
+                                  f"Warning: {row['warning']}\n"
                                   f"Warned by: {warner}\n"
                                   f"Created on: {row['created_at'].strftime('%Y-%m-%d')}",
                                   timeout=30)
@@ -627,6 +628,7 @@ class CouncilCog(commands.Cog):
             warner = self.bot.get_user(row['created_by'])
             content += (f"Warning ID: {row['warn_id']}\n"
                         f"Warning Class: Class {row['warning_class']}\n"
+                        f"Warning: {row['warning']}\n"
                         f"Warned by: {warner}\n"
                         f"Created on: {row['created_at'].strftime('%Y-%m-%d')}\n"
                         f"\n")
