@@ -6,6 +6,7 @@ from config import emojis
 
 
 def get_render_type(table, type_):
+    logger.info(f"Invoked: {type_}")
     board_choice = {
         "attacks": (table.board_1, "Att"),
         "defenses": (table.board_1, "Def"),

@@ -1,6 +1,7 @@
 import discord
 
 from discord.ext import commands
+from cogs.utils.converters import PlayerConverter, ClanConverter
 from cogs.utils.db import Sql
 from cogs.utils import helper
 from datetime import datetime
@@ -9,6 +10,20 @@ from datetime import datetime
 class OwnerCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.command(name="pp", hidden=True)
+    async def player_test(self, ctx, player_tag):
+        player = await self.bot.coc.get_player(player_tag)
+        await ctx.send(player)
+
+    @commands.command(name="dd", hidden=True)
+    async def discord_test(self, ctx, user: discord.User = None):
+        await ctx.send(user)
+
+    @commands.command(name="clan", hidden=True)
+    async def get_clan(self, ctx, clan_tag):
+        clan = await self.bot.coc.get_clan(clan_tag)
+        await ctx.send(clan)
 
     @commands.command(name="clear", hidden=True)
     @commands.is_owner()
