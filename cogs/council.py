@@ -375,6 +375,62 @@ class CouncilCog(commands.Cog):
                                      in_cwl,
                                      discord.Color.dark_red())
 
+    @commands.command(name="ban", hidden=True)
+    @is_mod_or_council()
+    async def ban_list(self, ctx, *args):
+        """Responds with a list of all members who have been banned from the RCS Discord Server"""
+        guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
+        content = ""
+        async for entry in guild.audit_logs(action=discord.AuditLogAction.ban):
+            reason = entry.reason
+            if not reason:
+                reason = "No reason given"
+            content += (f"**{entry.target}** was banned by {entry.user.display_name} on "
+                        f"**{entry.created_at.strftime('%Y-%m-%d')}** "
+                        f"for:\n{reason}\n\n")
+        embed = discord.Embed(title="Members banned from RCS Discord",
+                              description=content,
+                              color=discord.Color.dark_red())
+        if ctx.channel.id in (settings['rcs_channels']['council'],
+                              settings['rcs_channels']['council_spam'],
+                              settings['rcs_channels']['mods']):
+            await ctx.send(embed=embed)
+        else:
+            channel = self.bot.get_channel(settings['rcs_channels']['mods'])
+            await channel.send(embed=embed)
+            await ctx.message.delete()
+            await ctx.author.send(f"It's really not wise to use the {ctx.command.name} list command in the "
+                                  f"{ctx.channel.name} channel.  I have responded in the "
+                                  f"<#{settings['rcs_channels']['mods']}> channel instead.")
+
+    @commands.command(name="kick", hidden=True)
+    @is_mod_or_council()
+    async def kick_list(self, ctx, *args):
+        """Responds with a list of all members who have been banned from the RCS Discord Server"""
+        guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
+        content = ""
+        async for entry in guild.audit_logs(action=discord.AuditLogAction.kick):
+            reason = entry.reason
+            if not reason:
+                reason = "No reason given"
+            content += (f"**{entry.target}** was kicked by {entry.user.display_name} on "
+                        f"**{entry.created_at.strftime('%Y-%m-%d')}** "
+                        f"for:\n{reason}\n\n")
+        embed = discord.Embed(title="Members kicked from RCS Discord",
+                              description=content,
+                              color=discord.Color.dark_red())
+        if ctx.channel.id in (settings['rcs_channels']['council'],
+                              settings['rcs_channels']['council_spam'],
+                              settings['rcs_channels']['mods']):
+            await ctx.send(embed=embed)
+        else:
+            channel = self.bot.get_channel(settings['rcs_channels']['mods'])
+            await channel.send(embed=embed)
+            await ctx.message.delete()
+            await ctx.author.send(f"It's really not wise to use the {ctx.command.name} list command in the "
+                                  f"{ctx.channel.name} channel.  I have responded in the "
+                                  f"<#{settings['rcs_channels']['mods']}> channel instead.")
+
     @commands.command(name="leader", hidden=True)
     @is_mod_or_council()
     async def leader(self, ctx, *, clan: ClanConverter = None):
