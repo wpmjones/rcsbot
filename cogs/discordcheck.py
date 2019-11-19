@@ -38,7 +38,7 @@ class DiscordCheck(commands.Cog):
         notes_channel = self.guild.get_channel(settings['rcs_channels']['leader_notes'])
 
         messages = ""
-        async for message in notes_channel.history(limit=25, oldest_first=True):
+        async for message in notes_channel.history(limit=None, oldest_first=True):
             if message.content:
                 messages += message.content + " - "
         regex = r"[tT]ag:\s[PYLQGRJCUV0289]+|#[PYLQGRJCUV0289]{6,}"
