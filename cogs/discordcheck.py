@@ -143,7 +143,7 @@ class DiscordCheck(commands.Cog):
         if date.today().weekday() != 0:
             return
         member_role = self.guild.get_role(settings['rcs_roles']['members'])
-        mods_channel = self.guild.get_channel(settings['rcsChannels']['mods'])
+        mods_channel = self.guild.get_channel(settings['rcs_channels']['mods'])
         with Sql() as cursor:
             cursor.execute("SELECT shortName, clanName FROM rcs_data ORDER BY clanName")
             fetch = cursor.fetchall()
