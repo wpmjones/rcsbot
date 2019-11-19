@@ -85,12 +85,12 @@ class WarStatus(commands.Cog):
 
     async def add_war(self, war):
         with Sql() as cursor:
-            sql = ("INSERT INTO rcs_wars (clanTag, opponentTag, opponentName, teamSize, warState, endTime) "
-                   "(SELECT %s, %s, N'{}', %d, %s, %s "
+            sql = ("INSERT INTO rcs_wars (clanTag, opponentTag, opponentName, teamSize, warState, endTime, warType) "
+                   "(SELECT %s, %s, N'{}', %d, %s, %s, %s "
                    "WHERE NOT EXISTS "
                    "(SELECT war_id FROM rcs_wars WHERE clanTag = %s AND endTime = %s))".format(war.opponent.name))
             cursor.execute(sql, (war.clan.tag[1:], war.opponent.tag[1:], war.team_size,
-                                 war.state, war.end_time.time, war.clan.tag[1:], war.end_time.time))
+                                 war.state, war.end_time.time, war.clan.tag[1:], war.end_time.time, war.type))
             try:
                 self.bot.active_wars[war.clan.tag] = cursor.lastrowid()
             except TypeError:
