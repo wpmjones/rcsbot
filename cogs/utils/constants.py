@@ -61,6 +61,14 @@ trophy_leagues = {
     "Champion I",
 }
 
+veri_status = {
+    0: "has not been addressed",
+    1: "is awaiting a scout",
+    2: "is currently being scouted",
+    3: "is awaiting the post-scout survey",
+    4: "is awaiting a decision by Council",
+}
+
 log_types = {
     "discord_check": 1,
     "pfp": 2,
