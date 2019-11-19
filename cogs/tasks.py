@@ -3,6 +3,7 @@ import requests
 
 from discord.ext import commands
 from cogs.utils.checks import is_council
+from cogs.utils.constants import veri_status
 from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
@@ -55,7 +56,7 @@ class Tasks(commands.Cog):
                 embed.add_field(name=f"Suggestion from {row[1]}\n{row[7]}",
                                 value=f"{row[3][:500]}\nDated {row[0]}",
                                 inline=False)
-        embed.set_footer(text="Use ++done <Task ID> to complete a task")
+        embed.set_footer(text="Use ++tasks done <Task ID> to complete a task")
         if len(embed.fields) > 0:
             flag = 1
             await ctx.author.send(embed=embed)
@@ -68,7 +69,7 @@ class Tasks(commands.Cog):
                 embed.add_field(name=f"Council Nomination for {row[3]}\n{row[9]}",
                                 value=f"Submitted by {row[1]}\nDated {row[0]}",
                                 inline=False)
-        embed.set_footer(text="Use ++done <Task ID> to complete a task")
+        embed.set_footer(text="Use ++tasks done <Task ID> to complete a task")
         if len(embed.fields) > 0:
             flag = 1
             await ctx.author.send(embed=embed)
@@ -89,7 +90,7 @@ class Tasks(commands.Cog):
                 embed.add_field(name=f"Verification for {row[1]} {status}.\n{row[7]}",
                                 value=f"Leader: {row[3]}\nDated {row[0]}",
                                 inline=False)
-        embed.set_footer(text="User ++verification <Task ID> to change the status.")
+        embed.set_footer(text="Use ++tasks update <Task ID> to change the status.")
         if len(embed.fields) > 0:
             flag = 1
             await ctx.author.send(embed=embed)
@@ -107,7 +108,7 @@ class Tasks(commands.Cog):
                                 value=(f"{row[3][:500]}\n{assigned_to}\n"
                                        f"Dated {row[0]}"),
                                 inline=False)
-        embed.set_footer(text="Use ++done <Task ID> to complete a task")
+        embed.set_footer(text="Use ++tasks done <Task ID> to complete a task")
         if len(embed.fields) > 0:
             flag = 1
             await ctx.author.send(embed=embed)
@@ -124,7 +125,7 @@ class Tasks(commands.Cog):
                 embed.add_field(name=f"{assigned_to}\n{row[7]}",
                                 value=f"{row[1]}\nDated: {row[0]}",
                                 inline=False)
-        embed.set_footer(text="Use ++done <Task ID> to complete a task")
+        embed.set_footer(text="Use ++tasks done <Task ID> to complete a task")
         if len(embed.fields) > 0:
             flag = 1
             await ctx.author.send(embed=embed)
@@ -143,7 +144,7 @@ class Tasks(commands.Cog):
                 embed.add_field(name=f"Suggestion from {row[1]}\n{row[7]}\nDated {row[0]}",
                                 value=row[3][:1023],
                                 inline=True)
-        embed.set_footer(text="Use ++done <Task ID> to complete a task")
+        embed.set_footer(text="Use ++tasks done <Task ID> to complete a task")
         if len(embed.fields) > 0:
             await ctx.send(embed=embed)
         else:
@@ -161,7 +162,7 @@ class Tasks(commands.Cog):
                 embed.add_field(name=f"Council Nomination for {row[3]}\n{row[9]}\nDated {row[0]}",
                                 value=f"Submitted by {row[1]}",
                                 inline=True)
-        embed.set_footer(text="Use ++done <Task ID> to complete a task")
+        embed.set_footer(text="Use ++tasks done <Task ID> to complete a task")
         if len(embed.fields) > 0:
             await ctx.send(embed=embed)
         else:
@@ -184,7 +185,8 @@ class Tasks(commands.Cog):
                 embed.add_field(name=f"Verification for {row[1]} {status}.\n{row[7]}\nDated {row[0]}",
                                 value=f"Leader: {row[3]}",
                                 inline=True)
-        embed.set_footer(text="To change status, use ++veri <task ID> <new status> (e.g. ++veri V128 3)")
+        embed.set_footer(text="To change status, use ++tasks update <task ID> <new status> "
+                              "(e.g. ++tasks update Ver128 3)")
         if len(embed.fields) > 0:
             await ctx.send(embed=embed)
 
@@ -205,7 +207,7 @@ class Tasks(commands.Cog):
                     embed.add_field(name=f"Other Comment from {row[1]}\n{row[7]}",
                                     value=f"{row[3][:1000]}\n{assigned_to}\nDated: {row[0]}",
                                     inline=False)
-            embed.set_footer(text="Use ++done <Task ID> to complete a task")
+            embed.set_footer(text="Use ++tasks done <Task ID> to complete a task")
             if len(embed.fields) > 0:
                 await ctx.send(embed=embed)
             else:
@@ -229,7 +231,7 @@ class Tasks(commands.Cog):
                 embed.add_field(name=f"{assigned_to}\n{row[7]}",
                                 value=f"{row[1]}\nDated: {row[0]}",
                                 inline=False)
-        embed.set_footer(text="Use ++done <Task ID> to complete a task")
+        embed.set_footer(text="Use ++tasks done <Task ID> to complete a task")
         if len(embed.fields):
             await ctx.send(embed=embed)
         else:
@@ -326,6 +328,7 @@ class Tasks(commands.Cog):
                                "correct Task ID. Use `++tasks action` if you are unsure.")
 
     @tasks.command(name="update")
+    @is_council()
     async def tasks_update(self, ctx, task_id, new_status: int = None):
         """Change the status of an existing clan verification
 
@@ -341,77 +344,69 @@ class Tasks(commands.Cog):
         3 - is awaiting the post-scout surveys
         4 - is awaiting a decision by Council
         """
-        if await self.is_council(ctx.author.id):
-            if task_id[:1].lower() != "v":
-                await ctx.send("This command only works on Verification tasks.")
-                return
-            # Fix for user providing Veri107 instead of Ver107
-            if len(task_id) == 7:
-                task_id = task_id[:3] + task_id[4:]
-            result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Verification!A2:I").execute()
-            values = result.get("values", [])
-            row_num = 1
-            found = 0
-            for row in values:
-                row_num += 1
-                if row[7].lower() == task_id.lower():
-                    task_row = row_num
-                    clan_name = row[1]
-                    leader = row[3]
-                    if len(row) >= 9:
-                        cur_status_num = row[8]
-                    else:
-                        cur_status_num = 0
-                    found = 1
-            if found == 0:
-                return await ctx.send(f"I could not find {task_id} in the Verification tab. Are you sure that's the "
-                                      f"right ID?")
-            cur_status_text = " has not been addressed"
-            # TODO Move statuses to constants.py so you can respond in English on line 400
-            if cur_status_num == "1": cur_status_text = "is awaiting a scout"
-            if cur_status_num == "2": cur_status_text = "is currently being scouted"
-            if cur_status_num == "3": cur_status_text = "is awaiting the post-scout survey"
-            if cur_status_num == "4": cur_status_text = "is awaiting a decision by Council"
-            msg = await ctx.send(f"Verification for {clan_name} {cur_status_text}\nLeader: {leader}\n"
-                                 f"Update in progress...")
-            async with ctx.typing():
-                if not new_status:
-                    prompt = await ctx.prompt(f"Please select a new status:\n"
-                                              f":one: Awaiting a scout\n"
-                                              f":two: Being scouted\n"
-                                              f":three: Awaiting the post-scout surveys\n"
-                                              f":four: Awaiting a decision by Council\n"
-                                              f":five: Mark complete",
-                                              additional_options=5)
-                    if prompt == 5:
-                        prompt = await ctx.prompt("Did this clan get verified?")
-                        if prompt:
-                            new_status = 5
-                        else:
-                            new_status = 6
-                    else:
-                        new_status = prompt
-                url = f"{settings['google']['comm_log']}?call=verification&status={new_status}&row={task_row}"
-                # TODO ditch requests for aiohttp.clientsession
-                r = requests.get(url)
-                if r.status_code == requests.codes.ok:
-                    if r.text == "1":
-                        if new_status <= 4:
-                            return await msg.edit(content=f"Verification for {clan_name} "
-                                                          f"has been changed to {new_status}.\n"
-                                                          f"Leader: {leader}")
-                        elif new_status == 5:
-                            return await msg.edit(content=f"Verification for {clan_name} "
-                                                          f"has been changed to Verified.\n"
-                                                          f"Leader: {leader}")
-                        else:
-                            return await msg.edit(content=f"Verification for {clan_name} "
-                                                          f"has been changed to 'Heck No!' :wink:\n"
-                                                          f"Leader: {leader}")
+        if task_id[:1].lower() != "v":
+            await ctx.send("This command only works on Verification tasks.")
+            return
+        # Fix for user providing Veri107 instead of Ver107
+        if len(task_id) == 7:
+            task_id = task_id[:3] + task_id[4:]
+        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Verification!A2:I").execute()
+        values = result.get("values", [])
+        row_num = 1
+        found = 0
+        for row in values:
+            row_num += 1
+            if row[7].lower() == task_id.lower():
+                task_row = row_num
+                clan_name = row[1]
+                leader = row[3]
+                if len(row) >= 9:
+                    cur_status_num = row[8]
                 else:
-                    await ctx.send(f"Whoops! Something went sideways!\nVerification Error: {r.text}")
-        else:
-            await ctx.send("This very special and important command is reserved for council members only!")
+                    cur_status_num = 0
+                found = 1
+        if found == 0:
+            return await ctx.send(f"I could not find {task_id} in the Verification tab. Are you sure that's the "
+                                  f"right ID?")
+        cur_status_text = veri_status[int(cur_status_num)]
+        msg = await ctx.send(f"Verification for {clan_name} {cur_status_text}\nLeader: {leader}\n"
+                             f"Update in progress...")
+        async with ctx.typing():
+            if not new_status:
+                prompt = await ctx.prompt(f"Please select a new status:\n"
+                                          f":one: Awaiting a scout\n"
+                                          f":two: Being scouted\n"
+                                          f":three: Awaiting the post-scout surveys\n"
+                                          f":four: Awaiting a decision by Council\n"
+                                          f":five: Mark complete",
+                                          additional_options=5)
+                if prompt == 5:
+                    prompt = await ctx.prompt("Did this clan get verified?")
+                    if prompt:
+                        new_status = 5
+                    else:
+                        new_status = 6
+                else:
+                    new_status = prompt
+            url = f"{settings['google']['comm_log']}?call=verification&status={new_status}&row={task_row}"
+            # TODO ditch requests for aiohttp.clientsession
+            r = requests.get(url)
+            if r.status_code == requests.codes.ok:
+                if r.text == "1":
+                    if new_status <= 4:
+                        return await msg.edit(content=f"Verification for {clan_name} "
+                                                      f"has been changed to *{veri_status[new_status]}*.\n"
+                                                      f"Leader: {leader}")
+                    elif new_status == 5:
+                        return await msg.edit(content=f"Verification for {clan_name} "
+                                                      f"has been changed to Verified.\n"
+                                                      f"Leader: {leader}")
+                    else:
+                        return await msg.edit(content=f"Verification for {clan_name} "
+                                                      f"has been changed to 'Heck No!' :wink:\n"
+                                                      f"Leader: {leader}")
+            else:
+                await ctx.send(f"Whoops! Something went sideways!\nVerification Error: {r.text}")
 
     @tasks.command(name="complete", aliases=["done", "finished", "x"])
     async def tasks_complete(self, ctx, task_id):
