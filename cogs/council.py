@@ -570,9 +570,12 @@ class CouncilCog(commands.Cog):
                 return await ctx.send("I don't know why you want to warn this person. Please start over when you are "
                                       "willing to provide a little more information.")
         prompt = await ctx.prompt("Please specify the class for this infraction:\n"
-                                  ":one: - Class A\n"
-                                  ":two: - Class B\n"
-                                  ":three: - Class C",
+                                  ":one: - Class A (isms, discrimination, links to naughty things, gore, etc. or "
+                                  "hostile attack on another member)\n"
+                                  ":two: - Class B (Joke or comment in poor taste or offensive to another member, "
+                                  "TOS mention, aggresstion to another member)\n"
+                                  ":three: - Class C (Spamming, disruptive messages, overuse of profanity or off color "
+                                  "remarks/jokes)",
                                   additional_options=3)
         if prompt == 1:
             warning_class = "A"
@@ -586,6 +589,7 @@ class CouncilCog(commands.Cog):
         conn = self.bot.pool
         sql = ("INSERT INTO rcs_warnings (warned_user_id, warning_class, warning, created_by, created_at) "
                "VALUES ($1, $2, $3, $4, $5)")
+        # TODO List role (if guest or member) also include other warnings with dates
         await conn.execute(sql, member.id, warning_class, reason, ctx.author.id, ctx.message.created_at)
         await ctx.message.add_reaction('\u2705')
 
