@@ -30,20 +30,22 @@ class Games(commands.Cog):
     @games.command(name="all")
     async def games_all(self, ctx):
         """Returns clan points for all RCS clans"""
-        with Sql(as_dict=True) as cursor:
-            cursor.execute("SELECT TOP 1 clanPoints "
-                           "FROM rcs_events "
-                           "WHERE eventType = 5 "
-                           "ORDER BY eventId DESC")
-            row = cursor.fetchone()
-            clan_points = row['clanPoints']
-            cursor.callproc("rcs_spClanGamesTotal")
-            data = []
-            for clan in cursor:
-                if clan['clanTotal'] >= clan_points:
-                    data.append([clan['clanTotal'], "* " + clan['clanName']])
-                else:
-                    data.append([clan['clanTotal'], clan['clanName']])
+        conn = self.bot.pool
+        sql = ("SELECT clan_points FROM rcs_events "
+               "WHERE event_type_id =5 and start_time < now() "
+               "LIMIT 1")
+        fetch = await conn.fetchrow(sql)
+        clan_points = fetch[0]
+        sql = ("SELECT SUM(points) as clan_total, clan_name FROM rcs_get_game_points() "
+               "GROUP BY clan_name "
+               "ORDER BY clan_total DESC")
+        fetch = await conn.fetch(sql)
+        data = []
+        for clan in fetch:
+            if clan['clan_total'] >= clan_points:
+                data.append([clan['clan_total'], "* " + clan['clan_name']])
+            else:
+                data.append([clan['clan_total'], clan['clan_name']])
         page_count = math.ceil(len(data) / 25)
         title = "RCS Clan Games Points"
         ctx.icon = "https://cdn.discordapp.com/emojis/639623355770732545.png"
