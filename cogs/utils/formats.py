@@ -20,6 +20,7 @@ def get_render_type(table, type_):
         "games all": (table.board_1, "Points"),
         "games average": (table.board_1, "Avg"),
         "games clan": (table.board_1, "Points"),
+        "games top": (table.board_1, "Points"),
         "top attacks": (table.board_1, "Att"),
         "top defenses": (table.board_1, "Def"),
         "top donates": (table.board_1, "Don"),

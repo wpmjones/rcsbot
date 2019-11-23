@@ -52,6 +52,11 @@ class Games(commands.Cog):
         p = formats.TablePaginator(ctx, data=data, title=title, page_count=page_count)
         await p.paginate()
 
+    @games.command(name="top")
+    async def games_top(self, ctx):
+        """Show top ten players' games points"""
+        await ctx.invoke(self.bot.get_command("top games"))
+
     @games.command(name="average", aliases=["avg", "averages"])
     async def games_average(self, ctx):
         """Returns the average player points for all RCS clans"""
