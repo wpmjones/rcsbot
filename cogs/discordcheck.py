@@ -82,13 +82,13 @@ class DiscordCheck(commands.Cog):
             # Add to task log
             sql = ("INSERT INTO rcs_task_log (log_type_id, log_date, argument) "
                    "VALUES ($1, $2, $3)")
-            try:
-                await self.bot.pool.execute(sql,
-                                            log_types['danger'],
-                                            date.today(),
-                                            f"{len(ban_list)} tags processed")
-            except:
-                self.bot.logger.exception("RCS Task Log insert error")
+        try:
+            await self.bot.pool.execute(sql,
+                                        log_types['danger'],
+                                        date.today(),
+                                        f"{len(ban_list)} tags processed")
+        except:
+            self.bot.logger.exception("RCS Task Log insert error")
 
     @tasks.loop(time=time(hour=16, minute=30))
     async def discord_check(self):
