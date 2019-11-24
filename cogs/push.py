@@ -7,6 +7,7 @@ from cogs.utils import formats
 from cogs.utils.converters import ClanConverter
 from cogs.utils.db import Sql
 from cogs.utils.helper import rcs_tags
+from itertools import groupby
 from datetime import datetime
 
 
@@ -63,7 +64,7 @@ class Push(commands.Cog):
     async def push_all(self, ctx):
         """Returns list of all clans ranked by score (only top 30 trophies contribute to the score)."""
         with Sql() as cursor:
-            cursor.execute("SELECT SUM(clanPoints) AS totals, clanName FROM rcspush_vwClanPointsTop30 "
+            cursor.execute("SELECT SUM(clanPoints) AS totals, clanName FROM vRCSPush30 "
                            "GROUP BY clanName "
                            "ORDER BY totals DESC")
             fetch = cursor.fetchall()
@@ -77,7 +78,7 @@ class Push(commands.Cog):
     async def push_diff(self, ctx):
         """Returns list of clans ranked by score, showing the differential to the top clan."""
         with Sql() as cursor:
-            cursor.execute("SELECT SUM(clanPoints) AS totals, clanName FROM rcspush_vwClanPointsTop30 "
+            cursor.execute("SELECT SUM(clanPoints) AS totals, clanName FROM vRCSPush30 "
                            "GROUP BY clanName "
                            "ORDER BY totals DESC")
             fetch = cursor.fetchall()
@@ -115,7 +116,7 @@ class Push(commands.Cog):
         with Sql() as cursor:
             cursor.execute(f"SELECT TOP 100 currentTrophies, CAST(clanPoints AS DECIMAL(5,2)), "
                            f"playerName + ' (' + COALESCE(altName, clanName) + ')'"
-                           f"FROM rcspush_vwClanPoints "
+                           f"FROM vRCSPush "
                            f"WHERE currentThLevel = {th_level} "
                            f"ORDER BY clanPoints DESC")
             fetch = cursor.fetchall()
@@ -170,7 +171,7 @@ class Push(commands.Cog):
         with Sql() as cursor:
             cursor.execute(f"SELECT CAST(clanPoints as decimal(5,2)), "
                            f"playerName + ' (TH' + CAST(currentThLevel as varchar(2)) + ')' "
-                           f"FROM rcspush_vwClanPoints "
+                           f"FROM vRCSPush "
                            f"WHERE clanName = %s "
                            f"ORDER BY clanPoints DESC",
                            clan.name)
