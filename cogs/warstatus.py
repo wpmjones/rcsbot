@@ -13,6 +13,7 @@ from config import settings
 class WarStatus(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.war_channel = self.bot.get_channel(settings['rcs_channels']['war_updates'])
         self.bot.coc.add_events(self.on_war_state_change,
                                 )
         self.bot.coc.add_war_update(rcs_tags(prefix=True))
