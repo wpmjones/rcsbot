@@ -14,7 +14,6 @@ class Background(commands.Cog):
     """Cog for background tasks. No real commands here."""
     def __init__(self, bot):
         self.bot = bot
-        self.guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
         self.media_stats = self.guild.get_channel(settings['rcs_channels']['media_stats'])
 
         self.bot.coc.add_events(self.on_clan_war_win_streak_change,
@@ -23,12 +22,19 @@ class Background(commands.Cog):
                                 )
         self.bot.coc.add_clan_update(rcs_tags(prefix=True))
         self.bot.coc.start_updates("clan")
+        bot.loop.create_task(self.cog_init_ready())
 
     def cog_unload(self):
         self.bot.coc.remove_events(self.on_clan_war_win_streak_change,
                                    self.on_clan_level_change,
                                    self.on_clan_war_win_change,
                                    )
+
+    async def cog_init_ready(self) -> None:
+        """Sets the guild properly"""
+        await self.bot.wait_until_ready()
+        if not self.guild:
+            self.guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
 
     async def on_clan_war_win_streak_change(self, old_streak, new_streak, clan):
         """Watch for changes in war win streak and report to media/stats channel"""

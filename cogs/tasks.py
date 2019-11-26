@@ -25,8 +25,14 @@ class Tasks(commands.Cog):
     """Cog for handling Council Tasks"""
     def __init__(self, bot):
         self.bot = bot
-        self.guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
+        bot.loop.create_task(self.cog_init_ready())
         # TODO Set up DM for assigned action items
+
+    async def cog_init_ready(self) -> None:
+        """Sets the guild properly"""
+        await self.bot.wait_until_ready()
+        if not self.guild:
+            self.guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
 
     @commands.group(name="tasks", aliases=["task", "veri"], hidden=True)
     @is_council()

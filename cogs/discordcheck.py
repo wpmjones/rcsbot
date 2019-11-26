@@ -14,15 +14,21 @@ from config import settings, color_pick
 class DiscordCheck(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
         self.clear_danger.start()
         self.leader_notes.start()
         self.discord_check.start()
+        bot.loop.create_task(self.cog_init_ready())
 
     def cog_unload(self):
         self.clear_danger.cancel()
         self.leader_notes.cancel()
         self.discord_check.cancel()
+
+    async def cog_init_ready(self) -> None:
+        """Sets the guild properly"""
+        await self.bot.wait_until_ready()
+        if not self.guild:
+            self.guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
 
     @tasks.loop(time=time(hour=16, minute=20))
     async def clear_danger(self):

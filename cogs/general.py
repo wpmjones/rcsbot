@@ -7,6 +7,7 @@ from cogs.utils.db import Sql, Psql
 from cogs.utils.checks import is_mod_or_council
 from cogs.utils.converters import PlayerConverter, ClanConverter
 from cogs.utils.constants import cwl_league_names, cwl_league_order
+from cogs.utils.helper import rcs_names_tags
 from cogs.utils import formats
 from cogs.utils import season as coc_season
 from PIL import Image, ImageFont, ImageDraw
@@ -337,7 +338,7 @@ class General(commands.Cog):
             return await ctx.send("I don't particularly care for that player. Wanna try again?")
         if not member:
             return await ctx.send("That's not a real Discord user. Try again.")
-        if player.clan.tag[1:] in self.bot.rcs_names_tags.values():
+        if player.clan.tag[1:] in rcs_names_tags().values():
             try:
                 await Psql(self.bot).link_user(player.tag[1:], member.id)
                 emoji = "\u2705"

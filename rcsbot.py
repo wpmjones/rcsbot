@@ -47,6 +47,7 @@ elif enviro == "home":
                           "cogs.newhelp",
                           "cogs.owner",
                           "cogs.push",
+                          "cogs.warstatus",
                           ]
 else:
     token = settings['discord']['test_token']
@@ -87,7 +88,6 @@ class RcsBot(commands.Bot):
         self.remove_command("help")
         self.coc = coc_client
         self.logger = logger
-        self.rcs_names_tags = rcs_names_tags()
         self.color = discord.Color.dark_red()
         self.client_id = settings['discord']['rcs_client_id']
         self.messages = {}
@@ -95,6 +95,7 @@ class RcsBot(commands.Bot):
         self.active_wars = get_active_wars()
         self.session = aiohttp.ClientSession(loop=self.loop)
 
+        self.loop.create_task(self.after_ready())
         coc_client.add_events(self.on_event_error)
 
         for extension in initial_extensions:

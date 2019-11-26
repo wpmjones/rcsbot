@@ -13,17 +13,21 @@ from config import settings
 class WarStatus(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.test_channel = self.bot.get_channel(settings['log_channels']['test'])
-        self.war_channel = self.bot.get_channel(settings['rcs_channels']['war_updates'])
-
         self.bot.coc.add_events(self.on_war_state_change,
                                 )
         self.bot.coc.add_war_update(rcs_tags(prefix=True))
         self.bot.coc.start_updates("war")
+        bot.loop.create_task(self.cog_init_ready())
 
     def cog_unload(self):
         self.bot.coc.remove_events(self.on_war_state_change,
                                    )
+
+    async def cog_init_ready(self) -> None:
+        """Sets the guild properly"""
+        await self.bot.wait_until_ready()
+        if not self.war_channel:
+            self.war_channel = self.bot.get_channel(settings['rcs_channels']['war_updates'])
 
     @commands.command(name="back")
     async def backlog(self, ctx):
