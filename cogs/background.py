@@ -14,7 +14,7 @@ class Background(commands.Cog):
     """Cog for background tasks. No real commands here."""
     def __init__(self, bot):
         self.bot = bot
-        self.guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
+        self.guild = None
         self.media_stats = self.guild.get_channel(settings['rcs_channels']['media_stats'])
 
         self.bot.coc.add_events(self.on_clan_war_win_streak_change,

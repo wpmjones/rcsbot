@@ -14,7 +14,7 @@ from config import settings, color_pick
 class DiscordCheck(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
+        self.guild = None
         self.clear_danger.start()
         self.leader_notes.start()
         self.discord_check.start()

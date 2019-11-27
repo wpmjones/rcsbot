@@ -25,6 +25,7 @@ class Tasks(commands.Cog):
     """Cog for handling Council Tasks"""
     def __init__(self, bot):
         self.bot = bot
+        self.guild = None
         bot.loop.create_task(self.cog_init_ready())
         # TODO Set up DM for assigned action items
 
