@@ -10,7 +10,7 @@ import asyncio
 from discord.ext import commands
 from cogs.utils import context, category
 from cogs.utils.db import Psql
-from cogs.utils.helper import rcs_names_tags, get_active_wars
+from cogs.utils.helper import get_active_wars
 from datetime import datetime
 from config import settings
 from loguru import logger
@@ -160,7 +160,7 @@ class RcsBot(commands.Bot):
         embed.description = f"```py\n{traceback.format_exc()}\n```"
         embed.timestamp = datetime.utcnow()
 
-        args_str = ["```py"]
+        args_str = ["```py\n"]
         for index, arg in enumerate(args):
             args_str.append(f"[{index}]: {arg!r}")
         args_str.append("```")
@@ -177,7 +177,7 @@ class RcsBot(commands.Bot):
         e.description = f"```py\n{traceback.format_exc()}\n```"
         e.timestamp = datetime.utcnow()
 
-        args_str = ["```py"]
+        args_str = ["```py\n"]
         for index, arg in enumerate(args):
             args_str.append(f"[{index}]: {arg!r}")
         args_str.append("```")
@@ -198,7 +198,7 @@ class RcsBot(commands.Bot):
         await self.coc.close()
 
     async def after_ready(self):
-        await bot.wait_until_ready()
+        await self.wait_until_ready()
         logger.add(self.send_log, level=log_level)
 
 
