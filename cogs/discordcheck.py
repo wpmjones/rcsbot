@@ -1,7 +1,6 @@
 import discord
 import coc
 import re
-import requests
 
 from discord.ext import commands, tasks
 from datetime import datetime, time, date

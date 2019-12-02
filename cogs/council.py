@@ -341,24 +341,20 @@ class CouncilCog(commands.Cog):
             in_prep = ""
             in_war = ""
             in_cwl = ""
-            async for war in self.bot.coc.get_current_wars(tags):
+            async for war in self.bot.coc.get_clan_wars(tags):
                 try:
                     if war.state == "preparation":
                         in_prep += (f"{war.clan.name} ({war.clan.tag}) has "
                                     f"{war.start_time.seconds_until // 3600:.0f} hours until war.\n")
                     if war.state == "inWar":
-                        if war.type == "cwl":
-                            in_cwl += (f"{war.clan.name} ({war.clan.tag}) has "
-                                       f"{war.end_time.seconds_until // 3600:.0f} hours left in war.\n")
-                        else:
-                            in_war += (f"{war.clan.name} ({war.clan.tag}) has "
-                                       f"{war.end_time.seconds_until // 3600:.0f} hours left in war.\n")
+                        in_war += (f"{war.clan.name} ({war.clan.tag}) has "
+                                   f"{war.end_time.seconds_until // 3600:.0f} hours left in war.\n")
                 except Exception as e:
                     self.bot.logger.exception("get war state")
             await msg.delete()
             await ctx.send_embed(ctx.channel,
                                  "RCS Clan War Status",
-                                 "This includes CWL wars.",
+                                 "This does not include CWL wars.",
                                  in_prep,
                                  discord.Color.dark_gold())
             if in_war != "":
