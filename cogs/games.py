@@ -31,15 +31,17 @@ class Games(commands.Cog):
     async def games_all(self, ctx):
         """Returns clan points for all RCS clans"""
         conn = self.bot.pool
-        sql = ("SELECT clan_points FROM rcs_events "
-               "WHERE event_type_id =5 and start_time < now() "
-               "LIMIT 1")
-        fetch = await conn.fetchrow(sql)
-        clan_points = fetch[0]
+        sql = ("SELECT event_id, clan_points "
+               "FROM rcs_events "
+               "WHERE event_yype = 5 and start_time < NOW() "
+               "ORDER BY start_time DESC")
+        fetch = conn.fetchrow(sql)
+        event_id = fetch[0]
+        clan_points = fetch[1]
         sql = ("SELECT SUM(points) as clan_total, clan_name FROM rcs_get_game_points() "
                "GROUP BY clan_name "
                "ORDER BY clan_total DESC")
-        fetch = await conn.fetch(sql)
+        fetch = await conn.fetchall(sql, event_id)
         data = []
         for clan in fetch:
             if clan['clan_total'] >= clan_points:
