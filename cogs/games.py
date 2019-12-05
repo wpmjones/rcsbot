@@ -31,17 +31,15 @@ class Games(commands.Cog):
     async def games_all(self, ctx):
         """Returns clan points for all RCS clans"""
         conn = self.bot.pool
-        sql = ("SELECT event_id, clan_points "
+        sql = ("SELECT clan_points "
                "FROM rcs_events "
-               "WHERE event_yype = 5 and start_time < NOW() "
+               "WHERE event_type = 5 and start_time < NOW() "
                "ORDER BY start_time DESC")
-        fetch = conn.fetchrow(sql)
-        event_id = fetch[0]
-        clan_points = fetch[1]
-        sql = ("SELECT SUM(points) as clan_total, clan_name FROM rcs_get_game_points() "
-               "GROUP BY clan_name "
+        clan_points = conn.fetchval(sql)
+        sql = ("SELECT clan_total, clan_name "
+               "FROM rcs_clan_games_totals "
                "ORDER BY clan_total DESC")
-        fetch = await conn.fetchall(sql, event_id)
+        fetch = await conn.fetchall(sql)
         data = []
         for clan in fetch:
             if clan['clan_total'] >= clan_points:
@@ -62,11 +60,14 @@ class Games(commands.Cog):
     @games.command(name="average", aliases=["avg", "averages"])
     async def games_average(self, ctx):
         """Returns the average player points for all RCS clans"""
-        with Sql(as_dict=True) as cursor:
-            data = []
-            cursor.callproc("rcs_spClanGamesAverage")
-            for clan in cursor:
-                data.append([clan['clanAverage'], clan['clanName']])
+        conn = self.bot.pool
+        sql = ("SELECT clan_avg, clan_name "
+               "FROM rcs_clan_games_average "
+               "ORDER BY clan_avg DESC")
+        fetch = conn.fetchall(sql)
+        data = []
+        for clan in fetch:
+            data.append([clan['clanAverage'], clan['clanName']])
         page_count = math.ceil(len(data) / 25)
         title = "RCS Clan Games Averages"
         ctx.icon = "https://cdn.discordapp.com/emojis/639623355770732545.png"
