@@ -35,11 +35,11 @@ class Games(commands.Cog):
                "FROM rcs_events "
                "WHERE event_type = 5 and start_time < NOW() "
                "ORDER BY start_time DESC")
-        clan_points = conn.fetchval(sql)
+        clan_points = await conn.fetchval(sql)
         sql = ("SELECT clan_total, clan_name "
                "FROM rcs_clan_games_totals "
                "ORDER BY clan_total DESC")
-        fetch = await conn.fetchall(sql)
+        fetch = await conn.fetch(sql)
         data = []
         for clan in fetch:
             if clan['clan_total'] >= clan_points:
@@ -64,10 +64,10 @@ class Games(commands.Cog):
         sql = ("SELECT clan_avg, clan_name "
                "FROM rcs_clan_games_average "
                "ORDER BY clan_avg DESC")
-        fetch = conn.fetchall(sql)
+        fetch = await conn.fetch(sql)
         data = []
         for clan in fetch:
-            data.append([clan['clanAverage'], clan['clanName']])
+            data.append([clan['clan_avg'], clan['clan_name']])
         page_count = math.ceil(len(data) / 25)
         title = "RCS Clan Games Averages"
         ctx.icon = "https://cdn.discordapp.com/emojis/639623355770732545.png"
@@ -83,20 +83,20 @@ class Games(commands.Cog):
         `++games clan #CVCJR89`
         `++games clan Pi`
         """
-        # TODO Fix speed issue on this command
         async with ctx.typing():
             conn = self.bot.pool
             sql = ("SELECT player_points "
                    "FROM rcs_events "
                    "WHERE event_type = 5 and start_time < NOW() "
                    "ORDER BY start_time DESC")
-            player_points = conn.fetchval(sql)
+            player_points = await conn.fetchval(sql)
             sql = ("SELECT player_name, points "
                    "FROM rcs_clan_games_players "
                    "WHERE clan_tag = $1"
                    "ORDER BY points DESC")
-            fetch = conn.fetchall(sql, clan.tag)
+            fetch = await conn.fetch(sql, clan.tag[1:])
             clan_total = 0
+            clan_size = len(fetch)
             data = []
             for member in fetch:
                 clan_total += member['points']
@@ -106,9 +106,9 @@ class Games(commands.Cog):
                 else:
                     clan_total += member['points']
                     data.append([member['points'], member['player_name']])
-            clan_average = clan_total / len(fetch)
+            clan_average = clan_total / clan_size
         page_count = math.ceil(len(data) / 25)
-        title = f"{clan.name} Points {clan_total} ({clan_average} avg)"
+        title = f"{clan.name} Points {clan_total} ({clan_average:.2f} avg)"
         ctx.icon = "https://cdn.discordapp.com/emojis/639623355770732545.png"
         p = formats.TablePaginator(ctx, data=data, title=title, page_count=page_count)
         await p.paginate()
