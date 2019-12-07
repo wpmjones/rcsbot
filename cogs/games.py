@@ -85,37 +85,28 @@ class Games(commands.Cog):
         """
         # TODO Fix speed issue on this command
         async with ctx.typing():
-            with Sql(as_dict=True) as cursor:
-                cursor.execute("SELECT TOP 1 playerPoints, startTime "
-                               "FROM rcs_events "
-                               "WHERE eventType = 5 "
-                               "ORDER BY eventId DESC")
-                row = cursor.fetchone()
-                player_points = row['playerPoints']
-                cursor.execute("CREATE TABLE #rcs_players (playerTag varchar(15), playerName nvarchar(50)) "
-                               "INSERT INTO #rcs_players "
-                               "SELECT DISTINCT playerTag, playerName FROM rcs_members")
-                cursor.execute(f"SELECT '#' + playerTag as tag, CASE WHEN (currentPoints - startingPoints) > {player_points} "
-                               f"THEN {player_points} ELSE (currentPoints - startingPoints) END AS points "
-                               f"FROM rcs_clanGames "
-                               f"WHERE eventId = (SELECT MAX(eventId) FROM rcs_events WHERE eventType = 5) "
-                               f"AND clanTag = '{clan.tag[1:]}' "
-                               f"ORDER BY points DESC")
-                fetched = cursor.fetchall()
-                cursor.callproc("rcs_spClanGamesAverage")
-                for row in cursor:
-                    if clan.name.lower() == row['clanName'].lower():
-                        clan_average = row['clanAverage']
-                        break
-                clan_total = 0
-                data = []
-                for member in fetched:
+            conn = self.bot.pool
+            sql = ("SELECT player_points "
+                   "FROM rcs_events "
+                   "WHERE event_type = 5 and start_time < NOW() "
+                   "ORDER BY start_time DESC")
+            player_points = conn.fetchval(sql)
+            sql = ("SELECT player_name, points "
+                   "FROM rcs_clan_games_players "
+                   "WHERE clan_tag = $1"
+                   "ORDER BY points DESC")
+            fetch = conn.fetchall(sql, clan.tag)
+            clan_total = 0
+            data = []
+            for member in fetch:
+                clan_total += member['points']
+                if member['points'] >= player_points:
+                    clan_total += player_points
+                    data.append([member['points'], "* " + member['player_name']])
+                else:
                     clan_total += member['points']
-                    player = await self.bot.coc.get_player(member['tag'], cache=True)
-                    if member['points'] >= player_points:
-                        data.append([member['points'], "* " + player.name])
-                    else:
-                        data.append([member['points'], player.name])
+                    data.append([member['points'], member['player_name']])
+            clan_average = clan_total / len(fetch)
         page_count = math.ceil(len(data) / 25)
         title = f"{clan.name} Points {clan_total} ({clan_average} avg)"
         ctx.icon = "https://cdn.discordapp.com/emojis/639623355770732545.png"
