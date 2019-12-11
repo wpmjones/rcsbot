@@ -27,9 +27,12 @@ class OwnerCog(commands.Cog):
 
     @commands.command(name="clear", hidden=True)
     @commands.is_owner()
-    async def clear(self, ctx):
-        async for message in ctx.channel.history():
-            await message.delete()
+    async def clear(self, ctx, msg_count: int = None):
+        if msg_count:
+            await ctx.channel.purge(limit=msg_count + 1)
+        else:
+            async for message in ctx.channel.history():
+                await message.delete()
 
     @commands.command(name="pull", hidden=True)
     @commands.is_owner()
