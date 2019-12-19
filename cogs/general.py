@@ -368,7 +368,7 @@ class General(commands.Cog):
             await ctx.send("This clan does not have a subreddit.")
 
     @commands.command(name="discord")
-    async def discord(self, ctx, *, clan: ClanConverter = None):
+    async def discord(self, ctx, clan: ClanConverter = None):
         """Displays a link to specified clan's Discord server"""
         if not clan:
             return await ctx.send("You must provide an RCS clan name or tag.")
