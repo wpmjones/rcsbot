@@ -183,7 +183,13 @@ class Tasks(commands.Cog):
         values = result.get("values", [])
         embed = discord.Embed(title="RCS Council Verification Requests", color=discord.Color.dark_blue())
         for row in values:
-            if len(row) < 9 or row[8] in ("1", "2", "3", "4"):
+            print(row[1])
+            if len(row) < 9:
+                status = "has not been addressed"
+                embed.add_field(name=f"Verification for {row[1]} {status}.\n{row[7]}\nDated {row[0]}",
+                                value=f"Leader: {row[3]}",
+                                inline=True)
+            elif row[8] in ("1", "2", "3", "4"):
                 status = "has not been addressed"
                 if row[8] == "1": status = "is awaiting a scout"
                 if row[8] == "2": status = "is currently being scouted"
@@ -342,8 +348,8 @@ class Tasks(commands.Cog):
         If you don't provide a new status code, it will prompt you for the new status.
 
         **Example:**
-        ++tasks veri Ver78 3
-        ++tasks veri Ver78
+        ++tasks update Ver78 3
+        ++tasks update Ver78
 
         **Status Codes:**
         1 - is awaiting a scout
