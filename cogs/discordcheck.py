@@ -112,13 +112,15 @@ class DiscordCheck(commands.Cog):
             short_list = clan['short_name'].split("/")
             for short_name in short_list:
                 if short_name != "reddit":
-                    regex = r"\W" + short_name + "\W|\W" + short_name + "\Z"
+                    for member in self.guild.members:
+                        if member_role in member.roles and short_name.lower() in member.display_name.lower():
+                            report_list.append(member.display_name.replace('||', '|'))
                 else:
                     regex = r"\Wreddit[^\s]|\Wreddit$"
-                for member in self.guild.members:
-                    if member_role in member.roles \
-                            and re.search(regex, member.display_name.lower(), re.IGNORECASE) is not None:
-                        report_list.append(member.display_name.replace('||', '|'))
+                    for member in self.guild.members:
+                        if member_role in member.roles \
+                                and re.search(regex, member.display_name.lower(), re.IGNORECASE) is not None:
+                            report_list.append(member.display_name.replace('||', '|'))
             if report_list:
                 await danger_channel.send(f"<@{clan['leader_tag']}> Please check the following list of "
                                           f"members to make sure everyone is still in your clan "
