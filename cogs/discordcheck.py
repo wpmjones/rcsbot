@@ -40,8 +40,8 @@ class DiscordCheck(commands.Cog):
     @tasks.loop(time=time(hour=16, minute=25))
     async def leader_notes(self):
         """Check the leader-notes channel and see if any of those players are in an RCS clan"""
-        danger_channel = self.guild.get_channel(settings['rcs_channels']['danger_bot'])
-        notes_channel = self.guild.get_channel(settings['rcs_channels']['leader_notes'])
+        danger_channel = self.bot.get_channel(settings['rcs_channels']['danger_bot'])
+        notes_channel = self.bot.get_channel(settings['rcs_channels']['leader_notes'])
 
         messages = ""
         async for message in notes_channel.history(limit=None, oldest_first=True):
@@ -62,12 +62,17 @@ class DiscordCheck(commands.Cog):
                 self.bot.logger.debug(f"Short tag: {tag}")
             try:
                 player = await self.bot.coc.get_player(tag)
-                if player.clan and player.clan in rcs_tags():
+                if tag == "#8Q09QYLQ":
+                    print(player.name)
+                    print(player.clan.tag)
+                if player.clan and player.clan.tag[1:] in rcs_tags():
+                    if tag == "#8Q09QYLQ":
+                        print("inside")
                     with Sql() as cursor:
-                        cursor.execute(f"SELECT COUNT(timestamp) AS reported "
-                                       f"FROM rcs_notify "
-                                       f"WHERE memberTag = {player.tag[1:]} AND clanTag = {player.clan.tag[1:]} "
-                                       f"GROUP BY clanTag, memberTag")
+                        sql = ("SELECT COUNT(timestamp) AS reported "
+                               "FROM rcs_notify "
+                               "WHERE memberTag = %s AND clanTag = %s")
+                        cursor.execute(sql, (player.tag[1:], player.clan.tag[1:]))
                         row = cursor.fetchone()
                         reported = row[0]
                         if reported < 3:
@@ -80,11 +85,15 @@ class DiscordCheck(commands.Cog):
                             embed.set_footer(text="Reminder: This is not a ban list, simply information that this "
                                                   "member has caused problems in the past.")
                             await danger_channel.send(embed=embed)
-                            cursor.execute(f"INSERT INTO rcs_notify "
-                                           f"VALUES ({datetime.now().strftime('%m-%d-%Y %H:%M:%S')}, "
-                                           f"{player.clan.tag[1:]}, {player.tag[1:]})")
+                            sql = ("INSERT INTO rcs_notify "
+                                   "VALUES (%s, %s, %s)")
+                            cursor.execute(sql, (datetime.now().strftime('%m-%d-%Y %H:%M:%S'),
+                                                 player.clan.tag[1:],
+                                                 player.tag[1:]))
             except coc.NotFound:
                 self.bot.logger.warning(f"Exception on tag: {tag}")
+            except:
+                self.bot.logger.exception("Other failure")
             # Add to task log
             sql = ("INSERT INTO rcs_task_log (log_type_id, log_date, argument) "
                    "VALUES ($1, $2, $3)")

@@ -1,7 +1,6 @@
 import discord
 
 from discord.ext import commands
-from cogs.utils.converters import PlayerConverter, ClanConverter
 from cogs.utils.db import Sql
 from cogs.utils import helper
 from datetime import datetime
