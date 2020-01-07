@@ -67,6 +67,36 @@ class CouncilCog(commands.Cog):
         embed.set_footer(text=f"User ID: {user.id}")
         await ctx.send(embed=embed)
 
+    @commands.command(name="recommend", hidden=True)
+    @is_council()
+    async def recommend(self, ctx, user: discord.Member, *, desc):
+        """Command to recommend new Council member.
+
+        **Permissions:**
+        Council
+
+        **Example:**
+        ++recommend 178989365953822720 Long description of why we feel said individual would
+        make a really good Council member. Feel free to write a paragraph, but don't get crazy!
+        """
+        payload = desc
+        print(desc)
+        url = "https://script.google.com/macros/s/AKfycby6fVhNtzz9hjFT-oAKKF3yqE5gJnwqJPefM50mmOXTymKA5sY/exec"
+        async with ctx.session.post(url, data=payload) as r:
+            if r.status != 200:
+                return await ctx.send("Form did not update successfully.  Call the tuba!")
+        form_url = ("https://docs.google.com/forms/d/e/"
+                    "1FAIpQLSd0JDTqnwFYwg9X45wBwLHXCQcOSjiLJTe5iQ5g5mrUIYbXRQ/viewform?usp=sf_link")
+        channel = self.bot.get_channel(settings['rcs_channels']['leader_chat'])
+        # await channel.send(f"The RCS Council supports the addition of {user.display_name} to as a member of Council."
+        #                    f"\n\nPlease complete the following form and provide any necessary feedback.  Thank "
+        #                    f"you!\n\n{form_url}")
+        await ctx.send(f"Form udpated and sent to {channel.mention} (not really - just testing right now!)")
+
+    # @recommend.error
+    # async def recommend_error(self, ctx, error):
+
+
     @commands.command(name="addClan", aliases=["clanAdd", "newClan", "add_clan", "new_clan"], hidden=True)
     @is_council()
     async def add_clan(self, ctx, *, clan_tag: str = "x"):
@@ -333,30 +363,34 @@ class CouncilCog(commands.Cog):
         Council"""
         async with ctx.typing():
             msg = await ctx.send("Loading...")
-            with Sql(as_dict=True) as cursor:
-                cursor.execute("SELECT '#' + clanTag AS tag, isWarLogPublic FROM rcs_data "
-                               "WHERE classification <> 'feeder' ORDER BY clanName")
-                clans = cursor.fetchall()
-            tags = [clan['tag'] for clan in clans if clan['isWarLogPublic'] == 1]
+            tags = helper.rcs_tags(prefix=True)
             in_prep = ""
             in_war = ""
             in_cwl = ""
-            async for war in self.bot.coc.get_clan_wars(tags):
+            async for war in self.bot.coc.get_current_wars(tags):
+                print("inside war")
                 try:
-                    if war.state == "preparation":
-                        in_prep += (f"{war.clan.name} ({war.clan.tag}) has "
-                                    f"{war.start_time.seconds_until // 3600:.0f} hours until war.\n")
-                    if war.state == "inWar":
-                        in_war += (f"{war.clan.name} ({war.clan.tag}) has "
+                    if isinstance(war, coc.ClanWar):
+                        if war.state == "preparation":
+                            in_prep += (f"{war.clan.name} ({war.clan.tag}) has "
+                                        f"{war.start_time.seconds_until // 3600:.0f} hours until war.\n")
+                        if war.state == "inWar":
+                            in_war += (f"{war.clan.name} ({war.clan.tag}) has "
+                                       f"{war.end_time.seconds_until // 3600:.0f} hours left in war.\n")
+                    if isinstance(war, coc.LeagueWar):
+                        in_cwl += (f"{war.clan.name} ({war.clan.tag}) has "
                                    f"{war.end_time.seconds_until // 3600:.0f} hours left in war.\n")
+                except coc.PrivateWarLog:
+                    pass
                 except Exception as e:
                     self.bot.logger.exception("get war state")
             await msg.delete()
-            await ctx.send_embed(ctx.channel,
-                                 "RCS Clan War Status",
-                                 "This does not include CWL wars.",
-                                 in_prep,
-                                 discord.Color.dark_gold())
+            if in_prep != "":
+                await ctx.send_embed(ctx.channel,
+                                     "RCS Clan War Status",
+                                     "This does not include CWL wars.",
+                                     in_prep,
+                                     discord.Color.dark_gold())
             if in_war != "":
                 await ctx.send_embed(ctx.channel,
                                      "RCS Clan War Status",
@@ -369,6 +403,8 @@ class CouncilCog(commands.Cog):
                                      "These are CWL wars.",
                                      in_cwl,
                                      discord.Color.dark_red())
+            if all(x == "" for x in [in_prep, in_war, in_cwl]):
+                await ctx.send("No clans are in war right now.")
 
     @commands.command(name="ban", hidden=True)
     @is_mod_or_council()
