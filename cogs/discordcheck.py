@@ -62,9 +62,7 @@ class DiscordCheck(commands.Cog):
                 self.bot.logger.debug(f"Short tag: {tag}")
             try:
                 player = await self.bot.coc.get_player(tag)
-                if tag == "#8Q09QYLQ":
                 if player.clan and player.clan.tag[1:] in rcs_tags():
-                    if tag == "#8Q09QYLQ":
                     with Sql() as cursor:
                         sql = ("SELECT COUNT(timestamp) AS reported "
                                "FROM rcs_notify "
