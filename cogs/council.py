@@ -80,7 +80,6 @@ class CouncilCog(commands.Cog):
         make a really good Council member. Feel free to write a paragraph, but don't get crazy!
         """
         payload = desc
-        print(desc)
         url = "https://script.google.com/macros/s/AKfycby6fVhNtzz9hjFT-oAKKF3yqE5gJnwqJPefM50mmOXTymKA5sY/exec"
         async with ctx.session.post(url, data=payload) as r:
             if r.status != 200:
@@ -88,14 +87,10 @@ class CouncilCog(commands.Cog):
         form_url = ("https://docs.google.com/forms/d/e/"
                     "1FAIpQLSd0JDTqnwFYwg9X45wBwLHXCQcOSjiLJTe5iQ5g5mrUIYbXRQ/viewform?usp=sf_link")
         channel = self.bot.get_channel(settings['rcs_channels']['leader_chat'])
-        # await channel.send(f"The RCS Council supports the addition of {user.display_name} to as a member of Council."
-        #                    f"\n\nPlease complete the following form and provide any necessary feedback.  Thank "
-        #                    f"you!\n\n{form_url}")
+        await channel.send(f"The RCS Council supports the addition of {user.display_name} to as a member of Council."
+                           f"\n\nPlease complete the following form and provide any necessary feedback.  Thank "
+                           f"you!\n\n{form_url}")
         await ctx.send(f"Form udpated and sent to {channel.mention} (not really - just testing right now!)")
-
-    # @recommend.error
-    # async def recommend_error(self, ctx, error):
-
 
     @commands.command(name="addClan", aliases=["clanAdd", "newClan", "add_clan", "new_clan"], hidden=True)
     @is_council()
