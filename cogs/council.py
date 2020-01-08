@@ -85,8 +85,9 @@ class CouncilCog(commands.Cog):
         async with ctx.session.post(url, data=payload) as r:
             if r.status != 200:
                 return await ctx.send("Form did not update successfully.  Call the tuba!")
-        form_url = ("https://docs.google.com/forms/d/e/"
-                    "1FAIpQLSd0JDTqnwFYwg9X45wBwLHXCQcOSjiLJTe5iQ5g5mrUIYbXRQ/viewform?usp=sf_link")
+        form_url = (f"https://docs.google.com/forms/d/e/"
+                    f"1FAIpQLSd0JDTqnwFYwg9X45wBwLHXCQcOSjiLJTe5iQ5g5mrUIYbXRQ/viewform?usp=pp_url&entry.14972849="
+                    f"{user.display_name}")
         channel = self.bot.get_channel(settings['rcs_channels']['leader_chat'])
         await channel.send(f"The RCS Council supports the addition of {user.display_name} to as a member of Council."
                            f"\n\nPlease complete the following form and provide any necessary feedback.  Thank "
