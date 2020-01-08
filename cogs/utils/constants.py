@@ -75,6 +75,7 @@ log_types = {
     "no_clan": 3,
     "danger": 4,
     "rcslist": 5,
+    "leader_change": 6,
 }
 
 league_badges = {
