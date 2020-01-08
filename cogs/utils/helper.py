@@ -56,8 +56,6 @@ def get_active_wars():
         cursor.execute(sql)
         fetch = cursor.fetchall()
     wars = {}
-    print(len(fetch))
     for row in fetch:
         wars[row['tag']] = row['war_id']
-    print(len(wars))
     return wars

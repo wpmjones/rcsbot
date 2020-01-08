@@ -71,8 +71,8 @@ class DiscordCheck(commands.Cog):
                         row = cursor.fetchone()
                         reported = row[0]
                         if reported < 3:
-                            await danger_channel.send(f"<@{clan['leaderTag']}>")
                             clan = get_clan(player.clan.tag[1:])
+                            await danger_channel.send(f"<@{clan['leaderTag']}>")
                             embed = discord.Embed(color=discord.Color.dark_red())
                             embed.add_field(name="Leader Note found:",
                                             value=f"{player.name} ({player.tag}) is in {player.clan.name}. Please "
