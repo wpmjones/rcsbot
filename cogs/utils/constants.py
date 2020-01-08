@@ -74,6 +74,7 @@ log_types = {
     "pfp": 2,
     "no_clan": 3,
     "danger": 4,
+    "rcslist": 5,
 }
 
 league_badges = {
