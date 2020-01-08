@@ -76,8 +76,9 @@ class CouncilCog(commands.Cog):
         Council
 
         **Example:**
-        ++recommend 178989365953822720 Long description of why we feel said individual would
-        make a really good Council member. Feel free to write a paragraph, but don't get crazy!
+        ++recommend 178989365953822720 Long description of why we
+        feel said individual would make a really good Council member.
+        Feel free to write a paragraph, but don't get crazy!
         """
         payload = desc
         url = "https://script.google.com/macros/s/AKfycby6fVhNtzz9hjFT-oAKKF3yqE5gJnwqJPefM50mmOXTymKA5sY/exec"
