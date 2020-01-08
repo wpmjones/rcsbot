@@ -78,7 +78,7 @@ class DiscordCheck(commands.Cog):
                             embed = discord.Embed(color=discord.Color.dark_red())
                             embed.add_field(name="Leader Note found:",
                                             value=f"{player.name} ({player.tag}) is in {player.clan.name}. Please "
-                                            f"search for `in:leader-notes {player.tag}` for details.")
+                                                  f"search for `in:leader-notes {player.tag}` for details.")
                             embed.set_footer(text="Reminder: This is not a ban list, simply information that this "
                                                   "member has caused problems in the past.")
                             await danger_channel.send(embed=embed)
