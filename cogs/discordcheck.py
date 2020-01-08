@@ -63,11 +63,8 @@ class DiscordCheck(commands.Cog):
             try:
                 player = await self.bot.coc.get_player(tag)
                 if tag == "#8Q09QYLQ":
-                    print(player.name)
-                    print(player.clan.tag)
                 if player.clan and player.clan.tag[1:] in rcs_tags():
                     if tag == "#8Q09QYLQ":
-                        print("inside")
                     with Sql() as cursor:
                         sql = ("SELECT COUNT(timestamp) AS reported "
                                "FROM rcs_notify "
@@ -76,11 +73,11 @@ class DiscordCheck(commands.Cog):
                         row = cursor.fetchone()
                         reported = row[0]
                         if reported < 3:
+                            await danger_channel.send(f"<@{clan['leaderTag']}>")
                             clan = get_clan(player.clan.tag[1:])
                             embed = discord.Embed(color=discord.Color.dark_red())
                             embed.add_field(name="Leader Note found:",
-                                            value=f"<@{clan['leaderTag']}> "
-                                            f"{player.name} ({player.tag}) is in {player.clan.name}. Please "
+                                            value=f"{player.name} ({player.tag}) is in {player.clan.name}. Please "
                                             f"search for `in:leader-notes {player.tag}` for details.")
                             embed.set_footer(text="Reminder: This is not a ban list, simply information that this "
                                                   "member has caused problems in the past.")
