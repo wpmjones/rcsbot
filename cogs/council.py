@@ -753,7 +753,7 @@ class CouncilCog(commands.Cog):
         await msg.edit(f"Message sent to {counter} RCS DJs.")
 
     @commands.command(name="find", aliases=["search"], hidden=True)
-    @is_mod_or_council()
+    @is_leader_or_mod_or_council()
     async def find(self, ctx, *, arg: str = "help"):
         """Returns any Discord member of the RCS server with the search sting in the name
 
