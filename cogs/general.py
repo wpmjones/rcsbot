@@ -332,7 +332,17 @@ class General(commands.Cog):
     @commands.command(name="link")
     @is_leader_or_mod_or_council()
     async def link(self, ctx, member: discord.Member = None, player: PlayerConverter = None):
-        """Allows Chat mods or Council to link a Discord member to an in-game player tag"""
+        """Allows leaders, chat mods or council to link a Discord member to an in-game player tag
+        
+        **Permissions:**
+        RCS Leaders
+        Chat Mods
+        Council
+        
+        **Example:**
+        ++link @TubaKid #ABC1234
+        ++link 051150854571163648 #ABC1234
+        """
         if not player:
             self.bot.logger.error(f"{ctx.author} provided some bad info for the link command.")
             return await ctx.send("I don't particularly care for that player. Wanna try again?")
