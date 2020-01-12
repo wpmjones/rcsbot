@@ -760,6 +760,7 @@ class CouncilCog(commands.Cog):
         **Permissions:**
         Chat Mods
         Council
+        Leaders
 
         **Example:**
         ++find speed
