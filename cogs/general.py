@@ -329,7 +329,7 @@ class General(commands.Cog):
             p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=1)
         await p.paginate()
 
-    @commands.command(name="link")
+    @commands.group(name="link", invoke_without_command=True, hidden=True)
     @is_leader_or_mod_or_council()
     async def link(self, ctx, member: discord.Member = None, player: PlayerConverter = None):
         """Allows leaders, chat mods or council to link a Discord member to an in-game player tag
@@ -343,6 +343,9 @@ class General(commands.Cog):
         ++link @TubaKid #ABC1234
         ++link 051150854571163648 #ABC1234
         """
+        if ctx.invoked_subcommand is not None:
+            return
+
         if not player:
             self.bot.logger.error(f"{ctx.author} provided some bad info for the link command.")
             return await ctx.send("I don't particularly care for that player. Wanna try again?")
@@ -363,6 +366,34 @@ class General(commands.Cog):
         else:
             await ctx.send(f"I see that {player.name} is in {player.clan} which is not an RCS clan. Try again "
                            f"when {player.name} is in an RCS clan.")
+
+    @link.command(name="list", hidden=True)
+    @is_leader_or_mod_or_council()
+    async def list(self, ctx, clan: ClanConverter = None):
+        """List linked players for the spcified clan
+
+        **Permissions:**
+        RCS Leaders
+        Chat Mods
+        Council
+
+        **Example:**
+        ++link list Chi
+        ++link list #CVCJR89
+        ++link list Reddit Snow
+        """
+        if not clan:
+            return await ctx.send("You must provide an RCS clan name or tag.")
+        tags = [x.tag[1:] for x in clan.itermembers]
+        sql = "SELECT discord_id, player_tag FROM rcs_discord_links WHERE player_tag = any($1::TEXT[])"
+        fetch = await self.bot.pool.fetch(sql, tags)
+        if not fetch:
+            return await ctx.send(f"No linked players found for {clan.name}.")
+        response = ""
+        for row in fetch:
+            player = await self.bot.coc.get_player(row['player_tag'])
+            response += f"<@{row['discord_id']}> is linked to {player.name} ({player.tag})\n"
+        await ctx.send_text(ctx.channel, response)
 
     @commands.command(name="reddit", aliases=["subreddit"])
     async def reddit(self, ctx, *, clan: ClanConverter = None):
