@@ -4,7 +4,7 @@ import pathlib
 
 from discord.ext import commands
 from cogs.utils.db import Sql, Psql
-from cogs.utils.checks import is_mod_or_council
+from cogs.utils.checks import is_leader_or_mod_or_council
 from cogs.utils.converters import PlayerConverter, ClanConverter
 from cogs.utils.constants import cwl_league_names, cwl_league_order
 from cogs.utils.helper import rcs_names_tags
@@ -330,7 +330,7 @@ class General(commands.Cog):
         await p.paginate()
 
     @commands.command(name="link")
-    @is_mod_or_council()
+    @is_leader_or_mod_or_council()
     async def link(self, ctx, member: discord.Member = None, player: PlayerConverter = None):
         """Allows Chat mods or Council to link a Discord member to an in-game player tag"""
         if not player:
