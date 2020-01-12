@@ -382,6 +382,7 @@ class General(commands.Cog):
         ++link list #CVCJR89
         ++link list Reddit Snow
         """
+        # TODO add while typing thing
         if not clan:
             return await ctx.send("You must provide an RCS clan name or tag.")
         tags = [x.tag[1:] for x in clan.itermembers]
