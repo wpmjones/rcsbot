@@ -351,7 +351,7 @@ class General(commands.Cog):
             return await ctx.send("I don't particularly care for that player. Wanna try again?")
         if not user:
             return await ctx.send("That's not a real Discord user. Try again.")
-        if player.clan.tag[1:] in rcs_names_tags().values():
+        if player.clan.tag[1:] in rcs_names_tags().values() or player.clan.name.lower().startswith("reddit"):
             try:
                 await Psql(self.bot).link_user(player.tag[1:], user.id)
                 rcs_guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
