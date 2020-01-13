@@ -2,8 +2,7 @@ import coc
 import re
 
 from discord.ext import commands
-from cogs.utils.helper import rcs_names_tags
-from cogs.utils.db import Psql
+from cogs.utils.helper import rcs_names_tags, rcs_tags
 
 tag_validator = re.compile("^#?[PYLQGRJCUV0289]+$")
 
@@ -16,7 +15,7 @@ class PlayerConverter(commands.Converter):
         tag = coc.utils.correct_tag(argument)
         name = argument.strip()
 
-        if tag_validator.match(argument):
+        if tag_validator.match(tag):
             try:
                 return await ctx.coc.get_player(tag)
             except coc.NotFound:
@@ -25,25 +24,17 @@ class PlayerConverter(commands.Converter):
                                            'If you didn\'t pass in a tag, '
                                            'please drop the owner a message.'
                                            )
-        # TODO guild_clans should be a list of coc.Clan, not sql records
-        conn = ctx.pool
-        sql = "SELECT clan_name, clan_tag FROM rcs_clans ORDER BY clan_name"
-        guild_clans = await conn.fetch(sql)
-        for g in guild_clans:
-            if g.name == name or g.tag == tag:
+        for rcs_tag in rcs_tags():
+            clan = await ctx.coc.get_clan(rcs_tag)
+            if clan.name == name or clan.tag == tag:
                 raise commands.BadArgument(f'You appear to be passing '
-                                           f'the clan tag/name for `{str(g)}`')
+                                           f'the clan tag/name for `{str(clan)}`')
 
-            member = g.get_member(name=name)
+            member = clan.get_member(name=name)
             if member:
                 return member
 
-            member_by_tag = g.get_member(tag=tag)
-            if member_by_tag:
-                return member_by_tag
-
-        raise commands.BadArgument(f"Invalid tag or IGN in "
-                                   f"`{','.join(str(n) for n in guild_clans)}` clans.")
+        raise commands.BadArgument(f"Invalid tag or IGN. Please try again.")
 
 
 class ClanConverter(commands.Converter):
