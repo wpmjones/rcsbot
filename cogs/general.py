@@ -331,7 +331,7 @@ class General(commands.Cog):
 
     @commands.group(name="link", invoke_without_command=True, hidden=True)
     @is_leader_or_mod_or_council()
-    async def link(self, ctx, member: discord.Member = None, player: PlayerConverter = None):
+    async def link(self, ctx, user: discord.User = None, player: PlayerConverter = None):
         """Allows leaders, chat mods or council to link a Discord member to an in-game player tag
         
         **Permissions:**
@@ -349,13 +349,15 @@ class General(commands.Cog):
         if not player:
             self.bot.logger.error(f"{ctx.author} provided some bad info for the link command.")
             return await ctx.send("I don't particularly care for that player. Wanna try again?")
-        if not member:
+        if not user:
             return await ctx.send("That's not a real Discord user. Try again.")
         if player.clan.tag[1:] in rcs_names_tags().values():
             try:
-                await Psql(self.bot).link_user(player.tag[1:], member.id)
-                emoji = "\u2705"
+                await Psql(self.bot).link_user(player.tag[1:], user.id)
                 rcs_guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
+                member = rcs_guild.get_member(user.id)
+                if not member:
+                    return await ctx.send(f"{user.display_name} is not a member of the RCS Discord Server.")
                 member_role = rcs_guild.get_role(settings['rcs_roles']['members'])
                 await member.add_roles(member_role)
                 await ctx.confirm()
