@@ -3,6 +3,7 @@ import re
 
 from discord.ext import commands
 from cogs.utils.helper import rcs_names_tags
+from cogs.utils.db import Psql
 
 tag_validator = re.compile("^#?[PYLQGRJCUV0289]+$")
 
@@ -24,8 +25,10 @@ class PlayerConverter(commands.Converter):
                                            'If you didn\'t pass in a tag, '
                                            'please drop the owner a message.'
                                            )
-        # TODO clean this up for RCS specific info
-        guild_clans = await ctx.get_clans()
+        # TODO guild_clans should be a list of coc.Clan, not sql records
+        conn = ctx.pool
+        sql = "SELECT clan_name, clan_tag FROM rcs_clans ORDER BY clan_name"
+        guild_clans = await conn.fetch(sql)
         for g in guild_clans:
             if g.name == name or g.tag == tag:
                 raise commands.BadArgument(f'You appear to be passing '
