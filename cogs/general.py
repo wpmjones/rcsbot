@@ -331,7 +331,7 @@ class General(commands.Cog):
 
     @commands.group(name="link", invoke_without_command=True, hidden=True)
     @is_leader_or_mod_or_council()
-    async def link(self, ctx, member: discord.Member = None, player: PlayerConverter = None):
+    async def link(self, ctx, member: discord.User = None, player: PlayerConverter = None):
         """Allows leaders, chat mods or council to link a Discord member to an in-game player tag
         
         **Permissions:**
@@ -358,7 +358,7 @@ class General(commands.Cog):
                 rcs_guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
                 member_role = rcs_guild.get_role(settings['rcs_roles']['members'])
                 await member.add_roles(member_role)
-                await ctx.message.add_reaction(emoji)
+                await ctx.confirm()
             except:
                 self.bot.logger.exception("Something went wrong while adding a discord link")
                 await ctx.send("I'm sorry, but something has gone wrong. I notified the important people and they will "
@@ -369,7 +369,7 @@ class General(commands.Cog):
 
     @link.command(name="list", hidden=True)
     @is_leader_or_mod_or_council()
-    async def list(self, ctx, clan: ClanConverter = None):
+    async def link_list(self, ctx, clan: ClanConverter = None):
         """List linked players for the spcified clan
 
         **Permissions:**
@@ -395,6 +395,29 @@ class General(commands.Cog):
             player = await self.bot.coc.get_player(row['player_tag'])
             response += f"<@{row['discord_id']}> is linked to {player.name} ({player.tag})\n"
         await ctx.send_text(ctx.channel, response)
+
+    @commands.command(name="unlink", hidden=True)
+    @is_leader_or_mod_or_council()
+    async def unlink(self, ctx, player: PlayerConverter = None):
+        """Unlink player tag from Discord
+
+        **Permissions:**
+        RCS Council
+        Chat Mods
+        Leaders
+
+        **Example:**
+        ++unlink #UV8QQ0RV
+
+        **Other info:**
+        I plan to add an unlink all command at some point
+        """
+        if not player:
+            self.bot.logger.error(f"{ctx.author} provided some bad info for the link command.")
+            return await ctx.send("I don't particularly care for that player. Wanna try again?")
+        sql = "DELETE FROM rcs_discord_links WHERE player_tag = $1"
+        await self.bot.pool.execute(sql, player.tag[1:])
+        await ctx.confirm()
 
     @commands.command(name="reddit", aliases=["subreddit"])
     async def reddit(self, ctx, *, clan: ClanConverter = None):
