@@ -331,7 +331,7 @@ class General(commands.Cog):
 
     @commands.group(name="link", invoke_without_command=True, hidden=True)
     @is_leader_or_mod_or_council()
-    async def link(self, ctx, member: discord.User = None, player: PlayerConverter = None):
+    async def link(self, ctx, member: discord.Member = None, player: PlayerConverter = None):
         """Allows leaders, chat mods or council to link a Discord member to an in-game player tag
         
         **Permissions:**
