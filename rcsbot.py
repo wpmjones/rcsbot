@@ -15,7 +15,7 @@ from datetime import datetime
 from config import settings
 from loguru import logger
 
-enviro = "LIVE"
+enviro = "home"
 
 if enviro == "LIVE":
     token = settings['discord']['rcsbot_token']
@@ -47,7 +47,7 @@ elif enviro == "home":
                           "cogs.newhelp",
                           "cogs.owner",
                           "cogs.push",
-                          "cogs.warstatus",
+                          "cogs.miniwar",
                           ]
 else:
     token = settings['discord']['test_token']
@@ -151,7 +151,7 @@ class RcsBot(commands.Bot):
                 self.logger.error(f"In {ctx.command.qualified_name}:", file=sys.stderr)
                 traceback.print_tb(original.__traceback__)
                 self.logger.error(f"{original.__class__.__name__}: {original}", file=sys.stderr)
-        elif isinstance(error, commands.ArgumentParsingError):
+        else:
             await ctx.send(error)
 
     async def on_event_error(self, event_name, *args, **kwargs):
