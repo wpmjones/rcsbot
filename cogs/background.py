@@ -152,7 +152,7 @@ class Background(commands.Cog):
         else:
             await conn.execute(f"INSERT INTO rcs_messages "
                                f"VALUES ({message.author.id}, {points}, '{datetime.now()}', 1)")
-        if message.channel.id == 298620147424296970 and "<@&296114507959369739>" in message.contest:
+        if message.channel.id == 298620147424296970 and "<@&296114507959369739>" in message.content:
             # this is for leader's pinging chat mods in leader-chat
             chat_mods = self.bot.get_channel(settings['rcs_channels']['mods'])
             await chat_mods.send(f"{message.author.display_name} sent:\n{message.content}")
