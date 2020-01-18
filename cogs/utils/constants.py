@@ -76,6 +76,7 @@ log_types = {
     "danger": 4,
     "rcslist": 5,
     "leader_change": 6,
+    "loc_check": 7,
 }
 
 league_badges = {
