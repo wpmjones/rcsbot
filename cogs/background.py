@@ -2,7 +2,7 @@ import discord
 import random
 
 from discord.ext import commands, tasks
-from cogs.utils.constants import league_badges
+from cogs.utils.constants import league_badges, log_types
 from cogs.utils.db import Sql
 from cogs.utils.helper import rcs_tags
 from datetime import datetime, date, timedelta, time
@@ -77,6 +77,10 @@ class Background(commands.Cog):
         """Check clans for member count, badge, etc."""
         if date.today().weekday() != 2:
             return
+        sql = "SELECT MAX(log_date_ AS max_date FROM rcs_task_log WHERE log_type_id = $1"
+        row = self.bot.pool.fetchrow(sql, log_types['loc_check'])
+        if row and row['max_date'] > date.today() - timedelta(days=7):
+            return
         council_chat = self.guild.get_channel(settings['rcs_channels']['council'])
         bot_dev = self.guild.get_channel(settings['rcs_channels']['bot_dev'])
         with Sql(as_dict=True) as cursor:
@@ -148,7 +152,10 @@ class Background(commands.Cog):
         else:
             await conn.execute(f"INSERT INTO rcs_messages "
                                f"VALUES ({message.author.id}, {points}, '{datetime.now()}', 1)")
-
+        if message.channel.id == 298620147424296970 and "<@&296114507959369739>" in message.contest:
+            # this is for leader's pinging chat mods in leader-chat
+            chat_mods = self.bot.get_channel(settings['rcs_channels']['mods'])
+            await chat_mods.send(f"{message.author.display_name} sent:\n{message.content}")
 
 def setup(bot):
     bot.add_cog(Background(bot))
