@@ -381,8 +381,12 @@ class Tasks(commands.Cog):
         if found == 0:
             return await ctx.send(f"I could not find {task_id} in the Verification tab. Are you sure that's the "
                                   f"right ID?")
-        cur_status_text = veri_status[int(cur_status_num)]
-        msg = await ctx.send(f"Verification for {clan_name} {cur_status_text}\nLeader: {leader}\n"
+        try:
+            cur_status_text = veri_status[int(cur_status_num)]
+        except ValueError:
+            # If the cell from the Google Sheet contains text (instead of a number), you'll get a ValueError
+            return await ctx.send(f"This item is already marked complete. Status: {cur_status_num}")
+        msg = await ctx.send(f"Verification for {clan_name} - {cur_status_text}\nLeader: {leader}\n"
                              f"Update in progress...")
         async with ctx.typing():
             if not new_status:
