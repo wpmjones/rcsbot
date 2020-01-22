@@ -105,16 +105,20 @@ class OwnerCog(commands.Cog):
     async def new_games(self, ctx, start_date, games_length: int = 6, ind_points: int = 4000, clan_points: int = 50000):
         """Command to add new Clan Games dates to SQL database
         Bot owner only"""
+        start_day = int(start_date[8:9])
+        end_day = str(start_day + games_length)
+        end_date = start_date[:9] + end_day
         with Sql(as_dict=True) as cursor:
-            start_day = int(start_date[8:9])
-            end_day = str(start_day+games_length)
-            end_date = start_date[:9] + end_day
             cursor.execute("SELECT MAX(eventId) as eventId FROM rcs_events WHERE eventType = 5")
             row = cursor.fetchone()
             event_id = row['eventId'] + 1
-            sql = (f"INSERT INTO rcs_events (eventId, eventType, startTime, endTime, playerPoints, clanPoints) "
-                   f"VALUES (%d, %d, %s, %s, %d, %d)")
+            sql = ("INSERT INTO rcs_events (eventId, eventType, startTime, endTime, playerPoints, clanPoints) "
+                   "VALUES (%d, %d, %s, %s, %d, %d)")
             cursor.execute(sql, (event_id, 5, start_date, end_date, ind_points, clan_points))
+        sql = ("INSERT INTO rcs_events (event_type, start_time, end_time, player_points, clan_points) "
+               "VALUES ($1, $2, $3, $4, $5)")
+        await self.bot.pool.execute(sql, 5, datetime.strptime(start_date, "%Y-%m-%d"),
+                                    datetime.strptime(end_date, "%Y-%m-%d"), ind_points, clan_points)
         await ctx.send(f"New games info added to database.")
 
     @commands.command(name="new_cwl", hidden=True)
