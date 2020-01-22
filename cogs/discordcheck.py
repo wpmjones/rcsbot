@@ -17,12 +17,14 @@ class DiscordCheck(commands.Cog):
         self.clear_danger.start()
         self.leader_notes.start()
         self.discord_check.start()
+        self.no_clan.start()
         bot.loop.create_task(self.cog_init_ready())
 
     def cog_unload(self):
         self.clear_danger.cancel()
         self.leader_notes.cancel()
         self.discord_check.cancel()
+        self.no_clan.cancel()
 
     async def cog_init_ready(self) -> None:
         """Sets the guild properly"""
@@ -112,7 +114,7 @@ class DiscordCheck(commands.Cog):
             fetch = cursor.fetchall()
             daily_clans = [{"short_name": row[0], "leader_tag": row[1], "clan_name": row[2]} for row in fetch]
         for clan in daily_clans:
-            report_list = []
+            report_list = set()
             short_list = clan['short_name'].split("/")
             for short_name in short_list:
                 if short_name != "reddit":
@@ -122,7 +124,7 @@ class DiscordCheck(commands.Cog):
                 for member in self.guild.members:
                     if member_role in member.roles \
                             and re.search(regex, member.display_name.lower(), re.IGNORECASE) is not None:
-                        report_list.append(member.display_name.replace('||', '|'))
+                        report_list.add(member.display_name.replace('||', '|'))
             if report_list:
                 await danger_channel.send(f"<@{clan['leader_tag']}> Please check the following list of "
                                           f"members to make sure everyone is still in your clan "
