@@ -99,7 +99,6 @@ class Games(commands.Cog):
             clan_size = len(fetch)
             data = []
             for member in fetch:
-                clan_total += member['points']
                 if member['points'] >= player_points:
                     clan_total += player_points
                     data.append([member['points'], "* " + member['player_name']])
