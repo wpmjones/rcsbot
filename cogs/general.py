@@ -311,22 +311,24 @@ class General(commands.Cog):
     async def top_games(self, ctx):
         """Displays top ten clan games points for all of the RCS (current or most recent games)"""
         async with ctx.typing():
-            with Sql() as cursor:
-                temp_table = ("CREATE TABLE #rcs_players (playerTag varchar(15), playerName nvarchar(50)) "
-                              "INSERT INTO #rcs_players "
-                              "SELECT DISTINCT playerTag, playerName FROM rcs_members")
-                cursor.execute(temp_table)
-                cursor.execute("SELECT TOP 10 (a.currentPoints - a.startingPoints) as points, "
-                               "b.playerName + ' (' + c.altName + ')' as pname "
-                               "FROM rcs_clanGames a "
-                               "INNER JOIN #rcs_players b ON b.playerTag = a.playerTag "
-                               "INNER JOIN rcs_data c ON c.clanTag = a.clanTag "
-                               "WHERE eventId = (SELECT MAX(eventId) FROM rcs_events WHERE eventType = 5) "
-                               "ORDER BY points DESC")
-                fetch = cursor.fetchall()
+            conn = self.bot.pool
+            row = await conn.fetchrow("SELECT MAX(event_id) as event_id FROM rcs_events WHERE event_type = 5 "
+                                      "AND start_time < $1", datetime.utcnow())
+            event_id = row['event_id']
+            sql = ("SELECT player_tag, (current_points - starting_points) as points "
+                   "FROM rcs_clan_games "
+                   "WHERE event_id = $1 "
+                   "ORDER BY points DESC "
+                   "LIMIT 10")
+            fetch = await conn.fetch(sql, event_id)
+            data = []
+            for row in fetch:
+                player = await self.bot.coc.get_player(row['player_tag'])
+                clan = player.clan.name.replace("Reddit ", "")
+                data.append([row['points'], f"{player.name} ({clan})"])
             title = "RCS Top Ten for Clan Games"
             ctx.icon = "https://cdn.discordapp.com/emojis/635642869750824980.png"
-            p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=1)
+            p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
         await p.paginate()
 
     @commands.group(name="link", invoke_without_command=True, hidden=True)
