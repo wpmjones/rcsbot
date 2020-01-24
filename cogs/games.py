@@ -1,12 +1,11 @@
-import coc
 import math
 import re
 
 from discord.ext import commands
 from cogs.utils.checks import is_leader_or_mod_or_council
 from cogs.utils.converters import ClanConverter, PlayerConverter
-from cogs.utils.db import Sql
 from cogs.utils import formats
+from datetime import datetime
 
 tag_validator = re.compile("^#?[PYLQGRJCUV0289]+$")
 
@@ -117,7 +116,7 @@ class Games(commands.Cog):
     async def games_add(self, ctx, player: PlayerConverter = None, clan: ClanConverter = None, games_points: int = 0):
         """Add player who missed the initial pull
 
-        Examples:
+        **Examples:**
         `++games add TubaKid "Reddit Oak" 2310`
         `++games add #RVP02LU0 #CVCJR89 100`
         `++games add Fredo Tau 3850`
@@ -127,22 +126,44 @@ class Games(commands.Cog):
         if not clan:
             return await ctx.send("Please provide a valid clan tag.")
         if player.clan.tag == clan.tag:
-            with Sql(as_dict=True) as cursor:
-                cursor.execute("SELECT MAX(eventId) as eventId FROM rcs_events WHERE eventType = 5")
-                row = cursor.fetchone()
-                event_id = row['eventId']
-                try:
-                    starting_points = player.achievements_dict['Games Champion'].value - games_points
-                    current_points = player.achievements_dict['Games Champion'].value
-                except:
-                    self.bot.logger.debug("points assignment failed for some reason")
-                sql = (f"INSERT INTO rcs_clanGames (eventId, playerTag, clanTag, startingPoints, currentPoints) "
-                       f"VALUES (%d, %s, %s, %d,. %d)")
-                cursor.execute(sql, (event_id, player.tag[1:], player.clan.tag[1:], starting_points, current_points))
+            conn = self.bot.pool
+            row = await conn.fetchrow("SELECT MAX(event_id) as event_id FROM rcs_events WHERE event_type = 5 "
+                                      "AND start_time < $1", datetime.utcnow())
+            event_id = row['event_id']
+            try:
+                starting_points = player.achievements_dict['Games Champion'].value - games_points
+                current_points = player.achievements_dict['Games Champion'].value
+            except:
+                self.bot.logger.debug("points assignment failed for some reason")
+            sql = (f"INSERT INTO rcs_clan_games (event_id, player_tag, clan_tag, starting_points, current_points) "
+                   f"VALUES ($1, $2, $3, $4, $5)")
+            await conn.execute(sql, event_id, player.tag[1:], player.clan.tag[1:], starting_points, current_points)
             await ctx.send(f"{player.name} ({player.clan.name}) has been added to the games database.")
         else:
             response = f"{player.name}({player.tag}) is not currently in {clan.name}({clan.tag})."
             await ctx.send(response)
+
+    @games.command(name="correct", hidden=True)
+    @is_leader_or_mod_or_council()
+    async def games_correct(self, ctx, player: PlayerConverter = None, games_points: int = 0):
+        """Update a score for a player whose achievement is out of whack
+
+        **Example:**
+        ++games correct #RVP02LU0 3580
+        """
+        if not player:
+            return await ctx.send("Please provide a valid player tag.")
+        conn = self.bot.pool
+        row = await conn.fetchrow("SELECT MAX(event_id) as event_id FROM rcs_events "
+                                  "WHERE event_type = 5 AND start_time < $1",
+                                  datetime.utcnow())
+        event_id = row['event_id']
+        starting_points = player.achievements_dict['Games Champion'].value - games_points
+        sql = ("UPDATE rcs_clan_games "
+               "SET starting_points = $1 "
+               "WHERE event_id = $2 AND player_tag = $3")
+        await conn.execute(sql, starting_points, event_id, player.tag[1:])
+        await ctx.send(f"Points for {player.name} have been updated to {games_points}.")
 
 
 def setup(bot):
