@@ -456,6 +456,10 @@ class Tasks(commands.Cog):
                 elif r.text == "-1":
                     return await ctx.send(f"Task {task_id} does not exist in the Communication Log. Please "
                                           f"check the number and try again.")
+                else:
+                    return await ctx.send(f"Call TubaKid and tell him we got a new return code!\n"
+                                          f"Tasks: {task_id}\n"
+                                          f"Return Code: {r.text}")
             else:
                 await ctx.send(f"Yeah, we're going to have to try that one again.\n"
                                f"Complete Task Error: {r.text}")
