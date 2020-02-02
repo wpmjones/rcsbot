@@ -450,9 +450,12 @@ class Tasks(commands.Cog):
             r = requests.get(url)
             if r.status_code == requests.codes.ok:
                 if r.text == "1":
-                    await ctx.send(f"Task {task_id} has been marked complete.")
-                if r.text == "2":
-                    await ctx.send(f"It would appear that tasks has already been completed!")
+                    return await ctx.send(f"Task {task_id} has been marked complete.")
+                elif r.text == "2":
+                    return await ctx.send("It would appear that tasks has already been completed!")
+                elif r.text == "-1":
+                    return await ctx.send(f"Task {task_id} does not exist in the Communication Log. Please "
+                                          f"check the number and try again.")
             else:
                 await ctx.send(f"Yeah, we're going to have to try that one again.\n"
                                f"Complete Task Error: {r.text}")
