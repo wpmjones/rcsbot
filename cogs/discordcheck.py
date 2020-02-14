@@ -178,10 +178,9 @@ class DiscordCheck(commands.Cog):
                     no_clan_list.append(f"{member.mention} did not identify with any clan.")
         if no_clan_list:
             log_message = f"{len(no_clan_list)} members found without a clan"
-            embed = discord.Embed(color=color_pick(181, 0, 0))
-            embed.add_field(name="We found some Members without a clan:",
-                            value="\n  ".join(no_clan_list))
-            await mods_channel.send(embed=embed)
+            content = "**We found some Members without a clan:**\n"
+            content += "\n  ".join(no_clan_list)
+            await mods_channel.send(content)
         else:
             log_message = "All members have a happy home with a clan in their name."
         # Add to task log
