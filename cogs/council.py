@@ -2,6 +2,7 @@ import discord
 import coc
 import asyncio
 import re
+import requests
 
 from discord.ext import commands
 from cogs.utils.checks import is_council, is_mod_or_council, is_leader_or_mod_or_council
@@ -15,6 +16,30 @@ from datetime import datetime
 class CouncilCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.command(name="create_links", hidden=True)
+    @commands.is_owner()
+    async def create_links(self, ctx):
+        """Sends rcs stored Discord links to global links"""
+        conn = self.bot.pool
+        sql = "SELECT discord_id, player_tag FROM rcs_discord_links"
+        fetch = await conn.fetch(sql)
+        for row in fetch:
+            payload = {"playerTag": row['player_tag'], "discordId": row['discord_id']}
+            r = requests.post("http://api.amazingspinach.com/links", json=payload)
+            if r.status_code != 200:
+                await ctx.send(f"ERROR: {r.status_code} - {r.text}")
+                await ctx.send(payload)
+                break
+        await ctx.send("Loop complete")
+
+    @commands.command(name="gl", hidden=True)
+    @commands.is_owner()
+    async def get_link(self, ctx, tag):
+        url = f"http://api.amazingspinach.com/links/tag/{tag}"
+        r = requests.get(url)
+        data = r.json()
+        await ctx.send(data)
 
     @commands.command(name="form", aliases=["magic"], hidden=True)
     @is_council()
