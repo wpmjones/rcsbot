@@ -124,7 +124,7 @@ class DiscordCheck(commands.Cog):
                 for member in self.guild.members:
                     if member_role in member.roles \
                             and re.search(regex, member.display_name.lower(), re.IGNORECASE) is not None:
-                        report_list.add(member.display_name.replace('||', '|'))
+                        report_list.add(f"{member.display_name.replace('||', '|')} ({member.id})")
             if report_list:
                 await danger_channel.send(f"<@{clan['leader_tag']}> Please check the following list of "
                                           f"members to make sure everyone is still in your clan "

@@ -17,25 +17,26 @@ class CouncilCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="create_links", hidden=True)
+    @commands.command(name="cl", hidden=True)
     @commands.is_owner()
-    async def create_links(self, ctx):
-        """Sends rcs stored Discord links to global links"""
+    async def create_discord_links(self, ctx):
+        url = "http://api.amazingspinach.com/links"
         conn = self.bot.pool
-        sql = "SELECT discord_id, player_tag FROM rcs_discord_links"
+        sql = "SELECT player_tag, discord_id FROM rcs_discord_links"
         fetch = await conn.fetch(sql)
         for row in fetch:
             payload = {"playerTag": row['player_tag'], "discordId": row['discord_id']}
-            r = requests.post("http://api.amazingspinach.com/links", json=payload)
+            r = requests.post(url, json=payload)
+            if r.status_code == 500:
+                continue
             if r.status_code != 200:
-                await ctx.send(f"ERROR: {r.status_code} - {r.text}")
-                await ctx.send(payload)
+                await ctx.send(f"ERROR: {r.status_code}\n{r.text}")
                 break
-        await ctx.send("Loop complete")
+        await ctx.send("Done")
 
     @commands.command(name="gl", hidden=True)
     @commands.is_owner()
-    async def get_link(self, ctx, tag):
+    async def get_discord_link(self, ctx, tag):
         url = f"http://api.amazingspinach.com/links/tag/{tag}"
         r = requests.get(url)
         data = r.json()
