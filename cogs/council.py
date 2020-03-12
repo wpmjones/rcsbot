@@ -29,6 +29,9 @@ class CouncilCog(commands.Cog):
             r = requests.post(url, json=payload)
             if r.status_code == 500:
                 continue
+            if r.status_code == 400 and "exists" in r.text:
+                # player is already linked
+                continue
             if r.status_code != 200:
                 await ctx.send(f"ERROR: {r.status_code}\n{r.text}")
                 break
@@ -400,7 +403,7 @@ class CouncilCog(commands.Cog):
                         if war.state == "inWar":
                             in_war += (f"{war.clan.name} ({war.clan.tag}) has "
                                        f"{war.end_time.seconds_until // 3600:.0f} hours left in war.\n")
-                    if isinstance(war, coc.LeagueWar):
+                    if isinstance(war, coc.LeagueWar) and war.end_time.seconds_until > 0:
                         in_cwl += (f"{war.clan.name} ({war.clan.tag}) has "
                                    f"{war.end_time.seconds_until // 3600:.0f} hours left in war.\n")
                 except coc.PrivateWarLog:
