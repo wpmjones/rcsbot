@@ -23,6 +23,8 @@ def manage_guild():
 
 
 def check_is_council(ctx):
+    if ctx.guild.id == 566451504332931073:
+        return True
     rcs_guild = ctx.bot.get_guild(settings['discord']['rcsguild_id'])
     council_role = rcs_guild.get_role(settings['rcs_roles']['council'])
     rcs_member = rcs_guild.get_member(ctx.author.id)
@@ -43,6 +45,8 @@ def is_council():
 
 
 def check_is_mod(ctx):
+    if ctx.guild.id == 566451504332931073:
+        return True
     rcs_guild = ctx.bot.get_guild(settings['discord']['rcsguild_id'])
     mod_role = rcs_guild.get_role(settings['rcs_roles']['chat_mods'])
     rcs_member = rcs_guild.get_member(ctx.author.id)
@@ -63,6 +67,8 @@ def is_mod():
 
 
 def check_is_leader(ctx):
+    if ctx.guild.id == 566451504332931073:
+        return True
     rcs_guild = ctx.bot.get_guild(settings['discord']['rcsguild_id'])
     leader_role = rcs_guild.get_role(settings['rcs_roles']['leaders'])
     rcs_member = rcs_guild.get_member(ctx.author.id)
