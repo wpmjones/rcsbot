@@ -6,9 +6,10 @@ import requests
 
 from discord.ext import commands
 from cogs.utils.checks import is_council, is_mod_or_council, is_leader_or_mod_or_council
-from cogs.utils.converters import ClanConverter
+from cogs.utils.converters import ClanConverter, PlayerConverter
 from cogs.utils.db import Sql
 from cogs.utils import helper
+from collections.abc import Iterable
 from config import settings, color_pick
 from datetime import datetime
 
@@ -39,11 +40,21 @@ class CouncilCog(commands.Cog):
 
     @commands.command(name="gl", hidden=True)
     @commands.is_owner()
-    async def get_discord_link(self, ctx, tag):
-        url = f"http://api.amazingspinach.com/links/tag/{tag}"
-        r = requests.get(url)
-        data = r.json()
-        await ctx.send(data)
+    async def get_discord_link(self, ctx, player: PlayerConverter = None):
+        discord_id = await self.bot.coc.get_discord_link(player.tag)
+        await ctx.send(f"{player.name} ({player.tag}) is linked to <@{discord_id}> ({discord_id})")
+
+    @commands.command(name="gls", hidden=True)
+    @commands.is_owner()
+    async def get_discord_links(self, ctx, *tags):
+        tags = tags.replace(",","")
+        print(tags)
+        response = await self.bot.coc.get_discord_links(tags)
+        content = ""
+        for tag, discord_id in response.items():
+            player = await PlayerConverter().convert(ctx, tag)
+            content += f"{player.name} ({player.tag}) is linked to <@{discord_id}> ({discord_id})\n"
+        await ctx.send(content)
 
     @commands.command(name="form", aliases=["magic"], hidden=True)
     @is_council()

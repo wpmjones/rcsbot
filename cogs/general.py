@@ -7,7 +7,7 @@ from cogs.utils.db import Sql, Psql
 from cogs.utils.checks import is_leader_or_mod_or_council
 from cogs.utils.converters import PlayerConverter, ClanConverter
 from cogs.utils.constants import cwl_league_names, cwl_league_order
-from cogs.utils.helper import rcs_names_tags
+from cogs.utils.helper import rcs_names_tags, get_link_token
 from cogs.utils import formats
 from cogs.utils import season as coc_season
 from PIL import Image, ImageFont, ImageDraw
@@ -355,7 +355,22 @@ class General(commands.Cog):
             return await ctx.send("That's not a real Discord user. Try again.")
         if player.clan.tag[1:] in rcs_names_tags().values() or player.clan.name.lower().startswith("reddit"):
             try:
+                # Add to RCS specific link table
                 await Psql(self.bot).link_user(player.tag[1:], user.id)
+                # Add to global link table
+                await self.bot.coc.add_discord_link(player.tag, user.id)
+                # token = get_link_token()
+                # print(token)
+                # header = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+                # print(header)
+                # async with self.bot.session as session:
+                #     payload = {"playerTag": player.tag, "discordId": user.id}
+                #     print(payload)
+                #     async with session.post("http://api.amazingspinach.com/links", json=payload, headers=header) as r:
+                #         if r.status != 200:
+                #             await ctx.send(f"ERROR: There was a problem adding data to the global repository.\n"
+                #                            f"{r.status}: {r.text}")
+                # Add member role to discord user
                 rcs_guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
                 member = rcs_guild.get_member(user.id)
                 if not member:
@@ -386,18 +401,18 @@ class General(commands.Cog):
         ++link list #CVCJR89
         ++link list Reddit Snow
         """
-        # TODO add while typing thing
-        if not clan:
-            return await ctx.send("You must provide an RCS clan name or tag.")
-        tags = [x.tag[1:] for x in clan.itermembers]
-        sql = "SELECT discord_id, player_tag FROM rcs_discord_links WHERE player_tag = any($1::TEXT[])"
-        fetch = await self.bot.pool.fetch(sql, tags)
-        if not fetch:
-            return await ctx.send(f"No linked players found for {clan.name}.")
-        response = ""
-        for row in fetch:
-            player = await self.bot.coc.get_player(row['player_tag'])
-            response += f"<@{row['discord_id']}> is linked to {player.name} ({player.tag})\n"
+        async with ctx.typing():
+            if not clan:
+                return await ctx.send("You must provide an RCS clan name or tag.")
+            tags = [x.tag[1:] for x in clan.itermembers]
+            sql = "SELECT discord_id, player_tag FROM rcs_discord_links WHERE player_tag = any($1::TEXT[])"
+            fetch = await self.bot.pool.fetch(sql, tags)
+            if not fetch:
+                return await ctx.send(f"No linked players found for {clan.name}.")
+            response = ""
+            for row in fetch:
+                player = await self.bot.coc.get_player(row['player_tag'])
+                response += f"<@{row['discord_id']}> is linked to {player.name} ({player.tag})\n"
         await ctx.send_text(ctx.channel, response)
 
     @commands.command(name="unlink", hidden=True)
