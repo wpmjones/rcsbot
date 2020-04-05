@@ -426,6 +426,7 @@ class Tasks(commands.Cog):
                 await ctx.send(f"Whoops! Something went sideways!\nVerification Error: {r.text}")
 
     @tasks.command(name="complete", aliases=["done", "finished", "x"])
+    @is_council()
     async def tasks_complete(self, ctx, task_id):
         """Marks the specified task complete.
         Works for all task categories.
@@ -440,31 +441,28 @@ class Tasks(commands.Cog):
         it will prompt you for a new status.  Select 5,
         then specify whether or not the clan was verified.
         """
-        if await self.is_council(ctx.author.id):
-            if task_id[:1].lower() not in ("s", "v", "c", "o", "a"):
-                return await ctx.send("Please provide a valid task ID (Sug123, Cou123, Oth123, Act123).")
-            if task_id[:1].lower() == "v":
-                return await ctx.invoke(self.tasks_update, task_id=task_id, new_status=None)
-            url = f"{settings['google']['comm_log']}?call=completetask&task={task_id}"
-            # TODO ditch requests for aiohttp.clientsession
-            r = requests.get(url)
-            if r.status_code == requests.codes.ok:
-                if r.text == "1":
-                    return await ctx.send(f"Task {task_id} has been marked complete.")
-                elif r.text == "2":
-                    return await ctx.send("It would appear that tasks has already been completed!")
-                elif r.text == "-1":
-                    return await ctx.send(f"Task {task_id} does not exist in the Communication Log. Please "
-                                          f"check the number and try again.")
-                else:
-                    return await ctx.send(f"Call TubaKid and tell him we got a new return code!\n"
-                                          f"Tasks: {task_id}\n"
-                                          f"Return Code: {r.text}")
+        if task_id[:1].lower() not in ("s", "v", "c", "o", "a"):
+            return await ctx.send("Please provide a valid task ID (Sug123, Cou123, Oth123, Act123).")
+        if task_id[:1].lower() == "v":
+            return await ctx.invoke(self.tasks_update, task_id=task_id, new_status=None)
+        url = f"{settings['google']['comm_log']}?call=completetask&task={task_id}"
+        # TODO ditch requests for aiohttp.clientsession
+        r = requests.get(url)
+        if r.status_code == requests.codes.ok:
+            if r.text == "1":
+                return await ctx.send(f"Task {task_id} has been marked complete.")
+            elif r.text == "2":
+                return await ctx.send("It would appear that tasks has already been completed!")
+            elif r.text == "-1":
+                return await ctx.send(f"Task {task_id} does not exist in the Communication Log. Please "
+                                      f"check the number and try again.")
             else:
-                await ctx.send(f"Yeah, we're going to have to try that one again.\n"
-                               f"Complete Task Error: {r.text}")
+                return await ctx.send(f"Call TubaKid and tell him we got a new return code!\n"
+                                      f"Tasks: {task_id}\n"
+                                      f"Return Code: {r.text}")
         else:
-            await ctx.send("This very special and important command is reserved for council members only!")
+            await ctx.send(f"Yeah, we're going to have to try that one again.\n"
+                           f"Complete Task Error: {r.text}")
 
     async def is_council(self, user_id):
         council_role = self.guild.get_role(settings['rcs_roles']['council'])
