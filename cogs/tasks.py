@@ -258,22 +258,18 @@ class Tasks(commands.Cog):
         **Example:**
         ++task add @zig Don't forget to feed the cats!
         """
-        if await self.is_council(user.id):
-            url = (f"{settings['google']['comm_log']}?call=addtask&task={task}&"
-                   f"discord={user.id}")
-            async with ctx.session.get(url) as r:
-                if r.status == 200:
-                    async for line in r.content:
-                        task_id = line.decode("utf-8")
-                    await ctx.send(f"Action Item {task_id} - {task} added for {user.display_name}")
-                    await user.send(f"Action Item {task_id} - {task} was assigned "
-                                    f"to you by {ctx.author.display_name}.")
-                else:
-                    await ctx.send(f"Something went wrong. Here's an error code for you to play with.\n"
-                                   f"Add Task Error: {r.status} - {r.reason}")
-        else:
-            await ctx.send("You are trying to assign this task to a non-council member and I'm not real "
-                           "comfortable doing that!")
+        url = (f"{settings['google']['comm_log']}?call=addtask&task={task}&"
+               f"discord={user.id}")
+        async with ctx.session.get(url) as r:
+            if r.status == 200:
+                async for line in r.content:
+                    task_id = line.decode("utf-8")
+                await ctx.send(f"Action Item {task_id} - {task} added for {user.display_name}")
+                await user.send(f"Action Item {task_id} - {task} was assigned "
+                                f"to you by {ctx.author.display_name}.")
+            else:
+                await ctx.send(f"Something went wrong. Here's an error code for you to play with.\n"
+                               f"Add Task Error: {r.status} - {r.reason}")
 
     @tasks.command(name="assign")
     @is_council()
@@ -463,13 +459,6 @@ class Tasks(commands.Cog):
         else:
             await ctx.send(f"Yeah, we're going to have to try that one again.\n"
                            f"Complete Task Error: {r.text}")
-
-    async def is_council(self, user_id):
-        council_role = self.guild.get_role(settings['rcs_roles']['council'])
-        council_members = [member.id for member in council_role.members]
-        if user_id in council_members:
-            return True
-        return False
 
 
 def setup(bot):
