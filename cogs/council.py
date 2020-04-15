@@ -9,7 +9,6 @@ from cogs.utils.checks import is_council, is_mod_or_council, is_leader_or_mod_or
 from cogs.utils.converters import ClanConverter, PlayerConverter
 from cogs.utils.db import Sql
 from cogs.utils import helper
-from collections.abc import Iterable
 from config import settings, color_pick
 from datetime import datetime
 
@@ -17,6 +16,60 @@ from datetime import datetime
 class CouncilCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.command(name="council", hidden=True)
+    @is_council()
+    async def council(self, ctx):
+        """Help menu for RCS Council"""
+        response = "**RCS Council Help Menu**\n\n"
+        response += ("**++magic**\n(Permission: Council only)\n"
+                     "Responds with a link to the Council Magic Form\nUsed for:\n"
+                     "Leader change\nAdding clans\nRemoving clans\nChanging clan type\nUpdate clan notes\n"
+                     "Add a discussion channel\n\n")
+        response += ("**++ui  [Discord User] or ++userinfo [Discord User]**\n(Permission: Council or Mods)\n"
+                     "Retrieves user information for the specified user\n\n")
+        response += ("**++recommend [Discord User] [Recommendation]**\n(Permission: Council only)\n"
+                     "Recommends the specified user as a new council member, sending recommendation to #leader-chat "
+                     "(no tag).  The post in #leader-chat will include a link to the Google Form so that leaders "
+                     "can provide feedback.\n\n")
+        response += ("**++inwar**\n(Permission: Council or Mods)\n"
+                     "Responds with a list of which RCS clans are currently in prep or war.\n\n")
+        response += ("**++ban**\n(Permission: Council or Mods)\n"
+                     "Responds with a list of users who have been banned from the RCS Discord Server, who banned "
+                     "them and why.\n\n")
+        response += ("**++kick**\n(Permission: Council or Mods)\n"
+                     "Responds with a list of users who have been kciked from the RCS Discord Server, who kicked "
+                     "them and why.\n\n")
+        response += ("**++clan notes [clan name or tag]**\n(Permission: Council only)\n"
+                     "This command will respond with the current clan notes from the wiki. You then respond with the "
+                     "new clan notes and it will update the database.\n\n")
+        response += ("**++clan discord [clan name or tag] [new discord invite]**\n(Permission: Council only)\n"
+                     "This command will update the database with the new discord invite and, if the current clan "
+                     "notes are properly formatted (Discord: [Invite](link)), it will update the notes with the "
+                     "new server as well.\n\n")
+        response += ("**++leader [clan name or tag]**\n(Permission: Council or Mods)\n"
+                     "Responds with information on the clan leader and any alts they may have.\n\n")
+        response += ("**++alts list [clan name or tag]**\n(Permission: Council or Mods)\n"
+                     "Responds with information on the clan leader and any alts they may have.\n\n")
+        response += ("**++alts add [clan name or tag] [new alt name]**\n(Permission: Council or Mods)\n"
+                     "Adds the specified alt to the specified clan.\n\n")
+        response += ("**++alts remove [clan name or tag] [new alt name]**\n(Permission: Council or Mods)\n"
+                     "Removes the specified alt to the specified clan.\n\n")
+        response += ("**++warn list [Discord User]**\n(Permission: Council or Mods)\n"
+                     "Shows current warnings for the specified user.\n\n")
+        response += ("**++warn add [Discord User] [reason]**\n(Permission: Council or Mods)\n"
+                     "Adds a warning for the specified user.\n\n")
+        response += ("**++warn remove [Warning ID]]**\n(Permission: Council or Mods)\n"
+                     "Removes the specified warning.  Warning IDs can be obtained using ++warn list.\n\n")
+        response += ("**++dm leaders [message]**\n(Permission: Council only)\n"
+                     "Sends the message to all RCS leaders via DM.  If successful, it will respond with a message "
+                     "letting you know how many leaders the message was send to.\n\n")
+        response += ("**++find [search string]**\n(Permission: Council, Mods, Leaders)\n"
+                     "This command will search all users on the RCS Discord Server and, if the search string is in "
+                     "their name, respond with their name and whether or not they have the Member role.\n\n")
+        response += ("**For more information on any of these commands, simply use the ++help feature. For example:** "
+                     "`++help clan notes`")
+        await ctx.send_text(ctx.channel, response)
 
     @commands.command(name="cl", hidden=True)
     @commands.is_owner()
@@ -132,7 +185,7 @@ class CouncilCog(commands.Cog):
         await channel.send(f"The RCS Council supports the addition of {user.display_name} to as a member of Council."
                            f"\n\nPlease complete the following form and provide any necessary feedback.  Thank "
                            f"you!\n\n{form_url}")
-        await ctx.send(f"Form udpated and sent to {channel.mention} (not really - just testing right now!)")
+        await ctx.send(f"Form udpated and sent to {channel.mention}.")
 
     @commands.command(name="addClan", aliases=["clanAdd", "newClan", "add_clan", "new_clan"], hidden=True)
     @is_council()
@@ -445,7 +498,7 @@ class CouncilCog(commands.Cog):
 
     @commands.command(name="ban", hidden=True)
     @is_mod_or_council()
-    async def ban_list(self, ctx, *args):
+    async def ban_list(self, ctx):
         """Responds with a list of all members who have been banned from the RCS Discord Server"""
         guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
         content = ""
@@ -473,7 +526,7 @@ class CouncilCog(commands.Cog):
 
     @commands.command(name="kick", hidden=True)
     @is_mod_or_council()
-    async def kick_list(self, ctx, *args):
+    async def kick_list(self, ctx):
         """Responds with a list of all members who have been banned from the RCS Discord Server"""
         guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
         content = ""
