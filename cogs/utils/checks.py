@@ -70,6 +70,28 @@ def is_mod():
     return commands.check(pred)
 
 
+def check_is_scout(ctx):
+    if ctx.author.id == 251150854571163648:
+        return True
+    rcs_guild = ctx.bot.get_guild(338884664335007755)
+    scout_role = rcs_guild.get_role(340969543402913803)
+    rcs_member = rcs_guild.get_member(ctx.author.id)
+    if not rcs_member:
+        return False
+    if not rcs_member.roles:
+        return False
+    if scout_role in rcs_member.roles:
+        return True
+    else:
+        return False
+
+
+def is_scout():
+    def pred(ctx):
+        return check_is_scout(ctx)
+    return commands.check(pred)
+
+
 def check_is_leader(ctx):
     if ctx.author.id == 251150854571163648:
         return True
@@ -97,6 +119,12 @@ def is_leader():
 def is_mod_or_council():
     async def pred(ctx):
         return check_is_mod(ctx) or check_is_council(ctx)
+    return commands.check(pred)
+
+
+def is_scout_or_council():
+    async def pred(ctx):
+        return check_is_scout(ctx) or check_is_council(ctx)
     return commands.check(pred)
 
 

@@ -23,6 +23,7 @@ if enviro == "LIVE":
     log_level = "INFO"
     coc_names = "vps"
     initial_extensions = ["cogs.admin",
+                          "cogs.archive",
                           "cogs.background",
                           "cogs.council",
                           "cogs.discordcheck",
@@ -40,13 +41,13 @@ elif enviro == "home":
     log_level = "DEBUG"
     coc_names = "ubuntu"
     initial_extensions = ["cogs.admin",
+                          "cogs.archive",
                           "cogs.council",
                           "cogs.eggs",
                           "cogs.games",
                           "cogs.general",
                           "cogs.newhelp",
                           "cogs.owner",
-                          "cogs.push",
                           "cogs.miniwar",
                           ]
 else:
