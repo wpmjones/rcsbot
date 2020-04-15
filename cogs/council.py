@@ -67,6 +67,23 @@ class CouncilCog(commands.Cog):
         response += ("**++find [search string]**\n(Permission: Council, Mods, Leaders)\n"
                      "This command will search all users on the RCS Discord Server and, if the search string is in "
                      "their name, respond with their name and whether or not they have the Member role.\n\n")
+        response += ("**++tasks all**\n(Permission: Council only)\n"
+                     "Sends all active tasks to your DM.\n\n")
+        response += ("**++tasks [category]**\n(Permission: Council only)\n"
+                     "Responds with active tasks in the specified category (suggestions, council, verification, other, "
+                     "action).\n\n")
+        response += ("**++tasks add [Discord User] [task]**\n(Permission: Council only)\n"
+                     "Creates a new action item for the specified user.\n\n")
+        response += ("**++tasks assign [Discord User] [Task ID]**\n(Permission: Council only)\n"
+                     "Assigns the specified task to the Discord user provided. Task IDs can be obtained using the "
+                     "++tasks [category] command.  Only Suggestions, Other, and Action Items can be assigned.\n\n")
+        response += ("**++tasks change [Task ID] [new task]**\n(Permission: Council only)\n"
+                     "Change an existing action item.  Only action items can be modified.\n\n")
+        response += ("**++tasks update [Task ID] [Optional: new status]**\n(Permission: Council only)\n"
+                     "This can only be used on Verification tasks. If you do not provide a new status, it will "
+                     "prompt you for the new status.\n\n")
+        response += ("**++tasks done [Task ID]**\n(Permission: Council only)\n"
+                     "Marks the specified task complete.  Works for all categories.\n\n")
         response += ("**For more information on any of these commands, simply use the ++help feature. For example:** "
                      "`++help clan notes`")
         await ctx.send_text(ctx.channel, response)
