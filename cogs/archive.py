@@ -265,6 +265,7 @@ class Archive(commands.Cog):
     @archive.command(name="search")
     @is_scout_or_council()
     async def archive_search(self, ctx, *, search_str):
+        """Searches the archived channels for the specified phrase/keyword"""
         if search_str == "list":
             await ctx.invoke(self.archive_list)
             return
