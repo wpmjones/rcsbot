@@ -537,6 +537,99 @@ class CouncilCog(commands.Cog):
                         inline=False)
         await ctx.send(embed=embed)
 
+    @commands.group(name="clan", invoke_without_command=True, hidden=True)
+    @is_council()
+    async def clan(self, ctx):
+        """[Group] Commands to update clan information for the wiki
+
+        **Permissions:**
+        Council
+        """
+
+        if ctx.invoked_subcommand is None:
+            return await ctx.show_help(ctx.command)
+
+    @clan.command(name="notes")
+    @is_council()
+    async def clan_notes(self, ctx, clan: ClanConverter = None):
+        """Update the notes for the specified clan. This command will respond
+        with the current notes, then you will respond with the new notes.
+
+        **Example:**
+        ++clan notes Tau
+        """
+        if not clan:
+            return await ctx.send("Please specify the clan name in your command.")
+
+        def check_author(m):
+            return m.author == ctx.author
+
+        with Sql(as_dict=True) as cursor:
+            sql = "SELECT notes FROM rcs_data WHERE clanTag = %s"
+            cursor.execute(sql, (clan.tag[1:]))
+            fetch = cursor.fetchone()
+            if fetch is not None:
+                old_notes = fetch['notes']
+            else:
+                return await ctx.send("There was a problem retrieving the notes for this clan. Someone ought to "
+                                      "ping that old TubaKid guy and see if he can fix it.")
+            try:
+                await ctx.send(f"**Current clan notes:**\nPlease respond with the new clan notes. Remembering that all "
+                               f"discord info should appear in the following format:\n"
+                               f"**Discord: [Invite](https://discord.gg/invitelink)**\n\n{old_notes}")
+                response = await ctx.bot.wait_for("message", check=check_author, timeout=60)
+            except asyncio.TimeoutError:
+                return await ctx.send("Your request has timed out. No changes have been made.")
+            new_notes = response.content
+            sql = "UPDATE rcs_data SET notes = %s WHERE clanTag = %s"
+            cursor.execute(sql, (new_notes, clan.tag[1:]))
+        await ctx.send(f"The notes for {clan.name} ({clan.tag}) have been updated in the database. Please allow 3 "
+                       f"hours to see the changes reflected in the wiki.")
+
+    @clan.command(name="discord")
+    @is_council()
+    async def clan_discord(self, ctx, clan: ClanConverter = None, new_discord: str = None):
+        """Update the discord server link for the specified clan. This will replace the server link for the ++discord
+        command and if there is an existing discord link in the notes section for this clan, it will update that as
+        well.
+
+        **Examples:**
+        ++clan discord "Reddit Psi" https://discord.gg/newlink
+        ++clan discord zen https://discord.gg/newlink
+        """
+        if not clan:
+            return await ctx.send("Please specify the clan name in your command.")
+        if not new_discord:
+            return await ctx.send("Please provide the new invite link for this Discord server.")
+        flag = 0
+        with Sql(as_dict=True) as cursor:
+            sql = "SELECT notes FROM rcs_data WHERE clanTag = %s"
+            cursor.execute(sql, (clan.tag[1:]))
+            fetch = cursor.fetchone()
+            if fetch is not None:
+                old_notes = fetch['notes']
+                if "Discord: [Invite]" in old_notes:
+                    start = old_notes.find("Discord: [Invite]")
+                    end = old_notes.find(")", start) + 1
+                    old_discord = old_notes[start:end]
+                    new_notes = old_notes.replace(old_discord, f"Discord: [Invite]({new_discord})")
+                    sql = "UPDATE rcs_data SET notes = %s WHERE clanTag = %s"
+                    cursor.execute(sql, (new_notes, clan.tag[1:]))
+                    flag += 1
+            sql = "UPDATE rcs_data SET discordServer = %s WHERE clanTag = %s"
+            cursor.execute(sql, (new_discord, clan.tag[1:]))
+            flag += 1
+        if flag == 0:
+            response = ("Something weird happened and no updates were made. If the problem persists, please "
+                        "contact TubaKid")
+        elif flag == 1:
+            response = (f"The Discord server has been updated for {clan.name}. Please allow up to 3 hours for "
+                        f"the change to appear on the wiki.")
+        else:
+            response = (f"Both the Discord server and the notes section have been updated for {clan.name}. "
+                        f"Please allow up to 3 hours for the change to appear on the wiki.")
+        await ctx.send(response)
+
     @commands.group(invoke_without_command=True, hidden=True)
     @is_leader_or_mod_or_council()
     async def alts(self, ctx):

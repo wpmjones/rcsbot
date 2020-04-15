@@ -19,11 +19,6 @@ class OwnerCog(commands.Cog):
     async def discord_test(self, ctx, user: discord.User = None):
         await ctx.send(user)
 
-    @commands.command(name="clan", hidden=True)
-    async def get_clan(self, ctx, clan_tag):
-        clan = await self.bot.coc.get_clan(clan_tag)
-        await ctx.send(clan)
-
     @commands.command(name="clear", hidden=True)
     @commands.is_owner()
     async def clear(self, ctx, msg_count: int = None):
