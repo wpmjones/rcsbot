@@ -281,7 +281,10 @@ class Archive(commands.Cog):
         if file_list != "":
             content = "**Files found:**\n" + file_list
             self.bot.logger.info(f"Reported:\n{file_list}")
-            await msg.edit(content=content)
+            if len(content) < 2000:
+                await msg.edit(content=content)
+            else:
+                await ctx.send_text(ctx.channel, content)
         self.bot.messages[ctx.message.id] = msg
 
     @archive.command(name="delete")
