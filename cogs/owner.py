@@ -1,4 +1,5 @@
 import discord
+import coc
 
 from discord.ext import commands
 from cogs.utils.db import Sql
@@ -144,6 +145,50 @@ class OwnerCog(commands.Cog):
         helper.get_clan.cache_clear()
         content += "Caches cleared"
         await ctx.send(content)
+
+    @commands.command(name="update_warlog", hidden=True)
+    @commands.is_owner()
+    async def update_warlog(self, ctx):
+        conn = self.bot.pool
+        for tag in helper.rcs_tags():
+            try:
+                print(f"Trying {tag}")
+                war_log = await self.bot.coc.get_warlog(f"#{tag}")
+            except coc.PrivateWarLog:
+                print(f"{tag} has a private war log.")
+                continue
+            for war in war_log:
+                if isinstance(war, coc.LeagueWarLogEntry):
+                    # skip all CWL wars
+                    continue
+                sql = ("SELECT war_id, team_size, end_time::timestamp::date, war_state FROM rcs_wars "
+                       "WHERE clan_tag = $1 AND opponent_tag = $2")
+                fetch = await conn.fetch(sql, tag, war.opponent.tag[1:])
+                if fetch:
+                    # Update existing data in the database
+                    for row in fetch:
+                        if row['end_time'] == war.end_time.time.date() and row['war_state'] != "warEnded":
+                            # update database to reflect end of war
+                            sql = ("UPDATE rcs_wars SET war_state = 'warEnded', clan_attacks = $1, "
+                                   "clan_destruction = $2, clan_stars = $3, opponent_attacks = $4, "
+                                   "opponent_destruction = $5, opponent_stars = $6 WHERE war_id = $7")
+                            await conn.execute(sql, war.clan.attacks_used, war.clan.destruction, war.clan.stars,
+                                               war.opponent.attacks_used, war.opponent.destruction, war.opponent.stars,
+                                               row['war_id'])
+                            await ctx.send(f"Updated war for {war.clan.name} vs {war.opponent.name}.")
+                else:
+                    # War is not in database, add it (happens if bot is down)
+                    sql = ("INSERT INTO rcs_wars (clan_tag, clan_attacks, clan_destruction, clan_stars,"
+                           "opponent_tag, opponent_name, opponent_attacks, opponent_destruction, opponent_stars,"
+                           "end_time, war_state, team_size, reported)"
+                           "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)")
+                    await conn.execute(sql, war.clan.tag[1:], war.clan.attacks_used, war.clan.destruction,
+                                       war.clan.stars, war.opponent.tag, war.opponent.name,
+                                       war.opponent.attacks_used, war.opponent.destruction, war.opponent.stars,
+                                       war.end_time.time, "warEnded", war.team_size, False)
+                    await ctx.send(f"Added war for {war.clan.name} vs {war.opponent.name} ending "
+                                   f"{war.end_time.time}.")
+        await ctx.send("All done.")
 
 
 def setup(bot):
