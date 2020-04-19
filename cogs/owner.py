@@ -140,8 +140,10 @@ class OwnerCog(commands.Cog):
     async def clear_cache(self, ctx):
         content = (f"```python\n"
                    f"rcs_names_tags: {helper.rcs_names_tags.cache_info()}\n"
+                   f"rcs_tags: {helper.rcs_tags.cache_info()}\n"
                    f"get_clan: {helper.get_clan.cache_info()}```")
         helper.rcs_names_tags.cache_clear()
+        helper.rcs_tags.cache_clear()
         helper.get_clan.cache_clear()
         content += "Caches cleared"
         await ctx.send(content)
