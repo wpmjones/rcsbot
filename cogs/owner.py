@@ -164,27 +164,29 @@ class OwnerCog(commands.Cog):
                 sql = ("SELECT war_id, team_size, end_time::timestamp::date, war_state FROM rcs_wars "
                        "WHERE clan_tag = $1 AND opponent_tag = $2")
                 fetch = await conn.fetch(sql, tag, war.opponent.tag[1:])
+                print(f"Tag: {tag} vs {war.opponent.tag[1:]} ({war.opponent.name})")
+                print(fetch)
                 if fetch:
                     # Update existing data in the database
                     for row in fetch:
                         if row['end_time'] == war.end_time.time.date() and row['war_state'] != "warEnded":
                             # update database to reflect end of war
                             sql = ("UPDATE rcs_wars SET war_state = 'warEnded', clan_attacks = $1, "
-                                   "clan_destruction = $2, clan_stars = $3, opponent_attacks = $4, "
-                                   "opponent_destruction = $5, opponent_stars = $6 WHERE war_id = $7")
+                                   "clan_destruction = $2, clan_stars = $3, "
+                                   "opponent_destruction = $4, opponent_stars = $5 WHERE war_id = $6")
                             await conn.execute(sql, war.clan.attacks_used, war.clan.destruction, war.clan.stars,
-                                               war.opponent.attacks_used, war.opponent.destruction, war.opponent.stars,
+                                               war.opponent.destruction, war.opponent.stars,
                                                row['war_id'])
                             await ctx.send(f"Updated war for {war.clan.name} vs {war.opponent.name}.")
                 else:
                     # War is not in database, add it (happens if bot is down)
                     sql = ("INSERT INTO rcs_wars (clan_tag, clan_attacks, clan_destruction, clan_stars,"
-                           "opponent_tag, opponent_name, opponent_attacks, opponent_destruction, opponent_stars,"
+                           "opponent_tag, opponent_name, opponent_destruction, opponent_stars,"
                            "end_time, war_state, team_size, reported)"
-                           "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)")
+                           "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)")
                     await conn.execute(sql, war.clan.tag[1:], war.clan.attacks_used, war.clan.destruction,
-                                       war.clan.stars, war.opponent.tag, war.opponent.name,
-                                       war.opponent.attacks_used, war.opponent.destruction, war.opponent.stars,
+                                       war.clan.stars, war.opponent.tag[1:], war.opponent.name,
+                                       war.opponent.destruction, war.opponent.stars,
                                        war.end_time.time, "warEnded", war.team_size, False)
                     await ctx.send(f"Added war for {war.clan.name} vs {war.opponent.name} ending "
                                    f"{war.end_time.time}.")
