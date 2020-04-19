@@ -16,9 +16,9 @@ class Push(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.title = "2019 RCS Turkey Day Trophy Push"
-        self.start_time = datetime(2019, 11, 15, 5, 0)
-        self.end_time = datetime(2019, 11, 25, 4, 50)
+        self.title = "2020 Spring Trophy Push"
+        self.start_time = datetime(2020, 4, 27, 4, 0)
+        self.end_time = datetime(2020, 5, 25, 3, 55)
 
     @commands.group(name="push", invoke_without_command=True)
     async def push(self, ctx):
@@ -189,7 +189,7 @@ class Push(commands.Cog):
         # start push
         start = time.perf_counter()
         rcs_tag_list = rcs_tags()
-        rcs_tag_list.append('22L2RY2J9')
+        # rcs_tag_list.append('22L2RY2J9')
         for tag in rcs_tags():
             if tag == "888GPQ0J":  # Change to in list if more than one clan bails
                 continue
@@ -198,7 +198,7 @@ class Push(commands.Cog):
             with Sql() as cursor:
                 async for player in coc_clan.get_detailed_members():
                     pname = player.name.replace("'", "''")
-                    sql = (f"INSERT INTO rcspush_2019_2 "
+                    sql = (f"INSERT INTO rcspush_2020_1 "
                            f"(playerTag, clanTag, startingTrophies, currentTrophies, "
                            f"bestTrophies, startingThLevel, playerName, clanName) "
                            f"VALUES (%s, %s, %d, %d, %d, %d, N'{pname}', %s)")
