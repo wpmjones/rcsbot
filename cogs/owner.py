@@ -1,7 +1,7 @@
 import discord
 import coc
 
-from discord.ext import commands
+from discord.ext import commands, tasks
 from cogs.utils.db import Sql
 from cogs.utils import helper
 from datetime import datetime
@@ -10,6 +10,10 @@ from datetime import datetime
 class OwnerCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.update_warlog.start()
+
+    def cog_unload(self):
+        self.update_warlog.cancel()
 
     @commands.command(name="pp", hidden=True)
     async def player_test(self, ctx, player_tag):
@@ -148,9 +152,9 @@ class OwnerCog(commands.Cog):
         content += "Caches cleared"
         await ctx.send(content)
 
-    @commands.command(name="update_warlog", hidden=True)
-    @commands.is_owner()
+    @tasks.loop(hours=1)
     async def update_warlog(self, ctx):
+        print("starting")
         conn = self.bot.pool
         for tag in helper.rcs_tags():
             try:
@@ -164,10 +168,9 @@ class OwnerCog(commands.Cog):
                     # skip all CWL wars
                     continue
                 sql = ("SELECT war_id, team_size, end_time::timestamp::date, war_state FROM rcs_wars "
-                       "WHERE clan_tag = $1 AND opponent_tag = $2")
-                fetch = await conn.fetch(sql, tag, war.opponent.tag[1:])
+                       "WHERE clan_tag = $1 AND opponent_tag = $2 AND end_time < $3")
+                fetch = await conn.fetch(sql, tag, war.opponent.tag[1:], datetime.utcnow())
                 print(f"Tag: {tag} vs {war.opponent.tag[1:]} ({war.opponent.name})")
-                print(fetch)
                 if fetch:
                     # Update existing data in the database
                     for row in fetch:
