@@ -36,3 +36,6 @@ class SeasonConfig(commands.Cog, command_attrs=dict(hidden=True)):
             writer.writerow([new_start_date, self.next_last_monday()])
         return "success"
 
+
+def setup(bot):
+    bot.add_cog(SeasonConfig(bot))
