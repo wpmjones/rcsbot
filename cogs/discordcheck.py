@@ -149,7 +149,7 @@ class DiscordCheck(commands.Cog):
         except:
             self.bot.logger.exception("RCS Task Log insert fail")
 
-    @tasks.loop(time=time(hour=24))
+    @tasks.loop(time=time(hour=0))
     async def no_clan(self):
         """Check all discord members to see if they have a clan name in their display name"""
         if date.today().weekday() != 0:
