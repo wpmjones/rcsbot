@@ -123,7 +123,7 @@ class DiscordCheck(commands.Cog):
                     regex = r"\Wreddit[^\s]|\Wreddit$"
                 for member in self.guild.members:
                     if member_role in member.roles \
-                            and re.search(regex, member.display_name.lower(), re.IGNORECASE) is not None:
+                            and re.search(regex, member.display_name.lower(), re.IGNORECASE):
                         report_list.add(f"{member.display_name.replace('||', '|')} ({member.id})")
             if report_list:
                 await danger_channel.send(f"<@{clan['leader_tag']}> Please check the following list of "
@@ -149,7 +149,7 @@ class DiscordCheck(commands.Cog):
         except:
             self.bot.logger.exception("RCS Task Log insert fail")
 
-    @tasks.loop(hours=24)
+    @tasks.loop(time=time(hour=24))
     async def no_clan(self):
         """Check all discord members to see if they have a clan name in their display name"""
         if date.today().weekday() != 0:
