@@ -153,7 +153,7 @@ class OwnerCog(commands.Cog):
         await ctx.send(content)
 
     @tasks.loop(hours=1)
-    async def update_warlog(self, ctx):
+    async def update_warlog(self):
         print("starting")
         conn = self.bot.pool
         for tag in helper.rcs_tags():
@@ -193,9 +193,8 @@ class OwnerCog(commands.Cog):
                                        war.clan.stars, war.opponent.tag[1:], war.opponent.name,
                                        war.opponent.destruction, war.opponent.stars,
                                        war.end_time.time, "warEnded", war.team_size, False)
-                    await ctx.send(f"Added war for {war.clan.name} vs {war.opponent.name} ending "
-                                   f"{war.end_time.time}.")
-        await ctx.send("All done.")
+                    self.bot.logger.info(f"Added war for {war.clan.name} vs {war.opponent.name} ending "
+                                         f"{war.end_time.time}.")
 
 
 def setup(bot):
