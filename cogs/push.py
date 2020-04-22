@@ -7,7 +7,6 @@ from cogs.utils import formats
 from cogs.utils.converters import ClanConverter
 from cogs.utils.db import Sql
 from cogs.utils.helper import rcs_tags
-from itertools import groupby
 from datetime import datetime
 
 
@@ -188,21 +187,70 @@ class Push(commands.Cog):
         msg = await ctx.send("Starting process...")
         # start push
         start = time.perf_counter()
-        # rcs_tag_list.append('22L2RY2J9')
-        for tag in rcs_tags():
+        sql_timer = 0
+        player_timer = 0
+        player_counter = 0
+        clan_timer = 0
+        clan_counter = 0
+        player_list = []
+        clan_start = time.perf_counter()
+        async for clan in self.bot.coc.get_clans(rcs_tags()):
+            clan_timer += time.perf_counter() - clan_start
             # if tag == "888GPQ0J":  # Change to in list if more than one clan bails
             #     continue
-            self.bot.logger.info(f"Starting {tag}")
-            coc_clan = await self.bot.coc.get_clan(f"#{tag}")
-            with Sql() as cursor:
-                async for player in coc_clan.get_detailed_members():
-                    pname = player.name.replace("'", "''")
-                    sql = (f"INSERT INTO rcspush_2020_1 "
-                           f"(playerTag, clanTag, startingTrophies, currentTrophies, "
-                           f"bestTrophies, startingThLevel, playerName, clanName) "
-                           f"VALUES (%s, %s, %d, %d, %d, %d, N'{pname}', %s)")
-                    cursor.execute(sql, (player.tag[1:], tag, player.trophies, player.trophies,
-                                         player.best_trophies, player.town_hall, coc_clan.name))
+            clan_counter += 1
+            for member in clan.itermembers:
+                player_list.append(member.tag)
+            clan_start = time.perf_counter()
+        print(len(player_list))
+        players_many = []
+        to_insert = []
+        player_start = time.perf_counter()
+        async for player in self.bot.coc.get_players(player_list):
+            player_timer += time.perf_counter() - player_start
+            player_counter += 1
+            players_many.append((player.tag[1:], player.clan.tag[1:], player.trophies, player.trophies,
+                                 player.best_trophies, player.town_hall, player.name.replace("'", "''"),
+                                 player.clan.name))
+            to_insert.append({
+                "player_tag": player.tag[1:],
+                "clan_tag": player.clan.tag[1:],
+                "starting_trophies": player.trophies,
+                "current_trophies": player.trophies,
+                "best_trophies": player.best_trophies,
+                "starting_th_level": player.town_hall,
+                "player_name": player.name.replace("'", "''"),
+                "clan_name": player.clan.name
+            })
+            player_start = time.perf_counter()
+        print("Player list assembled.")
+        with Sql() as cursor:
+            sql_start = time.perf_counter()
+            sql = (f"INSERT INTO rcspush_2020_1 "
+                   f"(playerTag, clanTag, startingTrophies, currentTrophies, "
+                   f"bestTrophies, startingThLevel, playerName, clanName) "
+                   f"VALUES (%s, %s, %d, %d, %d, %d, %s, %s)")
+            cursor.executemany(sql, players_many)
+            sql_timer += time.perf_counter() - sql_start
+        conn = self.bot.pool
+        sql = ("INSERT INTO rcspush_2020_1 (player_tag, clan_tag, starting_trophies, current_trophies, best_trophies, "
+               "starting_th_level, player_name, clan_name) "
+               "SELECT x.player_tag, x.clan_tag, x.starting_trophies, x.current_trophies, x.best_trophies, "
+               "x.starting_th_level, x.player_name, x.clan_name "
+               "FROM jsonb_to_recordset($1::jsonb) as x (player_tag TEXT, clan_tag TEXT, starting_trophies INTEGER, "
+               "current_trophies INTEGER, best_trophies INTEGER, starting_th_level INTEGER, player_name TEXT, "
+               "clan_name TEXT)")
+        psql_start = time.perf_counter()
+        await conn.execute(sql, to_insert)
+        psql_timer = time.perf_counter() - psql_start
+        print(f"\nAll clans retrieved in {clan_timer}s")
+        print(f"Clan API retrieval average: {clan_timer / clan_counter}s per clan")
+        print(f"{len(player_list)} players retrieved in {player_timer / 60:.2f} minutes")
+        print(f"Player API retrieval average: {player_timer / player_counter}s per player")
+        print(f"{len(player_list)} players inserted into DB in {sql_timer / 60:.2f} minutes")
+        print(f"SQL insert average:  {sql_timer / len(player_list)}s")
+        print(f"{len(player_list)} players inserted into PSQL DB in {psql_timer} seconds")
+        print(f"PSQL insert average:  {psql_timer / len(player_list)}s")
         await msg.delete()
         await ctx.send(f"All members added. Elapsed time: {(time.perf_counter() - start) / 60:.2f} minutes")
 
