@@ -9,7 +9,7 @@ import asyncio
 
 from discord.ext import commands
 from cogs.utils import context, category
-from cogs.utils.db import Psql
+from cogs.utils.db import Table
 from cogs.utils.helper import get_active_wars
 from datetime import datetime
 from config import settings
@@ -31,6 +31,7 @@ if enviro == "LIVE":
                           "cogs.games",
                           "cogs.general",
                           "cogs.newhelp",
+                          "cogs.new_season",
                           "cogs.owner",
                           "cogs.push",
                           "cogs.tasks",
@@ -48,7 +49,7 @@ elif enviro == "home":
                           "cogs.general",
                           "cogs.newhelp",
                           "cogs.owner",
-                          "cogs.miniwar",
+                          "cogs.push",
                           ]
 else:
     token = settings['discord']['test_token']
@@ -77,7 +78,9 @@ There are easter eggs. Feel free to try and find them!"""
 coc_client = coc.login(settings['supercell']['user'],
                        settings['supercell']['pass'],
                        client=coc.EventsClient,
+                       key_count=4,
                        key_names=coc_names,
+                       throttle_limit=35,
                        correct_tags=True)
 
 
@@ -206,7 +209,7 @@ class RcsBot(commands.Bot):
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     try:
-        pool = loop.run_until_complete(Psql.create_pool())
+        pool = loop.run_until_complete(Table.create_pool(f"{settings['pg']['uri']}/rcsdata"))
         bot = RcsBot()
         bot.repo = git.Repo(os.getcwd())
         bot.pool = pool
