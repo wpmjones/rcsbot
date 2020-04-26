@@ -8,7 +8,7 @@ class TestWarUpdates(commands.Cog, command_attrs=dict(hidden=True)):
         self.bot = bot
         self.bot.coc.add_events(self.on_war_state_change)
         self.bot.coc.add_war_update(rcs_tags())
-        self.bot.coc.start_updtes("war")
+        self.bot.coc.start_updates("war")
 
     async def on_war_state_change(self, current_state, war):
         channel = self.bot.get_channel(settings['api']['rcs_demo'])
