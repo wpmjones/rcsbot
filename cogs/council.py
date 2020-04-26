@@ -480,13 +480,13 @@ class CouncilCog(commands.Cog):
                     if isinstance(war, coc.ClanWar):
                         if war.state == "preparation":
                             in_prep += (f"{war.clan.name} ({war.clan.tag}) has "
-                                        f"{war.start_time.seconds_until // 3600:.0f} hours until war.\n")
+                                        f"{war.start_time.seconds_until // 3600:.2f} hours until war.\n")
                         if war.state == "inWar":
                             in_war += (f"{war.clan.name} ({war.clan.tag}) has "
-                                       f"{war.end_time.seconds_until // 3600:.0f} hours left in war.\n")
+                                       f"{war.end_time.seconds_until // 3600:.2f} hours left in war.\n")
                     if isinstance(war, coc.LeagueWar) and war.end_time.seconds_until > 0:
                         in_cwl += (f"{war.clan.name} ({war.clan.tag}) has "
-                                   f"{war.end_time.seconds_until // 3600:.0f} hours left in war.\n")
+                                   f"{war.end_time.seconds_until // 3600:.2f} hours left in war.\n")
                 except coc.PrivateWarLog:
                     pass
                 except Exception as e:
