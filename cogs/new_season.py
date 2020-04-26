@@ -9,6 +9,10 @@ from cogs.utils.season import get_season_end
 class SeasonConfig(commands.Cog, command_attrs=dict(hidden=True)):
     def __init__(self, bot):
         self.bot = bot
+        self.start_new_season.start()
+
+    def cog_unload(self):
+        self.start_new_season.cancel()
 
     @staticmethod
     def next_last_monday():
