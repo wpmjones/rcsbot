@@ -125,6 +125,10 @@ class Push(commands.Cog):
         p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count, rows_per_table=20)
         await p.paginate()
 
+    @push.command(name="th13", hidden=True)
+    async def push_th13(self, ctx):
+        await ctx.invoke(self.push_th, th_level=13)
+
     @push.command(name="th12", hidden=True)
     async def push_th12(self, ctx):
         await ctx.invoke(self.push_th, th_level=12)
@@ -252,7 +256,8 @@ class Push(commands.Cog):
         print(f"{len(player_list)} players inserted into PSQL DB in {psql_timer} seconds")
         print(f"PSQL insert average:  {psql_timer / len(player_list)}s")
         await msg.delete()
-        await ctx.send(f"All members added. Elapsed time: {(time.perf_counter() - start) / 60:.2f} minutes")
+        await ctx.send(f"{len(player_list)} members added. Elapsed time: "
+                       f"{(time.perf_counter() - start) / 60:.2f} minutes")
 
 
 def setup(bot):
