@@ -185,57 +185,75 @@ class Push(commands.Cog):
         p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
         await p.paginate()
 
+    @push.command(name="clean", hidden=True)
+    @commands.is_owner()
+    async def push_clean(self, ctx):
+        with Sql() as cursor:
+            sql = "DELETE FROM rcspush_2020_1"
+            cursor.execute(sql)
+        conn = self.bot.pool
+        await conn.execute(sql)
+        await ctx.send("Done")
+
     @push.command(name="start", hidden=True)
     @commands.is_owner()
     async def push_start(self, ctx):
         msg = await ctx.send("Starting process...")
         # start push
         start = time.perf_counter()
-        sql_timer = 0
-        player_timer = 0
-        player_counter = 0
-        clan_timer = 0
-        clan_counter = 0
         player_list = []
-        clan_start = time.perf_counter()
         async for clan in self.bot.coc.get_clans(rcs_tags()):
-            clan_timer += time.perf_counter() - clan_start
-            # if tag == "888GPQ0J":  # Change to in list if more than one clan bails
-            #     continue
-            clan_counter += 1
+            if clan.tag == "#9L2PRL0U":  # Change to in list if more than one clan bails
+                continue
             for member in clan.itermembers:
                 player_list.append(member.tag)
-            clan_start = time.perf_counter()
+        team_boom = ['#20PCPRJ8', '#2QG2C9LG8', '#288UUGPGG', '#YQCVUGJU', '#2G0YV209J', '#9P0PPJV8',
+                     '#9PYP8VY90', '#982V9288G', '#2Q8GQLU9R', '#22LPCGV8', '#RU9LYLG9', '#28VYCQGRU',
+                     '#P2P9QU8C2', '#GVJP200U', '#20CCV90UQ', '#Y9C2909R', '#2UL9UVCC2', '#89QQ9QRJ0',
+                     '#8JQGGU2Q0', '#GPUQYRJC', '#R8JVUGVU', '#V8UQ0G0L', '#G82J00P', '#8VQY0GP2',
+                     '#88Y0YL98P', '#80LPL9PRP', '#Y0RPYJPC', '#9L9VCYQQ2', '#9P8PCUY8L', '#YY82YY2Y',
+                     '#2LQPJVR0', '#2PYQR02GV', '#URLVC082', '#PJ8V0QUU', '#2LJJY8JGQ', '#CYUVGPPQ',
+                     '#PY90C2CY', '#L0GYY8V2', '#8L8PLY2Q2', '#LQY0UUV8V', '#2VVQJ9GG2', '#9Y9GCYRJJ',
+                     '#8R2QVYYG', '#2VCG8PPVU', '#2UPPC0GUC', '#8LVCUQGRG', '#2LQVURL9L', '#PCR8QGY9',
+                     '#2YCV2JRRJ', '#JLPC2GCU']
+        player_list.extend(team_boom)
         print(len(player_list))
         players_many = []
         to_insert = []
-        player_start = time.perf_counter()
         async for player in self.bot.coc.get_players(player_list):
-            player_timer += time.perf_counter() - player_start
-            player_counter += 1
-            players_many.append((player.tag[1:], player.clan.tag[1:], player.trophies, player.trophies,
+            players_many.append((player.tag[1:], player.clan.tag[1:],
+                                 player.trophies if player.trophies <= 5000 else 5000,
+                                 player.trophies if player.trophies <= 5000 else 5000,
                                  player.best_trophies, player.town_hall, player.name.replace("'", "''"),
                                  player.clan.name))
             to_insert.append({
                 "player_tag": player.tag[1:],
                 "clan_tag": player.clan.tag[1:],
-                "starting_trophies": player.trophies,
-                "current_trophies": player.trophies,
+                "starting_trophies": player.trophies if player.trophies <= 5000 else 5000,
+                "current_trophies": player.trophies if player.trophies <= 5000 else 5000,
                 "best_trophies": player.best_trophies,
                 "starting_th_level": player.town_hall,
                 "player_name": player.name.replace("'", "''"),
                 "clan_name": player.clan.name
             })
-            player_start = time.perf_counter()
         print("Player list assembled.")
         with Sql() as cursor:
-            sql_start = time.perf_counter()
             sql = (f"INSERT INTO rcspush_2020_1 "
                    f"(playerTag, clanTag, startingTrophies, currentTrophies, "
                    f"bestTrophies, startingThLevel, playerName, clanName) "
                    f"VALUES (%s, %s, %d, %d, %d, %d, %s, %s)")
             cursor.executemany(sql, players_many)
-            sql_timer += time.perf_counter() - sql_start
+            sql = ("UPDATE rcspush_2020_1 SET clanTag = '9L2PRL0U' "
+                   "WHERE playerTag IN ('#20PCPRJ8', '#2QG2C9LG8', '#288UUGPGG', '#YQCVUGJU', '#2G0YV209J', "
+                   "'#9P0PPJV8', "
+                   "'#9PYP8VY90', '#982V9288G', '#2Q8GQLU9R', '#22LPCGV8', '#RU9LYLG9', '#28VYCQGRU', '#P2P9QU8C2', "
+                   "'#GVJP200U', '#20CCV90UQ', '#Y9C2909R', '#2UL9UVCC2', '#89QQ9QRJ0', '#8JQGGU2Q0', '#GPUQYRJC', "
+                   "'#R8JVUGVU', '#V8UQ0G0L', '#G82J00P', '#8VQY0GP2', '#88Y0YL98P', '#80LPL9PRP', '#Y0RPYJPC', "
+                   "'#9L9VCYQQ2', '#9P8PCUY8L', '#YY82YY2Y', '#2LQPJVR0', '#2PYQR02GV', '#URLVC082', '#PJ8V0QUU', "
+                   "'#2LJJY8JGQ', '#CYUVGPPQ', '#PY90C2CY', '#L0GYY8V2', '#8L8PLY2Q2', '#LQY0UUV8V', '#2VVQJ9GG2', "
+                   "'#9Y9GCYRJJ', '#8R2QVYYG', '#2VCG8PPVU', '#2UPPC0GUC', '#8LVCUQGRG', '#2LQVURL9L', '#PCR8QGY9', "
+                   "'#2YCV2JRRJ', '#JLPC2GCU')")
+            cursor.execute(sql)
         conn = self.bot.pool
         sql = ("INSERT INTO rcspush_2020_1 (player_tag, clan_tag, starting_trophies, current_trophies, best_trophies, "
                "starting_th_level, player_name, clan_name) "
@@ -244,17 +262,7 @@ class Push(commands.Cog):
                "FROM jsonb_to_recordset($1::jsonb) as x (player_tag TEXT, clan_tag TEXT, starting_trophies INTEGER, "
                "current_trophies INTEGER, best_trophies INTEGER, starting_th_level INTEGER, player_name TEXT, "
                "clan_name TEXT)")
-        psql_start = time.perf_counter()
         await conn.execute(sql, to_insert)
-        psql_timer = time.perf_counter() - psql_start
-        print(f"\nAll clans retrieved in {clan_timer}s")
-        print(f"Clan API retrieval average: {clan_timer / clan_counter}s per clan")
-        print(f"{len(player_list)} players retrieved in {player_timer / 60:.2f} minutes")
-        print(f"Player API retrieval average: {player_timer / player_counter}s per player")
-        print(f"{len(player_list)} players inserted into DB in {sql_timer / 60:.2f} minutes")
-        print(f"SQL insert average:  {sql_timer / len(player_list)}s")
-        print(f"{len(player_list)} players inserted into PSQL DB in {psql_timer} seconds")
-        print(f"PSQL insert average:  {psql_timer / len(player_list)}s")
         await msg.delete()
         await ctx.send(f"{len(player_list)} members added. Elapsed time: "
                        f"{(time.perf_counter() - start) / 60:.2f} minutes")
