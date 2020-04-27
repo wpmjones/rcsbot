@@ -16,8 +16,8 @@ class Push(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.title = "2020 Spring Trophy Push"
-        self.start_time = datetime(2020, 4, 27, 4, 0)
-        self.end_time = datetime(2020, 5, 25, 3, 55)
+        self.start_time = datetime(2020, 4, 27, 5, 0)
+        self.end_time = datetime(2020, 5, 25, 4, 55)
 
     @commands.group(name="push", invoke_without_command=True)
     async def push(self, ctx):
