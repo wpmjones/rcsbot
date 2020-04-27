@@ -185,16 +185,6 @@ class Push(commands.Cog):
         p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
         await p.paginate()
 
-    @push.command(name="clean", hidden=True)
-    @commands.is_owner()
-    async def push_clean(self, ctx):
-        with Sql() as cursor:
-            sql = "DELETE FROM rcspush_2020_1"
-            cursor.execute(sql)
-        conn = self.bot.pool
-        await conn.execute(sql)
-        await ctx.send("Done")
-
     @push.command(name="start", hidden=True)
     @commands.is_owner()
     async def push_start(self, ctx):
