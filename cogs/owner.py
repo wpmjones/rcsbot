@@ -159,7 +159,6 @@ class OwnerCog(commands.Cog):
         conn = self.bot.pool
         for tag in helper.rcs_tags():
             try:
-                print(f"Trying {tag}")
                 war_log = await self.bot.coc.get_warlog(f"#{tag}")
             except coc.PrivateWarLog:
                 print(f"{tag} has a private war log.")
@@ -171,7 +170,6 @@ class OwnerCog(commands.Cog):
                 sql = ("SELECT war_id, team_size, end_time::timestamp::date, war_state FROM rcs_wars "
                        "WHERE clan_tag = $1 AND opponent_tag = $2 AND end_time < $3")
                 fetch = await conn.fetch(sql, tag, war.opponent.tag[1:], datetime.utcnow())
-                print(f"Tag: {tag} vs {war.opponent.tag[1:]} ({war.opponent.name})")
                 if fetch:
                     # Update existing data in the database
                     for row in fetch:
