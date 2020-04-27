@@ -113,7 +113,7 @@ class Push(commands.Cog):
         if (th_level > 13) or (th_level < 6):
             return await ctx.send("You have not provided a valid town hall level.")
         with Sql() as cursor:
-            cursor.execute(f"SELECT TOP 100 currentTrophies, CAST(clanPoints AS DECIMAL(5,2)), "
+            cursor.execute(f"SELECT TOP 100 CAST(clanPoints AS DECIMAL(5,2)), "
                            f"playerName + ' (' + COALESCE(altName, clanName) + ')'"
                            f"FROM vRCSPush "
                            f"WHERE currentThLevel = {th_level} "
