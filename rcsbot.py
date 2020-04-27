@@ -22,6 +22,8 @@ if enviro == "LIVE":
     prefix = "++"
     log_level = "INFO"
     coc_names = "vps"
+    coc_email = settings['supercell']['user']
+    coc_pass = settings['supercell']['pass']
     initial_extensions = ["cogs.admin",
                           "cogs.archive",
                           "cogs.background",
@@ -35,12 +37,15 @@ if enviro == "LIVE":
                           "cogs.owner",
                           "cogs.push",
                           "cogs.tasks",
+                          "cogs.war",
                           ]
 elif enviro == "home":
     token = settings['discord']['test_token']
     prefix = ">"
     log_level = "DEBUG"
     coc_names = "ubuntu"
+    coc_email = settings['supercell']['user2']
+    coc_pass = settings['supercell']['pass2']
     initial_extensions = ["cogs.admin",
                           "cogs.archive",
                           "cogs.council",
@@ -56,6 +61,8 @@ else:
     prefix = ">"
     log_level = "DEBUG"
     coc_names = "dev"
+    coc_email = settings['supercell']['user2']
+    coc_pass = settings['supercell']['pass2']
     initial_extensions = ["cogs.admin",
                           "cogs.council",
                           "cogs.eggs",
@@ -75,8 +82,8 @@ You can use the clan tag (with or without the hashtag) or you can use the clan n
 
 There are easter eggs. Feel free to try and find them!"""
 
-coc_client = coc.login(settings['supercell']['user'],
-                       settings['supercell']['pass'],
+coc_client = coc.login(coc_email,
+                       coc_pass,
                        client=coc.EventsClient,
                        key_count=4,
                        key_names=coc_names,
