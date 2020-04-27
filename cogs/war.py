@@ -7,7 +7,7 @@ class TestWarUpdates(commands.Cog, command_attrs=dict(hidden=True)):
     def __init__(self, bot):
         self.bot = bot
         self.bot.coc.add_events(self.on_war_state_change)
-        self.bot.coc.add_war_update(rcs_tags())
+        self.bot.coc.add_war_update(rcs_tags(prefix="#"))
         self.bot.coc.start_updates("war")
 
     async def on_war_state_change(self, current_state, war):
