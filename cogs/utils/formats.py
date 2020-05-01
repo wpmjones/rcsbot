@@ -272,10 +272,10 @@ class TablePaginator(Pages):
 
 class TopTenPaginator(TablePaginator):
     def __init__(self, ctx, data):
-        super().__init__(ctx, data, title=None, page_count=6, rows_per_table=10)
+        super().__init__(ctx, data, title=None, page_count=7, rows_per_table=10)
         self.data = data
         self.title_prefix = "RCS Push Top Ten for TH"
-        self.th_by_page = {1: 13, 2: 12, 3: 11, 4: 10, 5: 9, 6: 8}
+        self.th_by_page = {1: 13, 2: 12, 3: 11, 4: 10, 5: 9, 6: 8, 7: 7}
 
     def create_row(self, data):
         row = [data[0], data[1][0], data[1][1]]
