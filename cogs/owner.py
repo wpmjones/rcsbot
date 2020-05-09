@@ -155,7 +155,6 @@ class OwnerCog(commands.Cog):
 
     @tasks.loop(hours=1)
     async def update_warlog(self):
-        print("starting")
         conn = self.bot.pool
         for tag in helper.rcs_tags():
             try:
