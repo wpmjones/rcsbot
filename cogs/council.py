@@ -627,12 +627,13 @@ class CouncilCog(commands.Cog):
 
         **Example:**
         ++clan notes Tau
+        ++clan notes "Reddit Eclipse"
         """
         if not clan:
             return await ctx.send("Please specify the clan name in your command.")
 
         def check_author(m):
-            return m.author == ctx.author
+            return m.author == ctx.author and m.channel == ctx.channel
 
         with Sql(as_dict=True) as cursor:
             sql = "SELECT notes FROM rcs_data WHERE clanTag = %s"
@@ -650,6 +651,8 @@ class CouncilCog(commands.Cog):
                 response = await ctx.bot.wait_for("message", check=check_author, timeout=60)
             except asyncio.TimeoutError:
                 return await ctx.send("Your request has timed out. No changes have been made.")
+            if response.content.lower() in ("cancel", "stop", "quit"):
+                return await ctx.send(f"Notes update cancelled by {ctx.author.display_name}")
             new_notes = response.content
             sql = "UPDATE rcs_data SET notes = %s WHERE clanTag = %s"
             cursor.execute(sql, (new_notes, clan.tag[1:]))
