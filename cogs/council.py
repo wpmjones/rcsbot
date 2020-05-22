@@ -624,6 +624,8 @@ class CouncilCog(commands.Cog):
     async def clan_notes(self, ctx, clan: ClanConverter = None):
         """Update the notes for the specified clan. This command will respond
         with the current notes, then you will respond with the new notes.
+        Responding with `cancel` or just ignoring the bot for 60 seconds
+        will stop the command.
 
         **Example:**
         ++clan notes Tau
