@@ -6,6 +6,7 @@ import requests
 
 from discord.ext import commands
 from cogs.utils.checks import is_council, is_mod_or_council, is_leader_or_mod_or_council
+from cogs.utils.constants import class_names, class_values
 from cogs.utils.converters import ClanConverter, PlayerConverter
 from cogs.utils.db import Sql
 from cogs.utils import helper
@@ -704,6 +705,29 @@ class CouncilCog(commands.Cog):
             response = (f"Both the Discord server and the notes section have been updated for {clan.name}. "
                         f"Please allow up to 3 hours for the change to appear on the wiki.")
         await ctx.send(response)
+
+    @clan.command(name="class", aliases=["classify", "classification"])
+    @is_council()
+    async def clan_class(self, ctx, clan: ClanConverter = None):
+        """Change the classification for the specified clan.  It will provide options for you.
+
+        **Example:**
+        ++clan class Eclipse
+        """
+        if not clan:
+            return await ctx.send("Please specify the clan name in your command.")
+        prompt = await ctx.prompt("Please select the new classification:\n"
+                                  ":one: Competitive\n"
+                                  ":two: Social\n"
+                                  ":three: General\n"
+                                  ":four: War Farming",
+                                  additional_options=4)
+        new_class = class_values[prompt]
+        with Sql(as_dict=True) as cursor:
+            sql = "UPDATE rcs_data SET classification = %s WHERE clanTag = %s"
+            cursor.execute(sql, (new_class, clan.tag[1:]))
+        await ctx.send(f"The classification for {clan} is now set to {class_names[prompt]}. Please allow up to "
+                       f"3 hours for the changes to appear on the wiki.")
 
     @commands.group(invoke_without_command=True, hidden=True)
     @is_leader_or_mod_or_council()

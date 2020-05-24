@@ -69,6 +69,20 @@ veri_status = {
     4: "is awaiting a decision by Council",
 }
 
+class_values = {
+    1: "comp",
+    2: "social",
+    3: "gen",
+    4: "warFarm",
+}
+
+class_names = {
+    1: "Competitive",
+    2: "Social",
+    3: "General",
+    4: "War Farming",
+}
+
 log_types = {
     "discord_check": 1,
     "pfp": 2,
