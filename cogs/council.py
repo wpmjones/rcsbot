@@ -708,7 +708,7 @@ class CouncilCog(commands.Cog):
 
     @clan.command(name="class", aliases=["classify", "classification"])
     @is_council()
-    async def clan_class(self, ctx, clan: ClanConverter = None):
+    async def clan_class(self, ctx, *, clan: ClanConverter = None):
         """Change the classification for the specified clan.  It will provide options for you.
 
         **Example:**
