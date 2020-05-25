@@ -55,7 +55,7 @@ class Push(commands.Cog):
             embed.set_author(name=end_info,
                              icon_url="https://cdn.discordapp.com/emojis/641101629881319434.png")
         else:
-            embed.add_field(name="Winning clan:", value="Winning clan")
+            # embed.add_field(name="Winning clan:", value="Winning clan")
             # TODO other cool stats here
             embed.set_author(name="Event complete!",
                              icon_url="https://cdn.discordapp.com/emojis/641101630342692884.png")
