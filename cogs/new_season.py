@@ -1,9 +1,8 @@
 import csv
 
 from discord.ext import commands, tasks
-from datetime import time, datetime
+from datetime import time, date
 from dateutil import relativedelta
-from cogs.utils.season import get_season_end
 
 
 class SeasonConfig(commands.Cog, command_attrs=dict(hidden=True)):
@@ -16,28 +15,25 @@ class SeasonConfig(commands.Cog, command_attrs=dict(hidden=True)):
 
     @staticmethod
     def next_last_monday():
-        now = datetime.utcnow()
+        now = date.today()
+        print(now.month + 1)
         day = now + relativedelta.relativedelta(month=now.month + 1,
-                                                weekday=relativedelta.MO(-1))
-        day.replace(hour=6, minute=0, second=0, microsecond=0)
+                                                weekday=relativedelta.MO(1))
         return day
 
     @tasks.loop(time=time(hour=6))
     async def start_new_season(self):
-        now = datetime.utcnow()
+        now = date.today()
         next_monday = self.next_last_monday()
-
-        if now.day != next_monday.day:
+        if now != next_monday:
             return
-
         await self.new_season()
 
     async def new_season(self):
-        new_start_date = get_season_end()
         with open("/home/tuba/season.csv", "w") as csv_file:
             writer = csv.writer(csv_file)
             writer.writerow(["start", "end"])
-            writer.writerow([new_start_date, self.next_last_monday()])
+            writer.writerow([date.today(), self.next_last_monday()])
         return "success"
 
 
