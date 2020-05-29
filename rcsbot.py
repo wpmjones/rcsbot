@@ -35,7 +35,6 @@ if enviro == "LIVE":
                           "cogs.owner",
                           "cogs.push",
                           "cogs.tasks",
-                          "cogs.war",
                           ]
 elif enviro == "home":
     token = settings['discord']['test_token']
