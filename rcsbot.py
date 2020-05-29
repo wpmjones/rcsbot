@@ -80,12 +80,21 @@ You can use the clan tag (with or without the hashtag) or you can use the clan n
 
 There are easter eggs. Feel free to try and find them!"""
 
+
+class CustomClient(coc.EventsClient):
+    def _create_status_tasks(self, cached_war, war):
+        if cached_war.state != war.state:
+            self.dispatch("on_war_state_change", war.state, war)
+
+        super()._create_status_tasks(cached_war, war)
+
+
 coc_client = coc.login(coc_email,
                        coc_pass,
-                       client=coc.EventsClient,
-                       key_count=4,
+                       client=CustomClient,
+                       key_count=2,
                        key_names=coc_names,
-                       throttle_limit=35,
+                       throttle_limit=25,
                        correct_tags=True)
 
 
