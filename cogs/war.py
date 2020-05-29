@@ -11,7 +11,7 @@ class TestWarUpdates(commands.Cog, command_attrs=dict(hidden=True)):
         self.bot.coc.start_updates("war")
 
     async def on_war_state_change(self, current_state, war):
-        channel = self.bot.get_channel(settings['api']['rcs_demo'])
+        channel = self.bot.get_channel(settings['log_channels']['test'])
         if current_state == "preparation":
             await channel.send(f"Preparation has just begun for a war between **{war.clan.name}** and "
                                f"**{war.opponent.name}**.")
