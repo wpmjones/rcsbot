@@ -1,7 +1,5 @@
 import discord
 import traceback
-import os
-import git
 import coc
 import sys
 import aiohttp
@@ -21,7 +19,7 @@ if enviro == "LIVE":
     token = settings['discord']['rcsbot_token']
     prefix = "++"
     log_level = "INFO"
-    coc_names = "vps"
+    coc_names = "galaxy"
     coc_email = settings['supercell']['user']
     coc_pass = settings['supercell']['pass']
     initial_extensions = ["cogs.admin",
@@ -47,11 +45,11 @@ elif enviro == "home":
     coc_email = settings['supercell']['user2']
     coc_pass = settings['supercell']['pass2']
     initial_extensions = ["cogs.admin",
-                          "cogs.archive",
                           "cogs.council",
                           "cogs.eggs",
                           "cogs.games",
                           "cogs.general",
+                          "cogs.new_season",
                           "cogs.newhelp",
                           "cogs.owner",
                           "cogs.push",
@@ -199,10 +197,8 @@ class RcsBot(commands.Bot):
             pass
 
     async def on_ready(self):
-        logger.info("rcs-bot has started")
         activity = discord.Game("Clash of Clans")
         await self.change_presence(status=discord.Status.online, activity=activity)
-        self.logger.info(f'Ready: {self.user} (ID: {self.user.id})')
 
     async def close(self):
         await super().close()
@@ -218,7 +214,6 @@ if __name__ == "__main__":
     try:
         pool = loop.run_until_complete(Table.create_pool(f"{settings['pg']['uri']}/rcsdata"))
         bot = RcsBot()
-        bot.repo = git.Repo(os.getcwd())
         bot.pool = pool
         bot.loop = loop
         bot.run(token, reconnect=True)
