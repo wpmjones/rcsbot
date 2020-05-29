@@ -32,16 +32,20 @@ class DiscordCheck(commands.Cog):
         if not self.guild:
             self.guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
 
-    @tasks.loop(time=time(hour=16, minute=20))
+    @tasks.loop(hours=1)
     async def clear_danger(self):
         """Clears the danger-bot channel in preparation for new info"""
+        if datetime.utcnow().hour != 16:
+            return
         danger_channel = self.guild.get_channel(settings['rcs_channels']['danger_bot'])
         async for message in danger_channel.history():
             await message.delete()
 
-    @tasks.loop(time=time(hour=16, minute=25))
+    @tasks.loop(hours=1)
     async def leader_notes(self):
         """Check the leader-notes channel and see if any of those players are in an RCS clan"""
+        if datetime.utcnow().hour != 16:
+            return
         danger_channel = self.bot.get_channel(settings['rcs_channels']['danger_bot'])
         notes_channel = self.bot.get_channel(settings['rcs_channels']['leader_notes'])
 
@@ -102,9 +106,11 @@ class DiscordCheck(commands.Cog):
         except:
             self.bot.logger.exception("RCS Task Log insert error")
 
-    @tasks.loop(time=time(hour=16, minute=30))
+    @tasks.loop(hours=1)
     async def discord_check(self):
         """Check members and notify clan leaders to confirm they are still in the clan"""
+        if datetime.utcnow().hour != 16:
+            return
         # THIS IS THE BEGINNING OF THE NAME CHECKS
         danger_channel = self.guild.get_channel(settings['rcs_channels']['danger_bot'])
         botdev_channel = self.guild.get_channel(settings['rcs_channels']['bot_dev'])
@@ -149,10 +155,10 @@ class DiscordCheck(commands.Cog):
         except:
             self.bot.logger.exception("RCS Task Log insert fail")
 
-    @tasks.loop(time=time(hour=0))
+    @tasks.loop(hours=1)
     async def no_clan(self):
         """Check all discord members to see if they have a clan name in their display name"""
-        if date.today().weekday() != 0:
+        if date.today().weekday() != 0 or datetime.utcnow().hour != 0:
             return
         member_role = self.guild.get_role(settings['rcs_roles']['members'])
         mods_channel = self.guild.get_channel(settings['rcs_channels']['mods'])
