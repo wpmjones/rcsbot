@@ -32,7 +32,7 @@ class Games(commands.Cog):
         conn = self.bot.pool
         sql = ("SELECT clan_points "
                "FROM rcs_events "
-               "WHERE event_type = 5 and start_time < NOW() "
+               "WHERE event_type_id = 1 and start_time < NOW() "
                "ORDER BY start_time DESC")
         clan_points = await conn.fetchval(sql)
         sql = ("SELECT clan_total, clan_name "
@@ -86,7 +86,7 @@ class Games(commands.Cog):
             conn = self.bot.pool
             sql = ("SELECT player_points "
                    "FROM rcs_events "
-                   "WHERE event_type = 5 and start_time < NOW() "
+                   "WHERE event_type_id = 1 and start_time < NOW() "
                    "ORDER BY start_time DESC")
             player_points = await conn.fetchval(sql)
             sql = ("SELECT player_name, points "
@@ -127,7 +127,7 @@ class Games(commands.Cog):
             return await ctx.send("Please provide a valid clan tag.")
         if player.clan.tag == clan.tag:
             conn = self.bot.pool
-            row = await conn.fetchrow("SELECT MAX(event_id) as event_id FROM rcs_events WHERE event_type = 5 "
+            row = await conn.fetchrow("SELECT MAX(event_id) as event_id FROM rcs_events WHERE event_type_id = 1 "
                                       "AND start_time < $1", datetime.utcnow())
             event_id = row['event_id']
             try:
@@ -155,7 +155,7 @@ class Games(commands.Cog):
             return await ctx.send("Please provide a valid player tag.")
         conn = self.bot.pool
         row = await conn.fetchrow("SELECT MAX(event_id) as event_id FROM rcs_events "
-                                  "WHERE event_type = 5 AND start_time < $1",
+                                  "WHERE event_type_id = 1 AND start_time < $1",
                                   datetime.utcnow())
         event_id = row['event_id']
         starting_points = player.achievements_dict['Games Champion'].value - games_points
