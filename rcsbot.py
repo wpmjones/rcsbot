@@ -212,7 +212,7 @@ class RcsBot(commands.Bot):
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     try:
-        pool = loop.run_until_complete(Table.create_pool(f"{settings['pg']['uri']}/rcsdata"))
+        pool = loop.run_until_complete(Table.create_pool(f"{settings['pg']['uri']}/tubadata"))
         bot = RcsBot()
         bot.pool = pool
         bot.loop = loop
