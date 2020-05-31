@@ -72,7 +72,7 @@ class Background(commands.Cog):
             msg = f"{prefix}{clan.name} just hit **{new_wins}** wins! {suffix}"
             await self.media_stats.send(msg)
 
-    @tasks.loop(time=time(hour=17))
+    @tasks.loop(hours=24.0)
     async def clan_checks(self):
         """Check clans for member count, badge, etc."""
         if date.today().weekday() != 2:
