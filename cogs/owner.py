@@ -16,15 +16,6 @@ class OwnerCog(commands.Cog):
     def cog_unload(self):
         self.update_warlog.cancel()
 
-    @commands.command(name="pp", hidden=True)
-    async def player_test(self, ctx, player_tag):
-        player = await self.bot.coc.get_player(player_tag)
-        await ctx.send(player)
-
-    @commands.command(name="dd", hidden=True)
-    async def discord_test(self, ctx, user: discord.User = None):
-        await ctx.send(user)
-
     @commands.command(name="clear", hidden=True)
     @commands.is_owner()
     async def clear(self, ctx, msg_count: int = None):
@@ -44,24 +35,6 @@ class OwnerCog(commands.Cog):
             activity = discord.Activity(type=discord.ActivityType.watching, name=msg)
         await self.bot.change_presence(status=discord.Status.online, activity=activity)
         print(f"{datetime.now()} - {ctx.author} changed the bot presence to {msg}")
-
-    @commands.command(name="emojis", hidden=True)
-    @commands.is_owner()
-    async def emoji_list(self, ctx):
-        def get_key(item):
-            return item.name
-
-        server_list = [self.bot.get_guild(506645671009583105),
-                       self.bot.get_guild(506645764512940032),
-                       self.bot.get_guild(531660501709750282),
-                       self.bot.get_guild(602130772098416678),
-                       self.bot.get_guild(629145390687584260)]
-        for guild in server_list:
-            content = ""
-            for index, emoji in enumerate(sorted(guild.emojis, key=get_key)):
-                content += f"\n{emoji} - {emoji.name}:{emoji.id}"
-            content = f"**{guild.name}** {index} emoji" + content
-            await ctx.send_text(ctx.channel, content)
 
     @commands.command(name="server", hidden=True)
     @commands.is_owner()
@@ -114,6 +87,7 @@ class OwnerCog(commands.Cog):
     async def new_cwl(self, ctx, start_date, cwl_length: int = 9):
         """Command to add new CWL dates to SQL database
         Bot owner only"""
+        # TODO Update postgres as well
         with Sql(as_dict=True) as cursor:
             start_day = int(start_date[8:9])
             end_day = str(start_day + cwl_length)
