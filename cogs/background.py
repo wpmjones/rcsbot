@@ -19,13 +19,14 @@ class Background(commands.Cog):
         self.bot = bot
         self.guild = None
         self.media_stats = None
-
         self.bot.coc.add_events(self.on_clan_war_win_streak_change,
                                 self.on_clan_level_change,
                                 self.on_clan_war_win_change,
                                 )
         self.bot.coc.add_clan_update(rcs_tags(prefix=True))
         self.bot.coc.start_updates("clan")
+        self.clan_checks.start()
+        self.rcs_list.start()
         bot.loop.create_task(self.cog_init_ready())
 
     def cog_unload(self):
@@ -33,6 +34,8 @@ class Background(commands.Cog):
                                    self.on_clan_level_change,
                                    self.on_clan_war_win_change,
                                    )
+        self.clan_checks.cancel()
+        self.rcs_list.cancel()
 
     async def cog_init_ready(self) -> None:
         """Sets the guild properly"""
@@ -183,7 +186,6 @@ class Background(commands.Cog):
                                        clan.war_ties, clan.war_losses, clan.public_war_log, clan.tag[1:])
                 except:
                     self.bot.logger.exception("SQL fail")
-            print(leader_changes)
             if leader_changes and 8 < now.hour < 12:
                 embed = discord.Embed(color=discord.Color.dark_red())
                 embed.add_field(name="Leader Changes", value=leader_changes)
@@ -293,11 +295,8 @@ class Background(commands.Cog):
             content = content.replace(content[start:end], "{}{}{}".format(start_marker, page_content, end_marker))
             page.edit(content, reason="Updating Clan Records")
 
-        print("Updating database")
-        # await update_database()
-        print("Updating wiki page")
+        await update_database()
         await update_wiki_page("official_reddit_clan_system")
-        print("Updating Records")
         await update_records("clan_records")
 
     @commands.Cog.listener()
