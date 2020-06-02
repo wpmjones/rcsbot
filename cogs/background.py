@@ -81,6 +81,7 @@ class Background(commands.Cog):
     @tasks.loop(hours=24.0)
     async def clan_checks(self):
         """Check clans for member count, badge, etc."""
+        print("Starting clan checks")
         if date.today().weekday() != 2:
             return
         sql = "SELECT MAX(log_date_ AS max_date FROM rcs_task_log WHERE log_type_id = $1"
@@ -132,9 +133,14 @@ class Background(commands.Cog):
                                  icon_url="https://coc.guide/static/imgs/gear_up.png")
                 await council_chat.send(embed=embed)
 
+    @clan_checks.before_loop
+    async def before_clan_checks(self):
+        await self.bot.wait_until_ready()
+
     @tasks.loop(hours=3.0)
-    async def rcs_list(self, ctx):
+    async def rcs_list(self):
         """Update database with latest info then update the wiki"""
+        print("Starting RCS List")
         now = datetime.utcnow()
         conn = self.bot.pool
         fetch = await conn.fetch("SELECT clan_tag, alt_tag FROM rcs_alts")
@@ -298,6 +304,10 @@ class Background(commands.Cog):
         await update_database()
         await update_wiki_page("official_reddit_clan_system")
         await update_records("clan_records")
+
+    @rcs_list.before_loop
+    async def before_rcs_list(self):
+        await self.bot.wait_until_ready()
 
     @commands.Cog.listener()
     async def on_message(self, message):
