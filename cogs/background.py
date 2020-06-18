@@ -192,16 +192,16 @@ class Background(commands.Cog):
                                        clan.war_ties, clan.war_losses, clan.public_war_log, clan.tag[1:])
                 except:
                     self.bot.logger.exception("SQL fail")
-            if leader_changes and 8 < now.hour < 12:
-                embed = discord.Embed(color=discord.Color.dark_red())
-                embed.add_field(name="Leader Changes", value=leader_changes)
-                embed.add_field(name="Disclaimer", value="These changes may or may not be permanent. "
-                                                         "Please investigate as appropriate.")
-                embed.set_footer(text="++help alts (for help adjusting leader alts)",
-                                 icon_url="https://api-assets.clashofclans.com/badges/200/h8Hj8FDhK2b1PdkwF7fEb"
-                                          "TGY5UkT_lntLEOXbiLTujQ.png")
-                council_chat = self.bot.get_channel(settings['rcs_channels']['council'])
-                await council_chat.send(embed=embed)
+            # if leader_changes and 8 < now.hour < 12:
+            #     embed = discord.Embed(color=discord.Color.dark_red())
+            #     embed.add_field(name="Leader Changes", value=leader_changes)
+            #     embed.add_field(name="Disclaimer", value="These changes may or may not be permanent. "
+            #                                              "Please investigate as appropriate.")
+            #     embed.set_footer(text="++help alts (for help adjusting leader alts)",
+            #                      icon_url="https://api-assets.clashofclans.com/badges/200/h8Hj8FDhK2b1PdkwF7fEb"
+            #                               "TGY5UkT_lntLEOXbiLTujQ.png")
+            #     council_chat = self.bot.get_channel(settings['rcs_channels']['council'])
+            #     await council_chat.send(embed=embed)
 
         def process_row(row):
             if row['subreddit']:
