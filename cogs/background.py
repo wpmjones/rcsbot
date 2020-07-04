@@ -162,6 +162,20 @@ class Background(commands.Cog):
             return player_tag in leader_alts[clan_tag] if clan_tag in leader_alts else False
 
         async def update_database():
+            # Sync changes from SQL to PSQL
+            with Sql() as cursor:
+                sql = ("SELECT clanleader, socMedia, notes, feeder, classification, subReddit, leaderReddit, "
+                       "discordTag, shortName, altName, clanTag FROM rcs_data")
+                cursor.execute(sql)
+                fetch = cursor.fetchall()
+                sql = ("UPDATE rcs_clans "
+                       "SET leader_name = $1, social_media = $2, notes = $3, family_clan = $4, classification = $5, "
+                       "subreddit = $6, leader_reddit = $7, discord_tag = $8, short_name = $9, alt_name = $10 "
+                       "WHERE clan_tag = $11")
+                for row in fetch:
+                    await conn.execute(sql, row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8],
+                                       row[9], row[10], row[11])
+            # Start the update process
             sql = ("SELECT clan_tag, leader_name, clan_level, classification, war_wins, win_streak "
                    "FROM rcs_clans ORDER BY clan_name")
             fetch = await conn.fetch(sql)
@@ -179,6 +193,21 @@ class Background(commands.Cog):
                               and row['leader_name'] != clan_leader.name)
                 if comparator:
                     leader_changes += f"{clan.name}: Leader changed from {row['leader_name']} to {clan_leader.name}\n"
+                # Update MS SQL
+                sql = ("UPDATE rcs_data "
+                       "SET clanName = %s, clanLevel = %d, members = %d, warFreq = %s, clanType = %s, "
+                       "clanDescription = %s, clanLocation = %s, clanBadge = %s, clanPoints = %d, "
+                       "clanVersusPoints = %d, requiredTrophies = %d, warWinStreak = %d, warWins = %d, warTies = %d, "
+                       "warLosses = %d, isWarLogPublic = %d "
+                       "WHERE clanTag = %s")
+                try:
+                    cursor.execute(sql, (clan.name, clan.level, clan.member_count, clan.war_frequency, clan.type,
+                                         description, clan.location.name, clan.badge.url, clan.points,
+                                         clan.versus_points, clan.required_trophies, clan.war_win_streak, clan.war_wins,
+                                         clan.war_ties, clan.war_losses, clan.public_war_log, clan.tag[1:]))
+                except:
+                    self.bot.logger.exception("MSSQL fail")
+                # Update Postgresql
                 sql = ("UPDATE rcs_clans "
                        "SET clan_name = $1, clan_level = $2, member_count = $3, war_frequency = $4, clan_type = $5, "
                        "clan_description = $6, clan_location = $7, badge_url = $8, clan_points = $9, "
@@ -191,17 +220,17 @@ class Background(commands.Cog):
                                        clan.versus_points, clan.required_trophies, clan.war_win_streak, clan.war_wins,
                                        clan.war_ties, clan.war_losses, clan.public_war_log, clan.tag[1:])
                 except:
-                    self.bot.logger.exception("SQL fail")
-            # if leader_changes and 8 < now.hour < 12:
-            #     embed = discord.Embed(color=discord.Color.dark_red())
-            #     embed.add_field(name="Leader Changes", value=leader_changes)
-            #     embed.add_field(name="Disclaimer", value="These changes may or may not be permanent. "
-            #                                              "Please investigate as appropriate.")
-            #     embed.set_footer(text="++help alts (for help adjusting leader alts)",
-            #                      icon_url="https://api-assets.clashofclans.com/badges/200/h8Hj8FDhK2b1PdkwF7fEb"
-            #                               "TGY5UkT_lntLEOXbiLTujQ.png")
-            #     council_chat = self.bot.get_channel(settings['rcs_channels']['council'])
-            #     await council_chat.send(embed=embed)
+                    self.bot.logger.exception("postgreSQL fail")
+            if leader_changes and 8 < now.hour < 12:
+                embed = discord.Embed(color=discord.Color.dark_red())
+                embed.add_field(name="Leader Changes", value=leader_changes)
+                embed.add_field(name="Disclaimer", value="These changes may or may not be permanent. "
+                                                         "Please investigate as appropriate.")
+                embed.set_footer(text="++help alts (for help adjusting leader alts)",
+                                 icon_url="https://api-assets.clashofclans.com/badges/200/h8Hj8FDhK2b1PdkwF7fEb"
+                                          "TGY5UkT_lntLEOXbiLTujQ.png")
+                council_chat = self.bot.get_channel(settings['rcs_channels']['council'])
+                await council_chat.send(embed=embed)
 
         def process_row(row):
             if row['subreddit']:
@@ -237,8 +266,8 @@ class Background(commands.Cog):
                    "FROM rcs_clans "
                    "WHERE classification = $1 "
                    "ORDER BY member_count, clan_name")
-            # Main four categories
-            clan_categories = ["comp", "social", "gen", "warFarm"]
+            # Main five categories
+            clan_categories = ["comp", "social", "clan", "tourney", "warFarm"]
             for category in clan_categories:
                 fetch = await conn.fetch(sql, category)
                 page_content = "Clan Name | Clan Tag | Leader | Members | Social Media | Notes | Family Clan\n"
