@@ -168,13 +168,18 @@ class Background(commands.Cog):
                        "discordTag, shortName, altName, clanTag FROM rcs_data")
                 cursor.execute(sql)
                 fetch = cursor.fetchall()
+                print(len(fetch))
                 sql = ("UPDATE rcs_clans "
                        "SET leader_name = $1, social_media = $2, notes = $3, family_clan = $4, classification = $5, "
                        "subreddit = $6, leader_reddit = $7, discord_tag = $8, short_name = $9, alt_name = $10 "
                        "WHERE clan_tag = $11")
                 for row in fetch:
-                    await conn.execute(sql, row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8],
-                                       row[9], row[10], row[11])
+                    try:
+                        await conn.execute(sql, row[0], row[1], row[2], row[3], row[4], row[5], row[6], int(row[7]),
+                                           row[8], row[9], row[10])
+                    except IndexError:
+                        self.bot.logger.exception("update failed")
+            print("SQL synced to postgresql")
             # Start the update process
             sql = ("SELECT clan_tag, leader_name, clan_level, classification, war_wins, win_streak "
                    "FROM rcs_clans ORDER BY clan_name")
@@ -201,10 +206,12 @@ class Background(commands.Cog):
                        "warLosses = %d, isWarLogPublic = %d "
                        "WHERE clanTag = %s")
                 try:
-                    cursor.execute(sql, (clan.name, clan.level, clan.member_count, clan.war_frequency, clan.type,
-                                         description, clan.location.name, clan.badge.url, clan.points,
-                                         clan.versus_points, clan.required_trophies, clan.war_win_streak, clan.war_wins,
-                                         clan.war_ties, clan.war_losses, clan.public_war_log, clan.tag[1:]))
+                    with Sql() as cursor:
+                        cursor.execute(sql, (clan.name, clan.level, clan.member_count, clan.war_frequency, clan.type,
+                                             description, clan.location.name, clan.badge.url, clan.points,
+                                             clan.versus_points, clan.required_trophies, clan.war_win_streak,
+                                             clan.war_wins, clan.war_ties, clan.war_losses, clan.public_war_log,
+                                             clan.tag[1:]))
                 except:
                     self.bot.logger.exception("MSSQL fail")
                 # Update Postgresql
@@ -330,8 +337,11 @@ class Background(commands.Cog):
             content = content.replace(content[start:end], "{}{}{}".format(start_marker, page_content, end_marker))
             page.edit(content, reason="Updating Clan Records")
 
+        print("Updating database")
         await update_database()
+        print("Updating wiki page")
         await update_wiki_page("official_reddit_clan_system")
+        print("Updating clan records")
         await update_records("clan_records")
 
     @rcs_list.before_loop
