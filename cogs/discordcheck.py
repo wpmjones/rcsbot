@@ -95,10 +95,10 @@ class DiscordCheck(commands.Cog):
                 self.bot.logger.warning(f"Exception on tag: {tag}")
             except:
                 self.bot.logger.exception("Other failure")
+        try:
             # Add to task log
             sql = ("INSERT INTO rcs_task_log (log_type_id, log_date, argument) "
                    "VALUES ($1, $2, $3)")
-        try:
             await self.bot.pool.execute(sql,
                                         log_types['danger'],
                                         date.today(),
