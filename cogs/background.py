@@ -165,18 +165,19 @@ class Background(commands.Cog):
             # Sync changes from SQL to PSQL
             with Sql() as cursor:
                 sql = ("SELECT clanleader, socMedia, notes, feeder, classification, subReddit, leaderReddit, "
-                       "discordTag, shortName, altName, clanTag FROM rcs_data")
+                       "discordTag, shortName, altName, discordServer, clanTag FROM rcs_data")
                 cursor.execute(sql)
                 fetch = cursor.fetchall()
                 print(len(fetch))
                 sql = ("UPDATE rcs_clans "
                        "SET leader_name = $1, social_media = $2, notes = $3, family_clan = $4, classification = $5, "
-                       "subreddit = $6, leader_reddit = $7, discord_tag = $8, short_name = $9, alt_name = $10 "
-                       "WHERE clan_tag = $11")
+                       "subreddit = $6, leader_reddit = $7, discord_tag = $8, short_name = $9, alt_name = $10, "
+                       "discord_server = $11 "
+                       "WHERE clan_tag = $12")
                 for row in fetch:
                     try:
                         await conn.execute(sql, row[0], row[1], row[2], row[3], row[4], row[5], row[6], int(row[7]),
-                                           row[8], row[9], row[10])
+                                           row[8], row[9], row[10], row[11])
                     except IndexError:
                         self.bot.logger.exception("update failed")
             print("SQL synced to postgresql")
