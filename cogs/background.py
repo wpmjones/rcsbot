@@ -169,6 +169,7 @@ class Background(commands.Cog):
                 cursor.execute(sql)
                 fetch = cursor.fetchall()
                 print(len(fetch))
+                # TODO Gotta deal with new clans to be inserted into psql
                 sql = ("UPDATE rcs_clans "
                        "SET leader_name = $1, social_media = $2, notes = $3, family_clan = $4, classification = $5, "
                        "subreddit = $6, leader_reddit = $7, discord_tag = $8, short_name = $9, alt_name = $10, "
@@ -246,7 +247,7 @@ class Background(commands.Cog):
             else:
                 sub = ""
             if row['leader_reddit']:
-                leader_reddit = f"[{row['leader_name']}](https://www.reddit.com{row['leader_reddit']})"
+                leader_reddit = f"[{row['leader_name']}]({row['leader_reddit']})"
             else:
                 leader_reddit = row['leader_name']
             if row['social_media']:
@@ -300,7 +301,7 @@ class Background(commands.Cog):
             page_content += "-|-|-|:-:|-|-"
             for row in fetch:
                 if row['leader_reddit']:
-                    leader_reddit = f"[{row['leader_name']}](https://www.reddit.com{row['leader_reddit']})"
+                    leader_reddit = f"[{row['leader_name']}]({row['leader_reddit']})"
                 else:
                     leader_reddit = row['leader_name']
                 page_content += (f"\n{row['family_clan'].replace(' ','&nbsp;')} | {row['clan_name'].replace(' ','&nbsp;')}"
