@@ -8,7 +8,8 @@ import asyncio
 from discord.ext import commands
 from cogs.utils import context, category
 from cogs.utils.db import Table
-from cogs.utils.helper import get_active_wars
+from cogs.utils.error_handler import clash_event_error
+from cogs.utils.helper import get_active_wars, rcs_tags
 from datetime import datetime
 from config import settings
 from loguru import logger
@@ -80,17 +81,14 @@ You can use the clan tag (with or without the hashtag) or you can use the clan n
 There are easter eggs. Feel free to try and find them!"""
 
 
-class CustomClient(coc.EventsClient):
-    def _create_status_tasks(self, cached_war, war):
-        if cached_war.state != war.state:
-            self.dispatch("on_war_state_change", war.state, war)
-
-        super()._create_status_tasks(cached_war, war)
+class COCClient(coc.EventsClient):
+    async def on_event_error(self, event_name, exception, *args, **kwargs):
+        await clash_event_error(self.bot, event_name, exception, *args, **kwargs)
 
 
 coc_client = coc.login(coc_email,
                        coc_pass,
-                       client=CustomClient,
+                       client=COCClient,
                        key_count=2,
                        key_names=coc_names,
                        throttle_limit=25,
@@ -111,9 +109,7 @@ class RcsBot(commands.Bot):
         self.categories = {}
         self.active_wars = get_active_wars()
         self.session = aiohttp.ClientSession(loop=self.loop)
-
         self.loop.create_task(self.after_ready())
-        coc_client.add_events(self.on_event_error)
 
         for extension in initial_extensions:
             try:
@@ -171,23 +167,6 @@ class RcsBot(commands.Bot):
         else:
             await ctx.send(error)
 
-    async def on_event_error(self, event_name, *args, **kwargs):
-        embed = discord.Embed(title="COC Event Error", colour=0xa32952)
-        embed.add_field(name="Event", value=event_name)
-        embed.description = f"```py\n{traceback.format_exc()}\n```"
-        embed.timestamp = datetime.utcnow()
-
-        args_str = ["```py\n"]
-        for index, arg in enumerate(args):
-            args_str.append(f"[{index}]: {arg!r}")
-        args_str.append("```")
-        embed.add_field(name="Args", value="\n".join(args_str), inline=False)
-        try:
-            event_channel = self.get_channel(settings['log_channels']['events'])
-            await event_channel.send(embed=embed)
-        except:
-            pass
-
     async def on_error(self, event_method, *args, **kwargs):
         e = discord.Embed(title="Discord Event Error", color=0xa32952)
         e.add_field(name="Event", value=event_method)
@@ -207,6 +186,7 @@ class RcsBot(commands.Bot):
     async def on_ready(self):
         activity = discord.Game("Clash of Clans")
         await self.change_presence(status=discord.Status.online, activity=activity)
+        self.coc.add_clan_updates(*rcs_tags(prefix=True))
 
     async def close(self):
         await super().close()

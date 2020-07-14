@@ -3,7 +3,7 @@ import math
 import pathlib
 
 from discord.ext import commands
-from cogs.utils.db import Sql, Psql
+from cogs.utils.db import Sql, Psql, get_link_token
 from cogs.utils.checks import is_leader_or_mod_or_council
 from cogs.utils.converters import PlayerConverter, ClanConverter
 from cogs.utils.constants import cwl_league_names, cwl_league_order
@@ -358,18 +358,14 @@ class General(commands.Cog):
                 # Add to RCS specific link table
                 await Psql(self.bot).link_user(player.tag[1:], user.id)
                 # Add to global link table
-                await self.bot.coc.add_discord_link(player.tag, user.id)
-                # token = get_link_token()
-                # print(token)
-                # header = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-                # print(header)
-                # async with self.bot.session as session:
-                #     payload = {"playerTag": player.tag, "discordId": user.id}
-                #     print(payload)
-                #     async with session.post("http://api.amazingspinach.com/links", json=payload, headers=header) as r:
-                #         if r.status != 200:
-                #             await ctx.send(f"ERROR: There was a problem adding data to the global repository.\n"
-                #                            f"{r.status}: {r.text}")
+                token = get_link_token()
+                header = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+                async with self.bot.session as session:
+                    payload = {"playerTag": player.tag, "discordId": user.id}
+                    async with session.post("http://api.amazingspinach.com/links", json=payload, headers=header) as r:
+                        if r.status > 300:
+                            await ctx.send(f"ERROR: There was a problem adding data to the global repository.\n"
+                                           f"{r.status}: {r.text}")
                 # Add member role to discord user
                 rcs_guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
                 member = rcs_guild.get_member(user.id)

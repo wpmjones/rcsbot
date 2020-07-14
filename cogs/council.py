@@ -1,5 +1,5 @@
-import discord
 import coc
+import discord
 import asyncio
 import re
 import requests
@@ -8,7 +8,7 @@ from discord.ext import commands
 from cogs.utils.checks import is_council, is_mod_or_council, is_leader_or_mod_or_council
 from cogs.utils.constants import class_names, class_values
 from cogs.utils.converters import ClanConverter, PlayerConverter
-from cogs.utils.db import Sql
+from cogs.utils.db import Sql, get_discord_id, get_player_tag
 from cogs.utils import helper
 from config import settings, color_pick
 from datetime import datetime
@@ -112,20 +112,11 @@ class CouncilCog(commands.Cog):
     @commands.command(name="gl", hidden=True)
     @commands.is_owner()
     async def get_discord_link(self, ctx, player: PlayerConverter = None):
-        discord_id = await self.bot.coc.get_discord_link(player.tag)
-        await ctx.send(f"{player.name} ({player.tag}) is linked to <@{discord_id}> ({discord_id})")
-
-    @commands.command(name="gls", hidden=True)
-    @commands.is_owner()
-    async def get_discord_links(self, ctx, *tags):
-        tags = tags.replace(",","")
-        print(tags)
-        response = await self.bot.coc.get_discord_links(tags)
-        content = ""
-        for tag, discord_id in response.items():
-            player = await PlayerConverter().convert(ctx, tag)
-            content += f"{player.name} ({player.tag}) is linked to <@{discord_id}> ({discord_id})\n"
-        await ctx.send(content)
+        discord_id = get_discord_id(player.tag)
+        if discord_id:
+            await ctx.send(f"{player.name} ({player.tag}) is linked to <@{discord_id}> ({discord_id})")
+        else:
+            await ctx.send(f"No Discord link exists for {player.name} ({player.tag}).")
 
     @commands.command(name="form", aliases=["magic"], hidden=True)
     @is_council()
@@ -478,14 +469,14 @@ class CouncilCog(commands.Cog):
             async for war in self.bot.coc.get_current_wars(tags):
                 print("inside war")
                 try:
-                    if isinstance(war, coc.ClanWar):
+                    if not war.is_cwl:
                         if war.state == "preparation":
                             in_prep += (f"{war.clan.name} ({war.clan.tag}) has "
                                         f"{war.start_time.seconds_until // 3600:.2f} hours until war.\n")
                         if war.state == "inWar":
                             in_war += (f"{war.clan.name} ({war.clan.tag}) has "
                                        f"{war.end_time.seconds_until // 3600:.2f} hours left in war.\n")
-                    if isinstance(war, coc.LeagueWar) and war.end_time.seconds_until > 0:
+                    if war.is_cwl and war.end_time.seconds_until > 0:
                         in_cwl += (f"{war.clan.name} ({war.clan.tag}) has "
                                    f"{war.end_time.seconds_until // 3600:.2f} hours left in war.\n")
                 except coc.PrivateWarLog:

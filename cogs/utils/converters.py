@@ -8,8 +8,8 @@ tag_validator = re.compile("^#?[PYLQGRJCUV0289]+$")
 
 
 class PlayerConverter(commands.Converter):
-    async def convert(self, ctx, argument):
-        if isinstance(argument, coc.BasicPlayer):
+    async def convert(self, ctx, argument) -> coc.ClanMember:
+        if isinstance(argument, coc.ClanMember):
             return argument
 
         tag = coc.utils.correct_tag(argument)
@@ -38,8 +38,8 @@ class PlayerConverter(commands.Converter):
 
 
 class ClanConverter(commands.Converter):
-    async def convert(self, ctx, argument):
-        if isinstance(argument, coc.BasicClan):
+    async def convert(self, ctx, argument) -> coc.Clan:
+        if isinstance(argument, coc.Clan):
             return argument
 
         tag = coc.utils.correct_tag(argument)

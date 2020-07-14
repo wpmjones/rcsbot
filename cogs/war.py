@@ -1,3 +1,5 @@
+import coc
+
 from discord.ext import commands
 from cogs.utils.helper import rcs_tags
 from config import settings
@@ -6,10 +8,8 @@ from config import settings
 class TestWarUpdates(commands.Cog, command_attrs=dict(hidden=True)):
     def __init__(self, bot):
         self.bot = bot
-        self.bot.coc.add_events(self.on_war_state_change)
-        self.bot.coc.add_war_update(rcs_tags(prefix="#"))
-        self.bot.coc.start_updates("war")
 
+    @coc.WarEvents.state(rcs_tags(prefix=True))
     async def on_war_state_change(self, current_state, war):
         channel = self.bot.get_channel(settings['log_channels']['test'])
         if current_state == "preparation":
@@ -27,7 +27,7 @@ class TestWarUpdates(commands.Cog, command_attrs=dict(hidden=True)):
                 content += "Looks like a tie!"
             await channel.send(content)
         else:
-            await channel.send(f"War state is {current_state} for ????")
+            await channel.send(f"War state is {current_state} for {war.clan.name}")
 
 
 def setup(bot):

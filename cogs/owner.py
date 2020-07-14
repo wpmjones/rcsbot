@@ -16,6 +16,10 @@ class OwnerCog(commands.Cog):
     def cog_unload(self):
         self.update_warlog.cancel()
 
+    @commands.command(name="time", hidden=True)
+    async def _time(self, ctx):
+        await ctx.send(datetime.utcnow())
+
     @commands.command(name="clear", hidden=True)
     @commands.is_owner()
     async def clear(self, ctx, msg_count: int = None):
@@ -124,7 +128,7 @@ class OwnerCog(commands.Cog):
                 print(f"{tag} has a private war log.")
                 continue
             for war in war_log:
-                if isinstance(war, coc.LeagueWarLogEntry):
+                if war.is_cwl:
                     # skip all CWL wars
                     continue
                 sql = ("SELECT war_id, team_size, end_time::timestamp::date, war_state FROM rcs_wars "

@@ -8,7 +8,7 @@ from discord.ext import commands, tasks
 from cogs.utils.constants import league_badges, log_types
 from cogs.utils.db import Sql
 from cogs.utils.helper import rcs_tags
-from datetime import datetime, date, timedelta, time
+from datetime import datetime, date, timedelta
 from random import randint
 from config import settings
 
@@ -19,12 +19,12 @@ class Background(commands.Cog):
         self.bot = bot
         self.guild = None
         self.media_stats = None
+        # coc.py events
         self.bot.coc.add_events(self.on_clan_war_win_streak_change,
                                 self.on_clan_level_change,
-                                self.on_clan_war_win_change,
+                                self.on_clan_war_win_change
                                 )
-        self.bot.coc.add_clan_update(rcs_tags(prefix=True))
-        self.bot.coc.start_updates("clan")
+        # Discord tasks
         self.clan_checks.start()
         self.rcs_list.start()
         bot.loop.create_task(self.cog_init_ready())
@@ -44,38 +44,43 @@ class Background(commands.Cog):
             self.guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
             self.media_stats = self.guild.get_channel(settings['rcs_channels']['media_stats'])
 
-    async def on_clan_war_win_streak_change(self, old_streak, new_streak, clan):
+    @coc.ClanEvents.war_win_streak()
+    async def on_clan_war_win_streak_change(self, old_clan, new_clan):
         """Watch for changes in war win streak and report to media/stats channel"""
         self.bot.logger.debug("Start war win streak change")
-        if new_streak >= 5:
+        if new_clan.war_win_streak >= 5:
             msg = random.choice(["And the wins keep coming! ",
                                  "We've got another streak! ",
                                  "Impressive numbers! ",
                                  ])
-            msg += f"**{clan.name}** has just won another one, bringing their streak to {new_streak}."
+            msg += f"**{new_clan.name}** has just won another one, bringing their streak to {new_clan.war_win_streak}."
             await self.media_stats.send(msg)
 
-    async def on_clan_level_change(self, old_level, new_level, clan):
+    @coc.ClanEvents.level()
+    async def on_clan_level_change(self, old_clan, new_clan):
         """Watch for changes in clan level and report to media/stats channel"""
         self.bot.logger.debug("Start clan level change")
-        msg = f"Please help us in congratulating {clan.name} on reaching Level {new_level}."
+        msg = f"Please help us in congratulating {new_clan.name} on reaching Level {new_clan.level}."
         await self.media_stats.send(msg)
 
-    async def on_clan_war_win_change(self, old_wins, new_wins, clan):
+    @coc.ClanEvents.war_wins()
+    async def on_clan_war_win_change(self, old_clan, new_clan):
         """Watch for war wins divisible by 50 and report to media/stats channel"""
-        if new_wins % 50 == 0:
+        if new_clan.war_wins % 50 == 0:
             self.bot.logger.debug("Start war win div 50 change")
             prefix = random.choice(["Holy smokes, that is a lot of wins! ",
                                     "Check this out! ",
                                     "Milestone! ",
                                     "Hot diggity dog! ",
-                                    "Want to see something cool? "
-                                    "And the wins keep coming! "])
+                                    "Want to see something cool? ",
+                                    "And the wins keep coming! ",
+                                    "Too cool!!!"])
             suffix = random.choice(["You are awesome!",
                                     "Keep up the great work!",
-                                    "You're making us all proud! ",
-                                    "Go win a few more!"])
-            msg = f"{prefix}{clan.name} just hit **{new_wins}** wins! {suffix}"
+                                    "You're making us all proud!",
+                                    "Go win a few more!",
+                                    f"Can you get to {new_clan.war_wins + 50}?"])
+            msg = f"{prefix}{new_clan.name} just hit **{new_clan.war_wins}** wins! {suffix}"
             await self.media_stats.send(msg)
 
     @tasks.loop(hours=24.0)
