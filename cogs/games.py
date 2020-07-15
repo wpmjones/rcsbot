@@ -22,16 +22,16 @@ class Games(commands.Cog):
         self.start_games.cancel()
         self.update_games.cancel()
 
-    async def get_last_games_id(self):
+    async def get_last_games(self):
         """Get games ID from rcs_events for the most recent clan games"""
-        sql = ("SELECT event_id, MAX(end_time) " 
+        sql = ("SELECT event_id, MAX(end_time) as end_time " 
                "FROM rcs_events "
                "WHERE event_type_id = 1 AND end_time < current_timestamp "
                "GROUP BY event_id "
                "ORDER BY end_time DESC "
                "LIMIT 1")
         row = await self.bot.pool.fetchrow(sql)
-        return row['event_id']
+        return row['event_id'], row['end_time']
 
     async def get_current_games(self):
         """Get games ID from RCS-events for the current clan games, if active (else None)"""
@@ -46,38 +46,38 @@ class Games(commands.Cog):
         else:
             return None
 
-    async def get_next_games_id(self):
+    async def get_next_games(self):
         """Get games ID from rcs_events for the next clan games, if available (else None)"""
-        sql = ("SELECT event_id, MIN(start_time) "
+        sql = ("SELECT event_id, MIN(start_time) as start_time "
                "FROM rcs_events "
                "WHERE event_type_id = 1 AND start_time > current_timestamp "
                "GROUP BY event_id")
         row = await self.bot.pool.fetchrow(sql)
         if row:
-            return row['event_id']
+            return row['event_id'], row['start_time']
         else:
             return None
 
     async def closest_games(self):
         """Get the most recent or next games, depending on which is closest"""
-        _last = await self.get_last_games_id()
-        _next = await self.get_next_games_id()
+        last_games_id, _last = await self.get_last_games()
+        next_games_id, _next = await self.get_next_games()
         now = datetime.utcnow()
         time_to_last = now - _last
         time_to_next = _next - now
         if time_to_next > time_to_last:
             # deal with last games
-            return "last", _last
+            return "last", last_games_id
         else:
             # deal with next games
-            return "next", _next
+            return "next", next_games_id
 
     @tasks.loop(minutes=10)
     async def start_games(self, ctx):
         """Task to pull initial Games data for the new clan games"""
         now = datetime.utcnow()
         conn = self.bot.pool
-        games_id = await self.get_next_games_id()
+        games_id = await self.get_next_games()
         print(f"start_games:\n  Games ID: {games_id}")
         if games_id:
             sql = "SELECT start_time FROM rcs_events WHERE event_id = $1"
