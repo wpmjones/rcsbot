@@ -128,7 +128,7 @@ class OwnerCog(commands.Cog):
                 print(f"{tag} has a private war log.")
                 continue
             for war in war_log:
-                if war.is_cwl:
+                if war.is_league_entry:
                     # skip all CWL wars
                     continue
                 sql = ("SELECT war_id, team_size, end_time::timestamp::date, war_state FROM rcs_wars "
