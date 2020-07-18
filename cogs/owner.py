@@ -29,6 +29,29 @@ class OwnerCog(commands.Cog):
             async for message in ctx.channel.history():
                 await message.delete()
 
+    @commands.command(name="emojis", hidden=True)
+    async def emoji_list(self, ctx):
+        """For listing emojis in RCS emoji servers"""
+        server_list = [506645671009583105,
+                       506645764512940032,
+                       531660501709750282,
+                       602130772098416678,
+                       629145390687584260,
+                       ]
+        for _id in server_list:
+            guild = self.bot.get_guild(_id)
+            emoji_list = list(guild.emojis)
+            emoji_list.sort(key=lambda e: e.name)
+            report = [f"**{guild.name}** {len(emoji_list)} emojis"]
+            for emoji in emoji_list:
+                report.append(f"<:{emoji.name}:{emoji.id}> - {emoji.name}:{emoji.id}")
+                if len("\n".join(report)) > 1900:
+                    await ctx.send("\n".join(report))
+                    report = []
+            if report:
+                await ctx.send("\n".join(report))
+
+
     @commands.command(name="presence", hidden=True)
     @commands.is_owner()
     async def presence(self, ctx, *, msg: str = "default"):
