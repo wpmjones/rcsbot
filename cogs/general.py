@@ -453,7 +453,7 @@ class General(commands.Cog):
         if not clan:
             return await ctx.send("You must provide an RCS clan name or tag.")
         async with ctx.typing():
-            sql = "SELECT discordServer FROM rcs_data WHERE clanTag = $1"
+            sql = "SELECT discord_server FROM rcs_clans WHERE clan_tag = $1"
             fetch = await self.bot.pool.fetchrow(sql, clan.tag[1:])
         if fetch['discord_server']:
             await ctx.send(fetch['discord_server'])
