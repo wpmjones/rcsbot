@@ -532,9 +532,9 @@ class General(commands.Cog):
                 await ctx.send("Update complete!")
                 if str(ctx.author.id) != str(leader):
                     try:
-                        leader_chat = self.bot.get_channel(settings["rcs_channels"]["leader_chat"])
-                        await leader_chat.send(f"<@{leader}> {clan}'s CWL league has been updated to {league} "
-                                               f"by {ctx.author.mention}.")
+                        leader_spam_chat = self.bot.get_channel(settings["rcs_channels"]["leader_spam"])
+                        await leader_spam_chat.send(f"<@{leader}> {clan}'s CWL league has been updated to {league} "
+                                                    f"by {ctx.author.mention}.")
                         await ctx.send("Update complete!")
                     except:
                         self.bot.logger.exception("Failed to send to Leader Chat")
