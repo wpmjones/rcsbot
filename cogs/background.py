@@ -199,7 +199,7 @@ class Background(commands.Cog):
                     clan.war_ties = 0
                     clan.war_losses = 0
                 # compare clan leader and report to council chat if different
-                clan_leader = clan.get_member(role=coc.Role.leader)
+                clan_leader = clan.get_member_by(role=coc.Role.leader)
                 comparator = (not leader(clan.tag[1:], clan_leader.tag[1:])
                               and row['classification'] != "family"
                               and row['leader_name'] != clan_leader.name)
