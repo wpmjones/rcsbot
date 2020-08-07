@@ -248,7 +248,7 @@ class Background(commands.Cog):
 
         def process_row(row):
             if row['subreddit']:
-                sub = f"[Subreddit](https://www.reddit.com{row['subreddit']})"
+                sub = f"[Subreddit]({row['subreddit']})"
             else:
                 sub = ""
             if row['leader_reddit']:
