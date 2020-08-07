@@ -89,7 +89,7 @@ class Background(commands.Cog):
         print("Starting clan checks")
         if date.today().weekday() != 2:
             return
-        sql = "SELECT MAX(log_date_ AS max_date FROM rcs_task_log WHERE log_type_id = $1"
+        sql = "SELECT MAX(log_date_ AS max_date FROM rcs_task_logs WHERE log_type_id = $1"
         row = self.bot.pool.fetchrow(sql, log_types['loc_check'])
         if row and row['max_date'] > date.today() - timedelta(days=7):
             return
