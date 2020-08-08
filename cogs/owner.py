@@ -168,8 +168,6 @@ class OwnerCog(commands.Cog):
                             await conn.execute(sql, war.clan.attacks_used, war.clan.destruction, war.clan.stars,
                                                war.opponent.destruction, war.opponent.stars,
                                                row['war_id'])
-                            channel = self.bot.get_channel(settings['log_channels']['test'])
-                            await channel.send(f"Updated war for {war.clan.name} vs {war.opponent.name}.")
                 else:
                     # War is not in database, add it (happens if bot is down)
                     sql = ("INSERT INTO rcs_wars (clan_tag, clan_attacks, clan_destruction, clan_stars,"

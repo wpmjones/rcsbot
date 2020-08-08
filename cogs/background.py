@@ -215,11 +215,11 @@ class Background(commands.Cog):
                     leader_changes += f"{clan.name}: Leader changed from {row['leader_name']} to {clan_leader.name}\n"
                 # Update MS SQL
                 sql = ("UPDATE rcs_data "
-                       "SET clanName = %s, clanLevel = %d, members = %d, warFreq = %s, clanType = %s, "
-                       "clanDescription = %s, clanLocation = %s, clanBadge = %s, clanPoints = %d, "
-                       "clanVersusPoints = %d, requiredTrophies = %d, warWinStreak = %d, warWins = %d, warTies = %d, "
-                       "warLosses = %d, isWarLogPublic = %d "
-                       "WHERE clanTag = %s")
+                       "SET clanName = ?, clanLevel = ?, members = ?, warFreq = ?, clanType = ?, "
+                       "clanDescription = ?, clanLocation = ?, clanBadge = ?, clanPoints = ?, "
+                       "clanVersusPoints = ?, requiredTrophies = ?, warWinStreak = ?, warWins = ?, warTies = ?, "
+                       "warLosses = ?, isWarLogPublic = ? "
+                       "WHERE clanTag = ?")
                 try:
                     with Sql() as cursor:
                         cursor.execute(sql, clan.name, clan.level, clan.member_count, clan.war_frequency, clan.type,
