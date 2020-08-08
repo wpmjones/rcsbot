@@ -151,8 +151,8 @@ class CouncilCog(commands.Cog):
         join_date = user.joined_at.strftime("%d %b %Y")
         join_delta = (today - user.joined_at).days
         conn = self.bot.pool
-        sql = "SELECT MAX(last_message) FROM rcs_discord WHERE discord_id = $1"
-        row = conn.fetchrow(sql, user.id)
+        sql = "SELECT last_message FROM rcs_messages WHERE discord_id = $1"
+        row = await conn.fetchrow(sql, user.id)
         last_message = row[0]
         user_roles = []
         for role in user.roles:
@@ -580,10 +580,10 @@ class CouncilCog(commands.Cog):
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         conn = self.bot.pool
-        sql = "SELECT discordTag, clanBadge FROM rcs_data WHERE clanName = $1"
-        fetch = await conn.fetchrow(sql, clan.name)
-        discord_id = fetch['discordTag']
-        badge_url = fetch['clanBadge']
+        sql = "SELECT discord_tag, badge_url FROM rcs_clans WHERE clan_tag = $1"
+        fetch = await conn.fetchrow(sql, clan.tag[1:])
+        discord_id = fetch['discord_tag']
+        badge_url = fetch['badge_url']
         sql = "SELECT alt_tag FROM rcs_alts WHERE clan_tag = $1"
         fetch = await conn.fetch(sql, clan.tag[1:])
         if fetch:
@@ -731,7 +731,7 @@ class CouncilCog(commands.Cog):
 
     @commands.group(invoke_without_command=True, hidden=True)
     @is_leader_or_mod_or_council()
-    async def alts(self, ctx):
+    async def alts(self, ctx, *, arg):
         """[Group] Command to handle alt accounts of RCS leaders
 
         **Permissions:**
@@ -739,15 +739,18 @@ class CouncilCog(commands.Cog):
         Council
         Leaders
         """
-        if ctx.invoked_subcommand is None:
-            return await ctx.show_help(ctx.command)
+        if ctx.invoked_subcommand is not None:
+            return
+        if arg:
+            clan = await ClanConverter().convert(ctx, arg)
+            await ctx.invoke(self.leader, clan=clan)
 
     @alts.command(name="list")
     async def alts_list(self, ctx, *, clan: ClanConverter = None):
         """List alts for the specified clan.
 
         **Example:**
-        ++alts list Clan Name
+        ++alts list "Clan Name"
         ++alts list #CLANTAG
         ++alts list ShortName (you can omit the word Reddit)
         """
@@ -798,7 +801,7 @@ class CouncilCog(commands.Cog):
             await conn.execute(sql, clan.tag[1:])
             await ctx.send(f"All alt accounts for {clan.name} have been removed.")
         else:
-            sql = f"DELETE FROM rcs_alts WHERE clan_tag = $1 AND altName = $2"
+            sql = f"DELETE FROM rcs_alts WHERE clan_tag = $1 AND alt_tag = $2"
             await conn.execute(sql, clan.tag[1:], player.tag[1:])
             await ctx.send(f"{player} has been removed as an alt for the leader of {clan.name}.")
 

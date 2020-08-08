@@ -381,16 +381,16 @@ class Background(commands.Cog):
             if datetime.now() > row['last_message'] + timedelta(minutes=1):
                 await conn.execute(f"UPDATE rcs_messages "
                                    f"SET message_points = {row['message_points']+points}, "
-                                   f"last_message = '{datetime.now()}', "
+                                   f"last_message = '{datetime.utcnow()}', "
                                    f"message_count = {row['message_count']+1} "
                                    f"WHERE discord_id = {message.author.id}")
             else:
                 await conn.execute(f"UPDATE rcs_messages "
-                                   f"SET last_message = '{datetime.now()}' "
+                                   f"SET last_message = '{datetime.utcnow()}' "
                                    f"WHERE discord_id = {message.author.id}")
         else:
             await conn.execute(f"INSERT INTO rcs_messages "
-                               f"VALUES ({message.author.id}, {points}, '{datetime.now()}', 1)")
+                               f"VALUES ({message.author.id}, {points}, '{datetime.utcnow()}', 1)")
         if message.channel.id == 298620147424296970 and "<@&296114507959369739>" in message.content:
             # this is for leader's pinging chat mods in leader-chat
             chat_mods = self.bot.get_channel(settings['rcs_channels']['mods'])

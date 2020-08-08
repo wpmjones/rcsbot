@@ -30,7 +30,7 @@ class PlayerConverter(commands.Converter):
                 raise commands.BadArgument(f'You appear to be passing '
                                            f'the clan tag/name for `{str(clan)}`')
 
-            member = clan.get_member(name=name)
+            member = clan.get_member_by(name=name)
             if member:
                 return member
 
