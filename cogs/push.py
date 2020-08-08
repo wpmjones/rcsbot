@@ -177,7 +177,7 @@ class Push(commands.Cog):
             cursor.execute(f"SELECT CAST(clanPoints as decimal(5,2)), "
                            f"playerName + ' (TH' + CAST(currentThLevel as varchar(2)) + ')' "
                            f"FROM vRCSPush "
-                           f"WHERE clanName = %s "
+                           f"WHERE clanName = ? "
                            f"ORDER BY clanPoints DESC",
                            clan.name)
             fetch = cursor.fetchall()
@@ -233,7 +233,7 @@ class Push(commands.Cog):
             sql = (f"INSERT INTO rcspush_2020_1 "
                    f"(playerTag, clanTag, startingTrophies, currentTrophies, "
                    f"bestTrophies, startingThLevel, playerName, clanName) "
-                   f"VALUES (%s, %s, %d, %d, %d, %d, %s, %s)")
+                   f"VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
             cursor.executemany(sql, players_many)
             sql = ("UPDATE rcspush_2020_1 SET clanTag = '9L2PRL0U' "
                    "WHERE playerTag IN ('#20PCPRJ8', '#2QG2C9LG8', '#288UUGPGG', '#YQCVUGJU', '#2G0YV209J', "

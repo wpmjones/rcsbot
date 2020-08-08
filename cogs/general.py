@@ -89,9 +89,8 @@ class General(commands.Cog):
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         async with ctx.typing():
-            with Sql() as cursor:
-                sql = "SELECT trophies, player_name FROM rcs_members WHERE clan_tag = $1 ORDER BY trophies DESC"
-                fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
+            sql = "SELECT trophies, player_name FROM rcs_members WHERE clan_tag = $1 ORDER BY trophies DESC"
+            fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
             page_count = math.ceil(len(fetch) / 25)
             title = f"Trophies for {clan.name}"
             ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
@@ -144,13 +143,8 @@ class General(commands.Cog):
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         async with ctx.typing():
-            with Sql() as cursor:
-                member_list = []
-                cursor.execute(f"SELECT thLevel, playerName FROM rcs_members WHERE clanTag = %s "
-                               f"AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = %s "
-                               f"ORDER BY timestamp DESC) ORDER BY thLevel DESC, trophies DESC",
-                               (clan.tag[1:], clan.tag[1:]))
-                fetch = cursor.fetchall()
+            sql = "SELECT th_level, player_name FROM rcs_members WHERE clan_tag = $1 ORDER BY th_level DESC"
+            fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
             page_count = math.ceil(len(fetch) / 25)
             title = f"Town Halls for {clan.name}"
             ctx.icon = "https://cdn.discordapp.com/emojis/513119024188489738.png"
@@ -167,13 +161,8 @@ class General(commands.Cog):
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         async with ctx.typing():
-            with Sql() as cursor:
-                member_list = []
-                cursor.execute(f"SELECT builderHallLevel, playerName FROM rcs_members WHERE clanTag = %s "
-                               f"AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = %s "
-                               f"ORDER BY timestamp DESC) ORDER BY builderHallLevel DESC, vsTrophies DESC",
-                               (clan.tag[1:], clan.tag[1:]))
-                fetch = cursor.fetchall()
+            sql = "SELECT bh_level, player_name FROM rcs_members WHERE clan_tag = $1 ORDER BY bh_level DESC"
+            fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
             page_count = math.ceil(len(fetch) / 25)
             title = f"Builder Halls for {clan.name}"
             ctx.icon = "https://cdn.discordapp.com/emojis/513119024188489738.png"
@@ -190,25 +179,19 @@ class General(commands.Cog):
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         async with ctx.typing():
-            with Sql() as cursor:
-                cursor.execute(f"SELECT warStars, playerName FROM rcs_members WHERE clanTag = %s "
-                               f"AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = %s "
-                               f"ORDER BY timestamp DESC) ORDER BY warStars DESC", (clan.tag[1:], clan.tag[1:]))
-                fetch = cursor.fetchall()
+            sql = "SELECT war_stars, player_name FROM rcs_members WHERE clan_tag = $1 ORDER BY war_stars DESC"
+            fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
             page_count = math.ceil(len(fetch) / 25)
             title = f"War Stars for {clan.name}"
             ctx.icon = "https://cdn.discordapp.com/emojis/635642870350741514.png"
             p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
         await p.paginate()
 
-    @staticmethod
-    def get_member_list(field):
-        with Sql() as cursor:
-            cursor.execute(f"SELECT TOP 10 {field}, playerName + ' (' + altName + ')' as pname FROM rcs_members "
-                           f"INNER JOIN rcs_data ON rcs_data.clanTag = rcs_members.clanTag "
-                           f"AND timestamp = (SELECT MAX(timestamp) FROM rcs_members WHERE timestamp < "
-                           f"(SELECT MAX(timestamp) FROM rcs_members)) ORDER BY {field} DESC")
-            fetch = cursor.fetchall()
+    def get_member_list(self, field):
+        sql = (f"SELECT {field}, player_name + ' (' + alt_name + ')' as pname FROM rcs_members "
+               f"INNER JOIN rcs_clans ON rcs_clans.clan_tag = rcs_members.clan_tag "
+               f"ORDER BY {field} DESC LIMIT 10")
+        fetch = await self.bot.pool.fetch(sql)
         return fetch
 
     @commands.group()
@@ -223,7 +206,7 @@ class General(commands.Cog):
     async def top_attacks(self, ctx):
         """Displays top ten attack win totals for all of the RCS"""
         async with ctx.typing():
-            data = self.get_member_list("attackWins")
+            data = self.get_member_list("attack_wins")
             title = "RCS Top Ten for Attack Wins"
             ctx.icon = "https://cdn.discordapp.com/emojis/635642869750824980.png"
             p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
@@ -234,7 +217,7 @@ class General(commands.Cog):
     async def top_defenses(self, ctx):
         """Displays top ten defense win totals for all of the RCS"""
         async with ctx.typing():
-            data = self.get_member_list("defenceWins")
+            data = self.get_member_list("defense_wins")
             title = "RCS Top Ten for Defense Wins"
             ctx.icon = "https://cdn.discordapp.com/emojis/635642869373468704.png"
             p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
@@ -264,7 +247,7 @@ class General(commands.Cog):
     async def top_bh_trophies(self, ctx):
         """Displays top ten vs trophy counts for all of the RCS"""
         async with ctx.typing():
-            data = self.get_member_list("vsTrophies")
+            data = self.get_member_list("vs_trophies")
             title = "RCS Top Ten for Builder Trophies"
             ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
             p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
@@ -274,7 +257,7 @@ class General(commands.Cog):
     async def top_best_trophies(self, ctx):
         """Displays top ten best trophy counts for all of the RCS"""
         async with ctx.typing():
-            data = self.get_member_list("bestTrophies")
+            data = self.get_member_list("best_trophies")
             title = "RCS Top Ten for Best Trophies"
             ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
             p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
@@ -284,7 +267,7 @@ class General(commands.Cog):
     async def top_warstars(self, ctx):
         """Displays top ten war star totals for all of the RCS"""
         async with ctx.typing():
-            data = self.get_member_list("warStars")
+            data = self.get_member_list("war_stars")
             title = "RCS Top Ten for War Stars"
             ctx.icon = "https://cdn.discordapp.com/emojis/635642870350741514.png"
             p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
@@ -294,9 +277,13 @@ class General(commands.Cog):
     async def top_games(self, ctx):
         """Displays top ten clan games points for all of the RCS (current or most recent games)"""
         async with ctx.typing():
+            now = datetime.utcnow()
             conn = self.bot.pool
-            row = await conn.fetchrow("SELECT MAX(event_id) as event_id FROM rcs_events WHERE event_type = 5 "
-                                      "AND start_time < $1", datetime.utcnow())
+            row = await conn.fetchrow("SELECT MAX(start_time) as start_time, event_id "
+                                      "FROM rcs_events WHERE event_type_id = 1 AND start_time < $1 "
+                                      "GROUP BY event_id "
+                                      "ORDER BY start_time DESC "
+                                      "LIMIT 1", now)
             event_id = row['event_id']
             sql = ("SELECT player_tag, (current_points - starting_points) as points "
                    "FROM rcs_clan_games "
@@ -339,6 +326,7 @@ class General(commands.Cog):
         if player.clan.tag[1:] in rcs_names_tags().values() or player.clan.name.lower().startswith("reddit"):
             try:
                 # Add to RCS specific link table
+                # TODO Change this to helper functions in db
                 await Psql(self.bot).link_user(player.tag[1:], user.id)
                 # Add to global link table
                 token = get_link_token()
@@ -383,7 +371,7 @@ class General(commands.Cog):
         async with ctx.typing():
             if not clan:
                 return await ctx.send("You must provide an RCS clan name or tag.")
-            tags = [x.tag[1:] for x in clan.itermembers]
+            tags = [x.tag[1:] for x in clan.members]
             sql = "SELECT discord_id, player_tag FROM rcs_discord_links WHERE player_tag = any($1::TEXT[])"
             fetch = await self.bot.pool.fetch(sql, tags)
             if not fetch:
@@ -410,6 +398,7 @@ class General(commands.Cog):
         **Other info:**
         I plan to add an unlink all command at some point
         """
+        # TODO USeless, switch to API
         if not player:
             self.bot.logger.error(f"{ctx.author} provided some bad info for the link command.")
             return await ctx.send("I don't particularly care for that player. Wanna try again?")
@@ -422,11 +411,10 @@ class General(commands.Cog):
         """Displays a link to specified clan's subreddit"""
         if not clan:
             return await ctx.send("You must provide an RCS clan name or tag.")
-        with Sql(as_dict=True) as cursor:
-            cursor.execute(f"SELECT subReddit FROM rcs_data WHERE clanTag = '{clan.tag[1:]}'")
-            fetched = cursor.fetchone()
-        if fetched['subReddit'] != "":
-            await ctx.send(fetched['subReddit'])
+        sql = "SELECT "
+        fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
+        if fetch['subreddit'] != "":
+            await ctx.send(fetch['subreddit'])
         else:
             await ctx.send("This clan does not have a subreddit.")
 
@@ -451,79 +439,78 @@ class General(commands.Cog):
         ++cwl list - Shows list of RCS clans in their leagues
         ++cwl Reddit Example Master II - assigns your clan to the specified league
         """
+        conn = self.bot.pool
         # Respond with list
         if args[0] in ["all", "list"]:
-            with Sql(as_dict=True) as cursor:
-                cursor.execute("SELECT clanName, clanTag, cwlLeague FROM rcs_data "
-                               "WHERE cwlLeague IS NOT NULL "
-                               "ORDER BY clanName")
-                clans = cursor.fetchall()
+            sql = ("SELECT clan_name, clan_tag, cwl_league FROM rcs_clans "
+                   "WHERE cwl_league IS NOT NULL "
+                   "ORDER BY clan_name")
+            clans = await conn.fetch(sql)
             content = ""
             for league in cwl_league_order:
                 header = f"**{league}:**\n"
                 temp = ""
                 for clan in clans:
-                    if clan['cwlLeague'] == league:
-                        temp += f"  {clan['clanName']} (#{clan['clanTag']})\n"
+                    if clan['cwl_league'] == league:
+                        temp += f"  {clan['clan_name']} (#{clan['clan_tag']})\n"
                 if temp:
                     content += header + temp
             return await ctx.send(content)
         # Handle user arguments
-        with Sql(as_dict=True) as cursor:
-            cursor.execute("SELECT clanName, clanTag, discordTag FROM rcs_data ORDER BY clanName")
-            fetch = cursor.fetchall()
-            clans = []
-            clans_tag = []
-            for clan in fetch:
-                clans.append(clan["clanName"].lower())
-                clans_tag.append([clan["clanTag"], clan["clanName"], clan["discordTag"]])
-            leagues = cwl_league_names
-            league_num = "I"
-            if args[-1].lower() in ["3", "iii", "three"]:
-                league_num = "III"
-            if args[-1].lower() in ["2", "ii", "two"]:
-                league_num = "II"
-            if len(args) == 4:
-                clan = f"{args[0]} {args[1]}"
-                league = f"{args[2]} {league_num}"
-            elif len(args) == 3:
-                clan = f"{args[0]}"
-                league = f"{args[1]} {league_num}"
-            elif len(args) == 5:
-                clan = f"{args[0]} {args[1]} {args[2]}"
-                league = f"{args[3]} {league_num}"
+        sql = "SELECT clan_name, clan_tag, discord_tag FROM rcs_clans ORDER BY clan_name"
+        fetch = await conn.fetch(sql)
+        clans = []
+        clans_tag = []
+        for clan in fetch:
+            clans.append(clan['clan_name'].lower())
+            clans_tag.append([clan['clan_tag'], clan['clan_name'], clan['discord_tag']])
+        leagues = cwl_league_names
+        league_num = "I"
+        if args[-1].lower() in ["3", "iii", "three"]:
+            league_num = "III"
+        if args[-1].lower() in ["2", "ii", "two"]:
+            league_num = "II"
+        if len(args) == 4:
+            clan = f"{args[0]} {args[1]}"
+            league = f"{args[2]} {league_num}"
+        elif len(args) == 3:
+            clan = f"{args[0]}"
+            league = f"{args[1]} {league_num}"
+        elif len(args) == 5:
+            clan = f"{args[0]} {args[1]} {args[2]}"
+            league = f"{args[3]} {league_num}"
+        else:
+            return await ctx.send("Please provide a clan name and CWL league in that order. "
+                                  "`++cwl Reddit Example Bronze II`")
+        self.bot.logger.debug(f"{ctx.command} for {ctx.author}\n{args}\n{clan}\n{league}")
+        if clan.lower() in clans and league.lower() in leagues:
+            if args[-2].lower() in ["master", "masters"]:
+                league = f"Master {league_num}"
+            elif args[-2].lower() in ["champ", "champs", "champion", "champions"]:
+                league = f"Champion {league_num}"
             else:
-                return await ctx.send("Please provide a clan name and CWL league in that order. "
-                                      "`++cwl Reddit Example Bronze II`")
-            self.bot.logger.debug(f"{ctx.command} for {ctx.author}\n{args}\n{clan}\n{league}")
-            if clan.lower() in clans and league.lower() in leagues:
-                if args[-2].lower() in ["master", "masters"]:
-                    league = f"Master {league_num}"
-                elif args[-2].lower() in ["champ", "champs", "champion", "champions"]:
-                    league = f"Champion {league_num}"
-                else:
-                    league = f"{args[-2].title()} {league_num}"
-                for clan_tuple in clans_tag:
-                    if clan.lower() == clan_tuple[1].lower():
-                        clan = clan_tuple[1]
-                        clan_tag = clan_tuple[0]
-                        leader = clan_tuple[2]
-                        break
-                cursor.execute(f"UPDATE rcs_data "
-                               f"SET cwlLeague = '{league}' "
-                               f"WHERE clanTag = '{clan_tag}'")
-                await ctx.send("Update complete!")
-                if str(ctx.author.id) != str(leader):
-                    try:
-                        leader_spam_chat = self.bot.get_channel(settings["rcs_channels"]["leader_spam"])
-                        await leader_spam_chat.send(f"<@{leader}> {clan}'s CWL league has been updated to {league} "
-                                                    f"by {ctx.author.mention}.")
-                        await ctx.send("Update complete!")
-                    except:
-                        self.bot.logger.exception("Failed to send to Leader Chat")
-            else:
-                return await ctx.send("Please provide a clan name and CWL league in that order. "
-                                      "`++cwl Reddit Example Bronze ii`")
+                league = f"{args[-2].title()} {league_num}"
+            for clan_tuple in clans_tag:
+                if clan.lower() == clan_tuple[1].lower():
+                    clan = clan_tuple[1]
+                    clan_tag = clan_tuple[0]
+                    leader = clan_tuple[2]
+                    break
+            await conn.execute(f"UPDATE rcs_clans "
+                               f"SET cwl_league = '{league}' "
+                               f"WHERE clan_tag = '{clan_tag}'")
+            await ctx.send("Update complete!")
+            if str(ctx.author.id) != str(leader):
+                try:
+                    leader_spam_chat = self.bot.get_channel(settings["rcs_channels"]["leader_spam"])
+                    await leader_spam_chat.send(f"<@{leader}> {clan}'s CWL league has been updated to {league} "
+                                                f"by {ctx.author.mention}.")
+                    await ctx.send("Update complete!")
+                except:
+                    self.bot.logger.exception("Failed to send to Leader Chat")
+        else:
+            return await ctx.send("Please provide a clan name and CWL league in that order. "
+                                  "`++cwl Reddit Example Bronze ii`")
 
     @commands.command(name="roll")
     async def roll(self, ctx, *args):

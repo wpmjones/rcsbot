@@ -1,7 +1,7 @@
 from discord.ext import commands, tasks
 from cogs.utils.season import get_season_end, update_season
 from datetime import date, datetime
-from dateutil import relativedelta
+from dateutil.relativedelta import relativedelta, MO
 
 
 class SeasonConfig(commands.Cog, command_attrs=dict(hidden=True)):
@@ -15,8 +15,7 @@ class SeasonConfig(commands.Cog, command_attrs=dict(hidden=True)):
     @staticmethod
     def next_last_monday():
         now = date.today()
-        day = now + relativedelta.relativedelta(month=now.month + 1,
-                                                weekday=relativedelta.MO(1))
+        day = now + relativedelta(month=now.month + 2, day=1, weekday=MO(-1))
         return day
 
     @tasks.loop(minutes=15.0)

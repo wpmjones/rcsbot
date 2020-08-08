@@ -24,21 +24,23 @@ class Games(commands.Cog):
 
     async def get_last_games(self):
         """Get games ID from rcs_events for the most recent clan games"""
+        now = datetime.utcnow()
         sql = ("SELECT event_id, MAX(end_time) as end_time " 
                "FROM rcs_events "
-               "WHERE event_type_id = 1 AND end_time < current_timestamp "
+               "WHERE event_type_id = 1 AND end_time < $1 "
                "GROUP BY event_id "
                "ORDER BY end_time DESC "
                "LIMIT 1")
-        row = await self.bot.pool.fetchrow(sql)
+        row = await self.bot.pool.fetchrow(sql, now)
         return row['event_id'], row['end_time']
 
     async def get_current_games(self):
         """Get games ID from RCS-events for the current clan games, if active (else None)"""
+        now = datetime.utcnow()
         sql = ("SELECT event_id, player_points, clan_points  "
                "FROM rcs_events "
-               "WHERE event_type_id = 1 AND current_timestamp BETWEEN start_time AND end_time")
-        row = await self.bot.pool.fetchrow(sql)
+               "WHERE event_type_id = 1 AND $1 BETWEEN start_time AND end_time")
+        row = await self.bot.pool.fetchrow(sql, now)
         if row:
             return {"games_id": row['event_id'],
                     "player_points": row['player_points'],
@@ -48,11 +50,12 @@ class Games(commands.Cog):
 
     async def get_next_games(self):
         """Get games ID from rcs_events for the next clan games, if available (else None)"""
+        now = datetime.utcnow()
         sql = ("SELECT event_id, MIN(start_time) as start_time "
                "FROM rcs_events "
-               "WHERE event_type_id = 1 AND start_time > current_timestamp "
+               "WHERE event_type_id = 1 AND start_time > $1 "
                "GROUP BY event_id")
-        row = await self.bot.pool.fetchrow(sql)
+        row = await self.bot.pool.fetchrow(sql, now)
         if row:
             return row['event_id'], row['start_time']
         else:
