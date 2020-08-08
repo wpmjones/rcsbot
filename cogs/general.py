@@ -34,11 +34,8 @@ class General(commands.Cog):
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         async with ctx.typing():
-            with Sql() as cursor:
-                cursor.execute("SELECT attackWins, playerName FROM rcs_members WHERE clanTag = %s "
-                               "AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = %s "
-                               "ORDER BY timestamp DESC) ORDER BY attackWins DESC", (clan.tag[1:], clan.tag[1:]))
-                fetch = cursor.fetchall()
+            sql = "SELECT attack_wins, player_name FROM rcs_members WHERE clan_tag = $1 ORDER BY attack_wins DESC"
+            fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
             page_count = math.ceil(len(fetch) / 25)
             title = f"Attack Wins for {clan.name}"
             ctx.icon = "https://cdn.discordapp.com/emojis/635642869750824980.png"
@@ -56,11 +53,8 @@ class General(commands.Cog):
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         async with ctx.typing():
-            with Sql() as cursor:
-                cursor.execute("SELECT defenceWins, playerName FROM rcs_members WHERE clanTag = %s "
-                               "AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = %s "
-                               "ORDER BY timestamp DESC) ORDER BY defenceWins DESC", (clan.tag[1:], clan.tag[1:]))
-                fetch = cursor.fetchall()
+            sql = "SELECT defense_wins, player_name FROM rcs_members WHERE clan_tag = $1 ORDER BY defense_wins DESC"
+            fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
             page_count = math.ceil(len(fetch) / 25)
             title = f"Defense Wins for {clan.name}"
             ctx.icon = "https://cdn.discordapp.com/emojis/635642869373468704.png"
@@ -76,16 +70,13 @@ class General(commands.Cog):
         """
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
-        with Sql() as cursor:
-            cursor.execute(f"SELECT donations, donationsReceived, playerName FROM rcs_members "
-                           f"WHERE clanTag = %s AND timestamp = (SELECT TOP 1 timestamp from rcs_members "
-                           f"WHERE clanTag = %s ORDER BY timestamp DESC) ORDER BY donations DESC",
-                           (clan.tag[1:], clan.tag[1:]))
-            fetch = cursor.fetchall()
-            page_count = math.ceil(len(fetch) / 25)
-            title = f"Donations for {clan.name}"
-            ctx.icon = "https://cdn.discordapp.com/emojis/301032036779425812.png"
-            p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
+        sql = ("SELECT donations, donations_received, player_name FROM rcs_members WHERE clan_tag = $1 "
+               "ORDER BY donations DESC")
+        fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
+        page_count = math.ceil(len(fetch) / 25)
+        title = f"Donations for {clan.name}"
+        ctx.icon = "https://cdn.discordapp.com/emojis/301032036779425812.png"
+        p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
         await p.paginate()
 
     @commands.command(name="trophies", aliases=["trophy"])
@@ -99,10 +90,8 @@ class General(commands.Cog):
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         async with ctx.typing():
             with Sql() as cursor:
-                cursor.execute("SELECT trophies, playerName FROM rcs_members WHERE clanTag = %s "
-                               "AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = %s "
-                               "ORDER BY timestamp DESC) ORDER BY trophies DESC", (clan.tag[1:], clan.tag[1:]))
-                fetch = cursor.fetchall()
+                sql = "SELECT trophies, player_name FROM rcs_members WHERE clan_tag = $1 ORDER BY trophies DESC"
+                fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
             page_count = math.ceil(len(fetch) / 25)
             title = f"Trophies for {clan.name}"
             ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
@@ -119,11 +108,8 @@ class General(commands.Cog):
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         async with ctx.typing():
-            with Sql() as cursor:
-                cursor.execute("SELECT vsTrophies, playerName FROM rcs_members WHERE clanTag = %s "
-                               "AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = %s "
-                               "ORDER BY timestamp DESC) ORDER BY vsTrophies DESC", (clan.tag[1:], clan.tag[1:]))
-                fetch = cursor.fetchall()
+            sql = "SELECT vs_trophies, player_name FROM rcs_members WHERE clan_tag = $1 ORDER BY vs_trophies DESC"
+            fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
             page_count = math.ceil(len(fetch) / 25)
             title = f"Builder Trophies for {clan.name}"
             ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
@@ -140,11 +126,8 @@ class General(commands.Cog):
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
         async with ctx.typing():
-            with Sql() as cursor:
-                cursor.execute("SELECT bestTrophies, playerName FROM rcs_members WHERE clanTag = %s "
-                               "AND timestamp = (SELECT TOP 1 timestamp from rcs_members WHERE clanTag = %s "
-                               "ORDER BY timestamp DESC) ORDER BY bestTrophies DESC", (clan.tag[1:], clan.tag[1:]))
-                fetch = cursor.fetchall()
+            sql = "SELECT best_trophies, player_name FROM rcs_members WHERE clan_tag = $1 ORDER BY best_trophies DESC"
+            fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
             page_count = math.ceil(len(fetch) / 25)
             title = f"Best Trophies for {clan.name}"
             ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
