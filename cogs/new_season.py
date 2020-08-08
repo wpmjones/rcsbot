@@ -23,7 +23,7 @@ class SeasonConfig(commands.Cog, command_attrs=dict(hidden=True)):
     async def start_new_season(self):
         now = datetime.utcnow()
         season_end = get_season_end()
-        end = datetime(year=season_end[:4], month=season_end[5:7], day=season_end[-2:], hour=5)
+        end = datetime(year=int(season_end[:4]), month=int(season_end[5:7]), day=int(season_end[-2:]), hour=5)
         if now > end:
             update_season(self.next_last_monday())
 

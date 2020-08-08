@@ -8,7 +8,7 @@ from discord.ext import commands
 from cogs.utils.checks import is_council, is_mod_or_council, is_leader_or_mod_or_council
 from cogs.utils.constants import class_names, class_values
 from cogs.utils.converters import ClanConverter, PlayerConverter
-from cogs.utils.db import Sql, get_discord_id, get_player_tag
+from cogs.utils.db import Sql, get_discord_id
 from cogs.utils import helper
 from config import settings, color_pick
 from datetime import datetime
@@ -367,7 +367,7 @@ class CouncilCog(commands.Cog):
                            f"{classification}\n**Subreddit:** {subreddit}\n**Leader's Reddit name:** "
                            f"{leader_reddit}\n**Leader's Discord Tag:** {discord_tag}")
         # Add info to database
-        with Sql(as_dict=True) as cursor:
+        with Sql() as cursor:
             cursor.execute(f"INSERT INTO rcs_data (clanName, clanTag, clanLeader, shortName, socMedia, "
                            f"notes, classification, subReddit, leaderReddit, discordTag)"
                            f"VALUES ('{clan.name}', '{clan_tag}', '{leader}', '{short_name}', '{soc_media}', "
@@ -416,17 +416,21 @@ class CouncilCog(commands.Cog):
         Council"""
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
-        with Sql(as_dict=True) as cursor:
+        conn = self.bot.pool
+        with Sql() as cursor:
+            # Check to see if the specified clan has a feeder/family clan
             cursor.execute(f"SELECT clanName, clanTag FROM rcs_data WHERE feeder = '{clan.name}'")
             fetch = cursor.fetchone()
             if fetch is not None:
                 self.bot.logger.info(f"Removing family clan for {clan.name}. Issued by {ctx.author} in {ctx.channel}")
-                cursor.execute(f"DELETE FROM rcs_data WHERE clanTag = '{fetch['clanTag']}'")
-                await ctx.send(f"{fetch['clanName']} (feeder for {clan.name}) has been removed.")
+                cursor.execute(f"DELETE FROM rcs_data WHERE clanTag = ?", fetch.clanTag)
+                await conn.execute("DELETE FROM rcs_clans WHERE clan_tag = $1", fetch.clanTag)
+                await ctx.send(f"{fetch.clanName} (feeder for {clan.name}) has been removed.")
             self.bot.logger.info(f"Removing {clan.name}. Issued by {ctx.author} in {ctx.channel}")
             cursor.execute(f"SELECT leaderReddit, discordTag FROM rcs_data WHERE clanTag = '{clan.tag}'")
             fetch = cursor.fetchone()
-            cursor.execute(f"DELETE FROM rcs_data WHERE clanTag = '{clan.tag}'")
+            cursor.execute("DELETE FROM rcs_data WHERE clanTag = ?", clan.tag[1:])
+            await conn.execute("DELETE FROM rcs_clans WHERE clan_tag = $1", clan.tag[1:])
         # remove leader's roles
         guild = ctx.bot.get_guild(settings['discord']['rcsguild_id'])
         user = guild.get_member(int(fetch['discordTag']))
@@ -442,10 +446,10 @@ class CouncilCog(commands.Cog):
                                     reason=f"Clan Recruiters role removed by ++removeClan command of rcs-bot.")
         await ctx.send(f"{clan.name} has been removed from the database.  The change will appear on the wiki "
                        "in the next 3 hours.")
-        # TODO update the wiki
+        # TODO update the wiki immediately
+        helper.rcs_tags.clear_cache()
         helper.rcs_names_tags.clear_cache()
         helper.get_clan.clear_cache()
-        await ctx.send("<@251150854571163648> Please recycle the bot so we aren't embarassed with old data!")
         await ctx.send(f"Please don't forget to remove {fetch['leaderReddit'][22:]} as a mod from META and "
                        f"update the META clan directory.  I've removed the Leaders, RCS Leaders, and Clan "
                        f"Recruiters role from <@{fetch['discordTag']}>. If they have any other roles, "
@@ -575,17 +579,18 @@ class CouncilCog(commands.Cog):
         """
         if not clan:
             return await ctx.send("You have not provided a valid clan name or clan tag.")
-        with Sql(as_dict=True) as cursor:
-            cursor.execute(f"SELECT discordTag, clanBadge FROM rcs_data WHERE clanName = '{clan.name}'")
-            fetch = cursor.fetchone()
-            discord_id = fetch['discordTag']
-            badge_url = fetch['clanBadge']
-            cursor.execute(f"SELECT altName FROM rcs_alts WHERE clanTag = '{clan.tag[1:]}' ORDER BY altName")
-            fetch = cursor.fetchall()
+        conn = self.bot.pool
+        sql = "SELECT discordTag, clanBadge FROM rcs_data WHERE clanName = $1"
+        fetch = await conn.fetchrow(sql, clan.name)
+        discord_id = fetch['discordTag']
+        badge_url = fetch['clanBadge']
+        sql = "SELECT alt_tag FROM rcs_alts WHERE clan_tag = $1"
+        fetch = await conn.fetch(sql, clan.tag[1:])
         if fetch:
             alt_names = ""
             for row in fetch:
-                alt_names += f"{row['altName']}\n"
+                player = await self.bot.coc.get_player(row['alt_tag'])
+                alt_names += f"{player.name}\n"
         else:
             alt_names = "No alts for this leader"
         embed = discord.Embed(title=f"Leader Information for {clan.name}",
@@ -629,27 +634,29 @@ class CouncilCog(commands.Cog):
         def check_author(m):
             return m.author == ctx.author and m.channel == ctx.channel
 
-        with Sql(as_dict=True) as cursor:
-            sql = "SELECT notes FROM rcs_data WHERE clanTag = %s"
-            cursor.execute(sql, (clan.tag[1:]))
-            fetch = cursor.fetchone()
-            if fetch is not None:
-                old_notes = fetch['notes']
-            else:
-                return await ctx.send("There was a problem retrieving the notes for this clan. Someone ought to "
-                                      "ping that old TubaKid guy and see if he can fix it.")
-            try:
-                await ctx.send(f"**Current clan notes:**\nPlease respond with the new clan notes. Remembering that all "
-                               f"discord info should appear in the following format:\n"
-                               f"**Discord: [Invite](https://discord.gg/invitelink)**\n\n{old_notes}")
-                response = await ctx.bot.wait_for("message", check=check_author, timeout=60)
-            except asyncio.TimeoutError:
-                return await ctx.send("Your request has timed out. No changes have been made.")
-            if response.content.lower() in ("cancel", "stop", "quit"):
-                return await ctx.send(f"Notes update cancelled by {ctx.author.display_name}")
-            new_notes = response.content
-            sql = "UPDATE rcs_data SET notes = %s WHERE clanTag = %s"
+        conn = self.bot.pool
+        sql = "SELECT notes FROM rcs_clans WHERE clan_tag = $1"
+        fetch = await conn.fetch(sql, clan.tag[1:])
+        if fetch is not None:
+            old_notes = fetch['notes']
+        else:
+            return await ctx.send("There was a problem retrieving the notes for this clan. Someone ought to "
+                                  "ping that old TubaKid guy and see if he can fix it.")
+        try:
+            await ctx.send(f"**Current clan notes:**\n{old_notes}\n\nPlease respond with the new clan notes. "
+                           f"Remembering that all discord info should appear in the following format:\n"
+                           f"**Discord: [Invite](https://discord.gg/invitelink)**")
+            response = await ctx.bot.wait_for("message", check=check_author, timeout=60)
+        except asyncio.TimeoutError:
+            return await ctx.send("Your request has timed out. No changes have been made.")
+        if response.content.lower() in ("cancel", "stop", "quit"):
+            return await ctx.send(f"Notes update cancelled by {ctx.author.display_name}")
+        new_notes = response.content
+        with Sql() as cursor:
+            sql = "UPDATE rcs_data SET notes = ? WHERE clanTag = ?"
             cursor.execute(sql, (new_notes, clan.tag[1:]))
+        psql = "UPDATE rcs_clans SET notes = $1 WHERE clan_tag = $2"
+        await conn.execute(sql, new_notes, clan.tag[1:])
         await ctx.send(f"The notes for {clan.name} ({clan.tag}) have been updated in the database. Please allow 3 "
                        f"hours to see the changes reflected in the wiki.")
 
@@ -669,27 +676,27 @@ class CouncilCog(commands.Cog):
         if not new_discord:
             return await ctx.send("Please provide the new invite link for this Discord server.")
         flag = 0
-        with Sql(as_dict=True) as cursor:
-            sql = "SELECT notes FROM rcs_data WHERE clanTag = %s"
-            cursor.execute(sql, (clan.tag[1:]))
-            fetch = cursor.fetchone()
-            if fetch is not None:
-                old_notes = fetch['notes']
-                if "Discord: [Invite]" in old_notes:
-                    start = old_notes.find("Discord: [Invite]")
-                    end = old_notes.find(")", start) + 1
-                    old_discord = old_notes[start:end]
-                    new_notes = old_notes.replace(old_discord, f"Discord: [Invite]({new_discord})")
-                    sql = "UPDATE rcs_data SET notes = %s WHERE clanTag = %s"
+        conn = self.bot.pool
+        sql = "SELECT notes FROM rcs_data WHERE clanTag = $1"
+        old_notes = await conn.fetchval(sql, clan.tag[1:])
+        if old_notes is not None:
+            if "Discord: [Invite]" in old_notes:
+                start = old_notes.find("Discord: [Invite]")
+                end = old_notes.find(")", start) + 1
+                old_discord = old_notes[start:end]
+                new_notes = old_notes.replace(old_discord, f"Discord: [Invite]({new_discord})")
+                with Sql() as cursor:
+                    sql = "UPDATE rcs_data SET notes = ? WHERE clanTag = ?"
                     cursor.execute(sql, (new_notes, clan.tag[1:]))
-                    flag += 1
-            sql = "UPDATE rcs_data SET discordServer = %s WHERE clanTag = %s"
-            cursor.execute(sql, (new_discord, clan.tag[1:]))
-            flag += 1
-        if flag == 0:
-            response = ("Something weird happened and no updates were made. If the problem persists, please "
-                        "contact TubaKid")
-        elif flag == 1:
+                sql = "UPDATE rcs_clans SET notes = $1 WHERE clan_tag = $1"
+                await conn.execute(sql, new_notes, clan.tag[1:])
+                flag += 1
+        sql = "UPDATE rcs_data SET discordServer = ? WHERE clanTag = ?"
+        cursor.execute(sql, (new_discord, clan.tag[1:]))
+        sql = "UPDATE rcs_clans SET discord_server = $1 WHERE clan_tag = $2"
+        await conn.execute(sql, new_discord, clan.tag[1:])
+        flag += 1
+        if flag == 1:
             response = (f"The Discord server has been updated for {clan.name}. Please allow up to 3 hours for "
                         f"the change to appear on the wiki.")
         else:
@@ -714,9 +721,11 @@ class CouncilCog(commands.Cog):
                                   ":four: War Farming",
                                   additional_options=4)
         new_class = class_values[prompt]
-        with Sql(as_dict=True) as cursor:
-            sql = "UPDATE rcs_data SET classification = %s WHERE clanTag = %s"
+        with Sql() as cursor:
+            sql = "UPDATE rcs_data SET classification = ? WHERE clanTag = ?"
             cursor.execute(sql, (new_class, clan.tag[1:]))
+        sql = "UPDATE rcs_clans SET classification = $1 WHERE clan_tag = $2"
+        await self.bot.pool.execute(sql, new_class, clan.tag[1:])
         await ctx.send(f"The classification for {clan} is now set to {class_names[prompt]}. Please allow up to "
                        f"3 hours for the changes to appear on the wiki.")
 
@@ -748,28 +757,27 @@ class CouncilCog(commands.Cog):
             await ctx.send(f"Terribly sorry, but I can't find that clan!")
 
     @alts.command(name="add")
-    async def alts_add(self, ctx, clan: ClanConverter = None, *, new_alt: str = None):
+    async def alts_add(self, ctx, clan: ClanConverter = None, *, player: PlayerConverter = None):
         """Adds new leader alt for the specified clan
-        Quotes are required for clans with a space in their name
+        Quotes are required for clans or players with a space in their name
         Feel free to use the short name (omit the word Reddit) if that is easier
+        For best accuracy, using tags is teh best practice
 
         **Example:**
         ++alts add "Clan Name" alt name
-        ++alts add #CLANTAG alt name
+        ++alts add #CVCJR89 #L2URRGV02    (This is the best approach to ensure proper selection.)
         ++alts add ShortName alt name
         """
-        if not new_alt:
-            return await ctx.send("Please provide the name of the new alt account.")
-        with Sql() as cursor:
-            sql = (f"INSERT INTO rcs_alts "
-                   f"SELECT %s, %s "
-                   f"EXCEPT "
-                   f"SELECT clanTag, altName FROM rcs_alts WHERE clanTag = %s AND altName = %s")
-            cursor.execute(sql, (clan.tag[1:], new_alt, clan.tag[1:], new_alt))
-        await ctx.send(f"{new_alt} has been added as an alt account for the leader of {clan.name}.")
+        if not clan:
+            return await ctx.send("Please provide a valid RCS clan.")
+        if not player:
+            return await ctx.send("Please provide the tag or name of the new alt account.")
+        sql = "INSERT INTO rcs_alts (clan_tag, alt_tag) VALUES ($1, $2) "
+        await self.bot.pool.execute(sql, clan.tag[1:], player.tag[1:])
+        await ctx.send(f"{player.name} ({player.tag}) has been added as an alt account for the leader of {clan.name}.")
 
     @alts.command(name="remove", aliases=["delete", "del", "rem"])
-    async def alts_remove(self, ctx, clan: ClanConverter = None, *, alt: str = None):
+    async def alts_remove(self, ctx, clan: ClanConverter = None, *, player: PlayerConverter = None):
         """Remove Leader alt for the specified clan
         Quotes are required for clans with a space in their name
         Feel free to use the short name (omit the word Reddit_ if that is easier
@@ -780,17 +788,19 @@ class CouncilCog(commands.Cog):
         ++alts del ShortName alt name
         ++alts del "Clan Name" all *(this removes all alts for this clan)*
         """
-        if not alt:
-            return await ctx.send("Please provide the name of the alt account to be removed or specify all.")
-        with Sql() as cursor:
-            if alt == "all":
-                sql = f"DELETE FROM rcs_alts WHERE clanTag = {clan.tag[1:]}"
-                cursor.execute(sql)
-                await ctx.send(f"All alt accounts for {clan.name} have been removed.")
-            else:
-                sql = f"DELETE FROM rcs_alts WHERE clanTag = %s AND altName = %s"
-                cursor.execute(sql, (clan.tag[1:], alt))
-                await ctx.send(f"{alt} has been removed as an alt for the leader of {clan.name}.")
+        if not clan:
+            return await ctx.send("Please provide a valid RCS clan.")
+        if not player:
+            return await ctx.send("Please provide the tag or name of the alt account to be removed or specify all.")
+        conn = self.bot.pool
+        if player == "all":
+            sql = f"DELETE FROM rcs_alts WHERE clan_tag = $1"
+            await conn.execute(sql, clan.tag[1:])
+            await ctx.send(f"All alt accounts for {clan.name} have been removed.")
+        else:
+            sql = f"DELETE FROM rcs_alts WHERE clan_tag = $1 AND altName = $2"
+            await conn.execute(sql, clan.tag[1:], player.tag[1:])
+            await ctx.send(f"{player} has been removed as an alt for the leader of {clan.name}.")
 
     @commands.group(invoke_without_subcommand=True, hidden=True)
     @is_mod_or_council()
@@ -931,13 +941,11 @@ class CouncilCog(commands.Cog):
         if not message:
             return await ctx.send("I'm not going to send a blank message you goofball!")
         msg = await ctx.send("One moment while I track down these leaders...")
-        with Sql(as_dict=True) as cursor:
-            cursor.execute("SELECT DISTINCT discordTag FROM rcs_data")
-            rows = cursor.fetchall()
+        fetch = await self.bot.pool.fetch("SELECT DISTINCT discord_tag FROM rcs_clans")
         counter = 0
-        for row in rows:
+        for row in fetch:
             try:
-                member = ctx.guild.get_member(int(row['discordTag']))
+                member = ctx.guild.get_member(int(row['discord_tag']))
                 await member.send(message)
                 counter += 1
             except:

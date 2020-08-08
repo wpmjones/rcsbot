@@ -3,7 +3,7 @@ import datetime
 import decimal
 import inspect
 import json
-import pymssql
+import pyodbc
 import pydoc
 import requests
 import uuid
@@ -56,12 +56,13 @@ class Sql:
         self.as_dict = as_dict
 
     def __enter__(self):
-        self.conn = pymssql.connect(settings['database']['server'],
-                                    settings['database']['username'],
-                                    settings['database']['password'],
-                                    settings['database']['database'],
-                                    autocommit=True)
-        self.cursor = self.conn.cursor(as_dict=self.as_dict)
+        driver = "ODBC Driver 17 for SQL Server"
+        self.conn = pyodbc.connect(f"DRIVER={driver};"
+                                   f"SERVER={settings['database']['server']};"
+                                   f"DATABASE={settings['database']['database']};"
+                                   f"UID={settings['database']['username']};"
+                                   f"PWD={settings['database']['password']}")
+        self.cursor = self.conn.cursor()
         return self.cursor
 
     def __exit__(self, exc_type, exc_val, exc_tb):

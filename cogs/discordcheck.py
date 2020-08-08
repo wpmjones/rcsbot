@@ -72,10 +72,10 @@ class DiscordCheck(commands.Cog):
                     with Sql() as cursor:
                         sql = ("SELECT COUNT(timestamp) AS reported "
                                "FROM rcs_notify "
-                               "WHERE memberTag = %s AND clanTag = %s")
-                        cursor.execute(sql, (player.tag[1:], player.clan.tag[1:]))
+                               "WHERE memberTag = ? AND clanTag = ?")
+                        cursor.execute(sql, player.tag[1:], player.clan.tag[1:])
                         row = cursor.fetchone()
-                        reported = row[0]
+                        reported = row.reported
                         if reported < 3:
                             clan = get_clan(player.clan.tag[1:])
                             await danger_channel.send(f"<@{clan['leaderTag']}>")
@@ -87,7 +87,7 @@ class DiscordCheck(commands.Cog):
                                                   "member has caused problems in the past.")
                             await danger_channel.send(embed=embed)
                             sql = ("INSERT INTO rcs_notify "
-                                   "VALUES (%s, %s, %s)")
+                                   "VALUES (?, ?, ?)")
                             cursor.execute(sql, (datetime.now().strftime('%m-%d-%Y %H:%M:%S'),
                                                  player.clan.tag[1:],
                                                  player.tag[1:]))
@@ -97,7 +97,7 @@ class DiscordCheck(commands.Cog):
                 self.bot.logger.exception("Other failure")
         try:
             # Add to task log
-            sql = ("INSERT INTO rcs_task_logs (log_type_id, log_date, argument) "
+            sql = ("INSERT INTO rcs_task_log (log_type_id, log_date, argument) "
                    "VALUES ($1, $2, $3)")
             await self.bot.pool.execute(sql,
                                         log_types['danger'],
@@ -115,10 +115,10 @@ class DiscordCheck(commands.Cog):
         danger_channel = self.guild.get_channel(settings['rcs_channels']['danger_bot'])
         botdev_channel = self.guild.get_channel(settings['rcs_channels']['bot_dev'])
         member_role = self.guild.get_role(settings['rcs_roles']['members'])
-        with Sql() as cursor:
-            cursor.execute("SELECT shortName, discordTag, clanName FROM rcs_vwDiscordClans ORDER BY clanName")
-            fetch = cursor.fetchall()
-            daily_clans = [{"short_name": row[0], "leader_tag": row[1], "clan_name": row[2]} for row in fetch]
+        sql = "SELECT short_name, discord_tag, clan_name FROM vw_rcs_discord_checks ORDER BY clan_name"
+        fetch = await self.bot.pool.fetch(sql)
+        daily_clans = [{"short_name": row['short_name'], "leader_tag": row['discord_tag'],
+                        "clan_name": row['clan_name']} for row in fetch]
         for clan in daily_clans:
             report_list = set()
             short_list = clan['short_name'].split("/")
@@ -145,7 +145,7 @@ class DiscordCheck(commands.Cog):
             else:
                 await botdev_channel.send(f"No members for {clan['clan_name']}")
         # Add to task log
-        sql = ("INSERT INTO rcs_task_logs (log_type_id, log_date, argument) "
+        sql = ("INSERT INTO rcs_task_log (log_type_id, log_date, argument) "
                "VALUES ($1, $2, $3)")
         try:
             await self.bot.pool.execute(sql,
@@ -162,13 +162,12 @@ class DiscordCheck(commands.Cog):
             return
         member_role = self.guild.get_role(settings['rcs_roles']['members'])
         mods_channel = self.guild.get_channel(settings['rcs_channels']['mods'])
-        with Sql() as cursor:
-            cursor.execute("SELECT shortName, clanName FROM rcs_data ORDER BY clanName")
-            fetch = cursor.fetchall()
+        sql = "SELECT short_name, clan_name FROM rcs_clans ORDER BY clan_name"
+        fetch = await self.bot.pool.fetch(sql)
         clan_list = []
         for row in fetch:
-            if "/" in row[0]:
-                for clan in row[0].split("/"):
+            if "/" in row['short_name']:
+                for clan in row['short_name'].split("/"):
                     clan_list.append(clan)
             else:
                 clan_list.append(row[0])
@@ -190,7 +189,7 @@ class DiscordCheck(commands.Cog):
         else:
             log_message = "All members have a happy home with a clan in their name."
         # Add to task log
-        sql = ("INSERT INTO rcs_task_logs (log_type_id, log_date, argument) "
+        sql = ("INSERT INTO rcs_task_log (log_type_id, log_date, argument) "
                "VALUES ($1, $2, $3)")
         try:
             await self.bot.pool.execute(sql,

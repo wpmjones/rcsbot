@@ -223,10 +223,10 @@ class Background(commands.Cog):
                 try:
                     with Sql() as cursor:
                         cursor.execute(sql, clan.name, clan.level, clan.member_count, clan.war_frequency, clan.type,
-                                             description, clan.location.name, clan.badge.url, clan.points,
-                                             clan.versus_points, clan.required_trophies, clan.war_win_streak,
-                                             clan.war_wins, clan.war_ties, clan.war_losses, clan.public_war_log,
-                                             clan.tag[1:])
+                                       description, clan.location.name, clan.badge.url, clan.points,
+                                       clan.versus_points, clan.required_trophies, clan.war_win_streak,
+                                       clan.war_wins, clan.war_ties, clan.war_losses, clan.public_war_log,
+                                       clan.tag[1:])
                 except:
                     self.bot.logger.exception("MSSQL fail")
                 # Update Postgresql

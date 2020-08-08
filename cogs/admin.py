@@ -371,9 +371,10 @@ class Admin(commands.Cog):
 
         try:
             start = time.perf_counter()
-            with Sql(as_dict=True) as cursor:
+            with Sql() as cursor:
                 cursor.execute(query)
                 results = cursor.fetchall()
+                headers = [t[0] for t in cursor.description]
             dt = (time.perf_counter() - start) * 1000.0
         except Exception:
             return await ctx.send(f'```py\n{traceback.format_exc()}\n```')
@@ -382,10 +383,9 @@ class Admin(commands.Cog):
         if is_multistatement or rows == 0:
             return await ctx.send(f'`{dt:.2f}ms: {results}`')
 
-        headers = list(results[0].keys())
         table = TabularData()
         table.set_columns(headers)
-        table.add_rows(list(r.values()) for r in results)
+        table.add_rows(results)
         render = table.render()
 
         fmt = f'```{query}\n\n{render}\n```\n*Returned {plural(rows):row} in {dt:.2f}ms*'
