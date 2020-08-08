@@ -144,7 +144,9 @@ class Games(commands.Cog):
         if games:
             sql = ("SELECT SUM(current_points - starting_points) AS clan_total, clan_name "
                    "FROM rcs_clan_games "
+                   "INNER JOIN rcs_clans on rcs_clans.clan_tag = rcs_clan_games.clan_tag "
                    "WHERE event_id = $1 "
+                   "GROUP BY clan_name "
                    "ORDER BY clan_total DESC")
             fetch = await conn.fetch(sql, games['games_id'])
             data = []
@@ -166,7 +168,9 @@ class Games(commands.Cog):
             else:
                 sql = ("SELECT SUM(current_points - starting_points) AS clan_total, clan_name "
                        "FROM rcs_clan_games "
+                       "INNER JOIN rcs_clans on rcs_clans.clan_tag = rcs_clan_games.clan_tag "
                        "WHERE event_id = $1 "
+                       "GROUP BY clan_name"
                        "ORDER BY clan_total DESC")
                 fetch = await conn.fetch(sql, games_id)
                 data = []

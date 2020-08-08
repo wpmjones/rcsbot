@@ -187,8 +187,8 @@ class General(commands.Cog):
             p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
         await p.paginate()
 
-    def get_member_list(self, field):
-        sql = (f"SELECT {field}, player_name + ' (' + alt_name + ')' as pname FROM rcs_members "
+    async def get_member_list(self, field):
+        sql = (f"SELECT {field}, player_name || ' (' || alt_name || ')' as pname FROM rcs_members "
                f"INNER JOIN rcs_clans ON rcs_clans.clan_tag = rcs_members.clan_tag "
                f"ORDER BY {field} DESC LIMIT 10")
         fetch = await self.bot.pool.fetch(sql)
@@ -206,7 +206,7 @@ class General(commands.Cog):
     async def top_attacks(self, ctx):
         """Displays top ten attack win totals for all of the RCS"""
         async with ctx.typing():
-            data = self.get_member_list("attack_wins")
+            data = await self.get_member_list("attack_wins")
             title = "RCS Top Ten for Attack Wins"
             ctx.icon = "https://cdn.discordapp.com/emojis/635642869750824980.png"
             p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
@@ -217,7 +217,7 @@ class General(commands.Cog):
     async def top_defenses(self, ctx):
         """Displays top ten defense win totals for all of the RCS"""
         async with ctx.typing():
-            data = self.get_member_list("defense_wins")
+            data = await self.get_member_list("defense_wins")
             title = "RCS Top Ten for Defense Wins"
             ctx.icon = "https://cdn.discordapp.com/emojis/635642869373468704.png"
             p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
@@ -227,7 +227,7 @@ class General(commands.Cog):
     async def top_donations(self, ctx):
         """Displays top ten donation totals for all of the RCS"""
         async with ctx.typing():
-            data = self.get_member_list("donations")
+            data = await self.get_member_list("donations")
             title = "RCS Top Ten for Donations"
             ctx.icon = "https://cdn.discordapp.com/emojis/301032036779425812.png"
             p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
@@ -237,7 +237,7 @@ class General(commands.Cog):
     async def top_trophies(self, ctx):
         """Displays top ten trophy counts for all of the RCS"""
         async with ctx.typing():
-            data = self.get_member_list("trophies")
+            data = await self.get_member_list("trophies")
             title = "RCS Top Ten for Trophies"
             ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
             p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
@@ -247,7 +247,7 @@ class General(commands.Cog):
     async def top_bh_trophies(self, ctx):
         """Displays top ten vs trophy counts for all of the RCS"""
         async with ctx.typing():
-            data = self.get_member_list("vs_trophies")
+            data = await self.get_member_list("vs_trophies")
             title = "RCS Top Ten for Builder Trophies"
             ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
             p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
@@ -257,7 +257,7 @@ class General(commands.Cog):
     async def top_best_trophies(self, ctx):
         """Displays top ten best trophy counts for all of the RCS"""
         async with ctx.typing():
-            data = self.get_member_list("best_trophies")
+            data = await self.get_member_list("best_trophies")
             title = "RCS Top Ten for Best Trophies"
             ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
             p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
@@ -267,7 +267,7 @@ class General(commands.Cog):
     async def top_warstars(self, ctx):
         """Displays top ten war star totals for all of the RCS"""
         async with ctx.typing():
-            data = self.get_member_list("war_stars")
+            data = await self.get_member_list("war_stars")
             title = "RCS Top Ten for War Stars"
             ctx.icon = "https://cdn.discordapp.com/emojis/635642870350741514.png"
             p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)

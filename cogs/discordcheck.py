@@ -115,7 +115,7 @@ class DiscordCheck(commands.Cog):
         danger_channel = self.guild.get_channel(settings['rcs_channels']['danger_bot'])
         botdev_channel = self.guild.get_channel(settings['rcs_channels']['bot_dev'])
         member_role = self.guild.get_role(settings['rcs_roles']['members'])
-        sql = "SELECT short_name, discord_tag, clan_name FROM vw_rcs_discord_checks ORDER BY clan_name"
+        sql = "SELECT short_name, discord_tag, clan_name FROM rcs_discord_checks ORDER BY clan_name"
         fetch = await self.bot.pool.fetch(sql)
         daily_clans = [{"short_name": row['short_name'], "leader_tag": row['discord_tag'],
                         "clan_name": row['clan_name']} for row in fetch]
