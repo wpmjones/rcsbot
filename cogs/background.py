@@ -7,7 +7,6 @@ import re
 from discord.ext import commands, tasks
 from cogs.utils.constants import league_badges, log_types
 from cogs.utils.db import Sql
-from cogs.utils.helper import rcs_tags
 from datetime import datetime, date, timedelta
 from random import randint
 from config import settings
@@ -86,21 +85,22 @@ class Background(commands.Cog):
     @tasks.loop(hours=24.0)
     async def clan_checks(self):
         """Check clans for member count, badge, etc."""
+        conn = self.bot.pool
         print("Starting clan checks")
         if date.today().weekday() != 2:
             return
-        sql = "SELECT MAX(log_date_ AS max_date FROM rcs_task_logs WHERE log_type_id = $1"
-        row = self.bot.pool.fetchrow(sql, log_types['loc_check'])
+        sql = "SELECT MAX(log_date) AS max_date FROM rcs_task_log WHERE log_type_id = $1"
+        row = await conn.fetchrow(sql, log_types['loc_check'])
         if row and row['max_date'] > date.today() - timedelta(days=7):
+            # Skip until 7 days are up
             return
         council_chat = self.guild.get_channel(settings['rcs_channels']['council'])
         bot_dev = self.guild.get_channel(settings['rcs_channels']['bot_dev'])
-        with Sql(as_dict=True) as cursor:
-            cursor.execute("SELECT clanTag, classification FROM rcs_data")
-            fetch = cursor.fetchall()
-            cursor.execute("SELECT TOP 1 startTime, endTime FROM rcs_events "
-                           "WHERE eventType = 11 AND startTime < GETDATE() ORDER BY startTime DESC")
-            cwl_fetch = cursor.fetchone()
+        fetch = await conn.fetch("SELECT clanTag, classification FROM rcs_data")
+        cwl_fetch = conn.fetchrow("SELECT start_time, end_time FROM rcs_events "
+                                  "WHERE event_type = 2 AND start_time < CURRENT_TIMESTAMP "
+                                  "ORDER BY start_time DESC "
+                                  "LIMIT 1")
         if cwl_fetch['endTime'] > datetime.utcnow():
             cwl = True
         else:
@@ -170,22 +170,30 @@ class Background(commands.Cog):
             # Sync changes from SQL to PSQL
             with Sql() as cursor:
                 sql = ("SELECT clanleader, socMedia, notes, feeder, classification, subReddit, leaderReddit, "
-                       "discordTag, shortName, altName, discordServer, clanTag FROM rcs_data")
+                       "discordTag, shortName, altName, discordServer, clanTag, clanName FROM rcs_data")
                 cursor.execute(sql)
                 fetch = cursor.fetchall()
-                print(len(fetch))
                 # TODO Gotta deal with new clans to be inserted into psql
-                sql = ("UPDATE rcs_clans "
-                       "SET leader_name = $1, social_media = $2, notes = $3, family_clan = $4, classification = $5, "
-                       "subreddit = $6, leader_reddit = $7, discord_tag = $8, short_name = $9, alt_name = $10, "
-                       "discord_server = $11 "
-                       "WHERE clan_tag = $12")
+                insert_sql = ("INSERT INTO rcs_clans (leader_name, social_media, notes, family_clan, classification, "
+                              "subreddit, leader_reddit, discord_tag, short_name, alt_name, discord_server, clan_tag, "
+                              "clan_name) "
+                              "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)")
+                update_sql = ("UPDATE rcs_clans "
+                              "SET leader_name = $1, social_media = $2, notes = $3, family_clan = $4, "
+                              "classification = $5, subreddit = $6, leader_reddit = $7, discord_tag = $8, "
+                              "short_name = $9, alt_name = $10, discord_server = $11 "
+                              "WHERE clan_tag = $12")
                 for row in fetch:
-                    try:
-                        await conn.execute(sql, row[0], row[1], row[2], row[3], row[4], row[5], row[6], int(row[7]),
+                    sql = "SELECT COUNT(*) AS num_found FROM rcs_clans WHERE clan_tag = $1"
+                    found = await conn.fetchval(sql, row[11])
+                    if found:
+                        # Clan already exists in postgres, update it
+                        await conn.execute(update_sql, row[0], row[1], row[2], row[3], row[4], row[5], row[6], int(row[7]),
                                            row[8], row[9], row[10], row[11])
-                    except IndexError:
-                        self.bot.logger.exception("update failed")
+                    else:
+                        # Clan does not exist in postgres, insert it
+                        await conn.execute(insert_sql, row[0], row[1], row[2], row[3], row[4], row[5], row[6], int(row[7]),
+                                           row[8], row[9], row[10], row[11], row[12])
             print("SQL synced to postgresql")
             # Start the update process
             sql = ("SELECT clan_tag, leader_name, clan_level, classification, war_wins, win_streak "
@@ -214,11 +222,11 @@ class Background(commands.Cog):
                        "WHERE clanTag = %s")
                 try:
                     with Sql() as cursor:
-                        cursor.execute(sql, (clan.name, clan.level, clan.member_count, clan.war_frequency, clan.type,
+                        cursor.execute(sql, clan.name, clan.level, clan.member_count, clan.war_frequency, clan.type,
                                              description, clan.location.name, clan.badge.url, clan.points,
                                              clan.versus_points, clan.required_trophies, clan.war_win_streak,
                                              clan.war_wins, clan.war_ties, clan.war_losses, clan.public_war_log,
-                                             clan.tag[1:]))
+                                             clan.tag[1:])
                 except:
                     self.bot.logger.exception("MSSQL fail")
                 # Update Postgresql
@@ -264,8 +272,10 @@ class Background(commands.Cog):
             else:
                 family = ""
             clan_dot = "![](%%yellowdot%%) "
-            if row['member_count'] < 35: clan_dot = "![](%%greendot%%) "
-            if row['member_count'] > 45: clan_dot = "![](%%reddot%%) "
+            if row['member_count'] < 35:
+                clan_dot = "![](%%greendot%%) "
+            if row['member_count'] > 45:
+                clan_dot = "![](%%reddot%%) "
             return (f"\n{clan_dot}[{row['clan_name'].replace(' ','&nbsp;')}]"
                     f"(https://link.clashofclans.com/?action=OpenClanProfile&tag={row['clan_tag']}) | "
                     f"[#{row['clan_tag']}](https://www.clashofstats.com/clans/{row['clan_tag']}/members)"

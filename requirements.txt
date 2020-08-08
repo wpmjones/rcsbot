@@ -1,5 +1,5 @@
 asyncpg>=0.18.3
-pymssql>=2.1.4
+pyodbc
 requests>=2.21.0
 numpy>=1.17.4
 Pillow>=7.1.2
