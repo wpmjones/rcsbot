@@ -76,7 +76,7 @@ class Games(commands.Cog):
             return "next", next_games_id
 
     @tasks.loop(minutes=10)
-    async def start_games(self, ctx):
+    async def start_games(self):
         """Task to pull initial Games data for the new clan games"""
         now = datetime.utcnow()
         conn = self.bot.pool
