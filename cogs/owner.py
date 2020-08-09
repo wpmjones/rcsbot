@@ -51,7 +51,6 @@ class OwnerCog(commands.Cog):
             if report:
                 await ctx.send("\n".join(report))
 
-
     @commands.command(name="presence", hidden=True)
     @commands.is_owner()
     async def presence(self, ctx, *, msg: str = "default"):

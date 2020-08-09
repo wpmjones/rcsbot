@@ -471,7 +471,6 @@ class CouncilCog(commands.Cog):
             in_war = ""
             in_cwl = ""
             async for war in self.bot.coc.get_current_wars(tags):
-                print("inside war")
                 try:
                     if not war.is_cwl:
                         if war.state == "preparation":
@@ -480,7 +479,7 @@ class CouncilCog(commands.Cog):
                         if war.state == "inWar":
                             in_war += (f"{war.clan.name} ({war.clan.tag}) has "
                                        f"{war.end_time.seconds_until // 3600:.2f} hours left in war.\n")
-                    if war.is_cwl and war.end_time.seconds_until > 0:
+                    if war.is_cwl and war.state == "inWar":
                         in_cwl += (f"{war.clan.name} ({war.clan.tag}) has "
                                    f"{war.end_time.seconds_until // 3600:.2f} hours left in war.\n")
                 except coc.PrivateWarLog:
@@ -505,7 +504,7 @@ class CouncilCog(commands.Cog):
                                      "RCS CWL War Status",
                                      "These are CWL wars.",
                                      in_cwl,
-                                     discord.Color.dark_red())
+                                     discord.Color.dark_blue())
             if all(x == "" for x in [in_prep, in_war, in_cwl]):
                 await ctx.send("No clans are in war right now.")
 
