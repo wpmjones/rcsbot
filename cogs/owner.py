@@ -4,8 +4,7 @@ import coc
 from discord.ext import commands, tasks
 from cogs.utils.db import Sql
 from cogs.utils import helper
-from datetime import datetime
-from config import settings
+from datetime import datetime, timedelta
 
 
 class OwnerCog(commands.Cog):
@@ -148,6 +147,10 @@ class OwnerCog(commands.Cog):
                                                row['war_id'])
                 else:
                     # War is not in database, add it (happens if bot is down)
+                    if war.end_time.time < datetime.utcnow() - timedelta(days=2):
+                        reported = True
+                    else:
+                        reported = False
                     sql = ("INSERT INTO rcs_wars (clan_tag, clan_attacks, clan_destruction, clan_stars,"
                            "opponent_tag, opponent_name, opponent_destruction, opponent_stars,"
                            "end_time, war_state, team_size, reported)"
@@ -155,7 +158,7 @@ class OwnerCog(commands.Cog):
                     await conn.execute(sql, war.clan.tag[1:], war.clan.attacks_used, war.clan.destruction,
                                        war.clan.stars, war.opponent.tag[1:], war.opponent.name,
                                        war.opponent.destruction, war.opponent.stars,
-                                       war.end_time.time, "warEnded", war.team_size, False)
+                                       war.end_time.time, "warEnded", war.team_size, reported)
                     self.bot.logger.info(f"Added war for {war.clan.name} vs {war.opponent.name} ending "
                                          f"{war.end_time.time}.")
 
