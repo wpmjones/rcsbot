@@ -36,11 +36,10 @@ class Games(commands.Cog):
 
     async def get_current_games(self):
         """Get games ID from RCS-events for the current clan games, if active (else None)"""
-        now = datetime.utcnow()
         sql = ("SELECT event_id, player_points, clan_points  "
                "FROM rcs_events "
-               "WHERE event_type_id = 1 AND $1 BETWEEN start_time AND end_time")
-        row = await self.bot.pool.fetchrow(sql, now)
+               "WHERE event_type_id = 1 AND CURRENT_TIMESTAMP BETWEEN start_time AND end_time")
+        row = await self.bot.pool.fetchrow(sql)
         if row:
             return {"games_id": row['event_id'],
                     "player_points": row['player_points'],
@@ -259,9 +258,7 @@ class Games(commands.Cog):
             return await ctx.send("Please provide a valid clan tag.")
         if player.clan.tag == clan.tag:
             conn = self.bot.pool
-            row = await conn.fetchrow("SELECT MAX(event_id) as event_id FROM rcs_events WHERE event_type_id = 1 "
-                                      "AND start_time < $1", datetime.utcnow())
-            event_id = row['event_id']
+            games = self.get_current_games()
             try:
                 starting_points = player.get_achievement("Games Champion").value - games_points
                 current_points = player.get_achievement("Games Champion").value
@@ -269,7 +266,7 @@ class Games(commands.Cog):
                 self.bot.logger.debug("points assignment failed for some reason")
             sql = (f"INSERT INTO rcs_clan_games (event_id, player_tag, clan_tag, starting_points, current_points) "
                    f"VALUES ($1, $2, $3, $4, $5)")
-            await conn.execute(sql, event_id, player.tag[1:], player.clan.tag[1:], starting_points, current_points)
+            await conn.execute(sql, games['event_id'], player.tag[1:], player.clan.tag[1:], starting_points, current_points)
             await ctx.send(f"{player.name} ({player.clan.name}) has been added to the games database.")
         else:
             response = f"{player.name}({player.tag}) is not currently in {clan.name}({clan.tag})."
@@ -286,15 +283,12 @@ class Games(commands.Cog):
         if not player:
             return await ctx.send("Please provide a valid player tag.")
         conn = self.bot.pool
-        row = await conn.fetchrow("SELECT MAX(event_id) as event_id FROM rcs_events "
-                                  "WHERE event_type_id = 1 AND start_time < $1",
-                                  datetime.utcnow())
-        event_id = row['event_id']
+        games = self.get_current_games()
         starting_points = player.get_achievement("Games Champion").value - games_points
         sql = ("UPDATE rcs_clan_games "
                "SET starting_points = $1 "
                "WHERE event_id = $2 AND player_tag = $3")
-        await conn.execute(sql, starting_points, event_id, player.tag[1:])
+        await conn.execute(sql, starting_points, games['event_id'], player.tag[1:])
         await ctx.send(f"Points for {player.name} have been updated to {games_points}.")
 
 
