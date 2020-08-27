@@ -252,7 +252,7 @@ class General(commands.Cog):
             p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
         await p.paginate()
 
-    @top.commands(name="level", aliases=["levels", "lvl", "xp", "exp", "harr"])
+    @top.command(name="level", aliases=["levels", "lvl", "xp", "exp", "harr"])
     async def top_levels(self, ctx):
         """Displays top ten Exp Levels for all of the RCS"""
         async with ctx.typing():
