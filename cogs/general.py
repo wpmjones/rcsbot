@@ -79,6 +79,25 @@ class General(commands.Cog):
         p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
         await p.paginate()
 
+    @commands.command(name="level", aliases=["levels", "lvl", "xp", "exp", "harr"])
+    async def levels(self, ctx, *, clan: ClanConverter = None):
+        """Exp Level for the whole clan
+
+        **Example:**
+        ++xp Reddit Oak
+        ++level Oak
+        ++lvl #CVCJR89"""
+        if not clan:
+            return await ctx.send("You have not provided a valid clan name or clan tag.")
+        async with ctx.typing():
+            sql = "SELECT exp_level, player_name FROM rcs_members WHERE clan_tag = $1 ORDER BY exp_level DESC"
+            fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
+            page_count = math.ceil(len(fetch) / 25)
+            title = f"Exp Levels for {clan.name}"
+            ctx.icon = "http://cdn.discordapp.com/emojis/748585659085881444.png"
+            p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
+        await p.paginate()
+
     @commands.command(name="trophies", aliases=["trophy"])
     async def trophies(self, ctx, *, clan: ClanConverter = None):
         """Trophy count for the whole clan
@@ -230,6 +249,16 @@ class General(commands.Cog):
             data = await self.get_member_list("donations")
             title = "RCS Top Ten for Donations"
             ctx.icon = "https://cdn.discordapp.com/emojis/301032036779425812.png"
+            p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
+        await p.paginate()
+
+    @top.commands(name="level", aliases=["levels", "lvl", "xp", "exp", "harr"])
+    async def top_levels(self, ctx):
+        """Displays top ten Exp Levels for all of the RCS"""
+        async with ctx.typing():
+            data = await self.get_member_list("exp_level")
+            title = "RCS Top Ten for Exp Level"
+            ctx.icon = "https://cdn.discordapp.com/emojis/748585659085881444.png"
             p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
         await p.paginate()
 
@@ -422,7 +451,7 @@ class General(commands.Cog):
     async def discord(self, ctx, *, clan: ClanConverter = None):
         """Displays a link to specified clan's Discord server"""
         if not clan:
-            return await ctx.send("You must provide an RCS clan name or tag.")
+            return await ctx.send("Here is the link to the RCS Discord Server.  https://discord.gg/X8U9XjD")
         async with ctx.typing():
             sql = "SELECT discord_server FROM rcs_clans WHERE clan_tag = $1"
             fetch = await self.bot.pool.fetchrow(sql, clan.tag[1:])
