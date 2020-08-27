@@ -80,7 +80,6 @@ class Games(commands.Cog):
         now = datetime.utcnow()
         conn = self.bot.pool
         games_id = await self.get_next_games()
-        print(f"start_games:\n  Games ID: {games_id}")
         if games_id:
             sql = "SELECT start_time FROM rcs_events WHERE event_id = $1"
             start_time = await conn.fetchval(sql, games_id)
