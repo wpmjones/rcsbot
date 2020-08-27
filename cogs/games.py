@@ -228,12 +228,18 @@ class Games(commands.Cog):
             clan_size = len(fetch)
             data = []
             for member in fetch:
+                if member['player_name'].startswith("#"):
+                    # Player has left clan and we can't retrieve the player name
+                    player = await self.bot.coc.get_player(member['player_name'])
+                    player_name = player.name
+                else:
+                    player_name = member['player_name']
                 if member['points'] >= player_points:
                     clan_total += player_points
-                    data.append([member['points'], "* " + member['player_name']])
+                    data.append([member['points'], "* " + player_name])
                 else:
                     clan_total += member['points']
-                    data.append([member['points'], member['player_name']])
+                    data.append([member['points'], player_name])
             clan_average = clan_total / clan_size
         page_count = math.ceil(len(data) / 25)
         title = f"{clan.name} Points {clan_total} ({clan_average:.2f} avg)"
