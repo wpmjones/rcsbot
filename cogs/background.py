@@ -173,7 +173,6 @@ class Background(commands.Cog):
                        "discordTag, shortName, altName, discordServer, clanTag, clanName FROM rcs_data")
                 cursor.execute(sql)
                 fetch = cursor.fetchall()
-                # TODO Gotta deal with new clans to be inserted into psql
                 insert_sql = ("INSERT INTO rcs_clans (leader_name, social_media, notes, family_clan, classification, "
                               "subreddit, leader_reddit, discord_tag, short_name, alt_name, discord_server, clan_tag, "
                               "clan_name) "
@@ -194,6 +193,27 @@ class Background(commands.Cog):
                         # Clan does not exist in postgres, insert it
                         await conn.execute(insert_sql, row[0], row[1], row[2], row[3], row[4], row[5], row[6], int(row[7]),
                                            row[8], row[9], row[10], row[11], row[12])
+                # Let's try and delete clans that are not listed in MS SQL
+                sql = "SELECT clan_tag FROM rcs_clans"
+                fetch = await conn.fetch(sql)
+                clan_list = [row['clan_tag'] for row in fetch]
+                sql = "SELECT clanTag FROM rcs_data"
+                cursor.execute(sql)
+                sql_clans = cursor.fetchall()
+                # After this, clan_list should only contain clans that should be removed
+                for row in sql_clans:
+                    try:
+                        clan_list.remove(row[0])
+                    except ValueError:
+                        # This will happen when if there is a value in MS SQL that is not in postgresql
+                        # Theoretically, this will never happen since we've upserted above
+                        pass
+                self.bot.logger.info(f"Removing: {clan_list}")
+                for tag in clan_list:
+                    member_sql = "DELETE FROM rcs_members WHERE clan_tag = $1"
+                    clan_sql = "DELETE FROM rcs_clans WHERE clan_tag = $1"
+                    await conn.execute(member_sql, tag)
+                    await conn.execute(clan_sql, tag)
             print("SQL synced to postgresql")
             # Start the update process
             sql = ("SELECT clan_tag, leader_name, clan_level, classification, war_wins, win_streak "
