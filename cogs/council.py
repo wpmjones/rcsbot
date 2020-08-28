@@ -427,13 +427,13 @@ class CouncilCog(commands.Cog):
                 await conn.execute("DELETE FROM rcs_clans WHERE clan_tag = $1", fetch.clanTag)
                 await ctx.send(f"{fetch.clanName} (feeder for {clan.name}) has been removed.")
             self.bot.logger.info(f"Removing {clan.name}. Issued by {ctx.author} in {ctx.channel}")
-            cursor.execute(f"SELECT leaderReddit, discordTag FROM rcs_data WHERE clanTag = '{clan.tag}'")
-            fetch = cursor.fetchone()
+            sql = "SELECT leader_reddit, discord_tag FROM rcs_clans WHERE clan_tag = $1"
+            fetch = await conn.fetchrow(sql, clan.tag[1:])
             cursor.execute("DELETE FROM rcs_data WHERE clanTag = ?", clan.tag[1:])
             await conn.execute("DELETE FROM rcs_clans WHERE clan_tag = $1", clan.tag[1:])
         # remove leader's roles
         guild = ctx.bot.get_guild(settings['discord']['rcsguild_id'])
-        user = guild.get_member(int(fetch['discordTag']))
+        user = guild.get_member(int(fetch['discord_tag']))
         if user:
             role_obj = guild.get_role(int(settings['rcs_roles']['leaders']))
             await user.remove_roles(role_obj,
@@ -450,9 +450,9 @@ class CouncilCog(commands.Cog):
         helper.rcs_tags.clear_cache()
         helper.rcs_names_tags.clear_cache()
         helper.get_clan.clear_cache()
-        await ctx.send(f"Please don't forget to remove {fetch['leaderReddit'][22:]} as a mod from META and "
+        await ctx.send(f"Please don't forget to remove {fetch['leader_reddit'][22:]} as a mod from META and "
                        f"update the META clan directory.  I've removed the Leaders, RCS Leaders, and Clan "
-                       f"Recruiters role from <@{fetch['discordTag']}>. If they have any other roles, "
+                       f"Recruiters role from <@{fetch['discord_tag']}>. If they have any other roles, "
                        f"you will need to remove them manually.")
 
     @commands.command(name="in_war", aliases=["inwar"], hidden=True)
