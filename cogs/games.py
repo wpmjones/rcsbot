@@ -79,10 +79,8 @@ class Games(commands.Cog):
         """Task to pull initial Games data for the new clan games"""
         now = datetime.utcnow()
         conn = self.bot.pool
-        games_id = await self.get_next_games()
+        games_id, start_time = await self.get_next_games()
         if games_id:
-            sql = "SELECT start_time FROM rcs_events WHERE event_id = $1"
-            start_time = await conn.fetchval(sql, games_id)
             print(f"start_games:\n  Start Time: {start_time}")
             if start_time - now < timedelta(minutes=10):
                 to_insert = []
