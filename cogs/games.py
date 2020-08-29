@@ -22,6 +22,19 @@ class Games(commands.Cog):
         self.start_games.cancel()
         self.update_games.cancel()
 
+    async def get_games(self, games_id):
+        """Get info on specified games"""
+        sql = ("SELECT player_points, clan_points "
+               "FROM rcs_events "
+               "WHERE event_id = $1")
+        row = await self.bot.pool.fetchrow(sql, games_id)
+        if row:
+            return {"games_id": games_id,
+                    "player_points": row['player_points'],
+                    "clan_points": row['clan_points']}
+        else:
+            return None
+
     async def get_last_games(self):
         """Get games ID from rcs_events for the most recent clan games"""
         now = datetime.utcnow()
@@ -67,6 +80,9 @@ class Games(commands.Cog):
         now = datetime.utcnow()
         time_to_last = now - _last
         time_to_next = _next - now
+        self.bot.logger.info(now)
+        self.bot.logger.info(time_to_last)
+        self.bot.logger.info(time_to_next)
         if time_to_next > time_to_last:
             # deal with last games
             return "last", last_games_id
@@ -156,6 +172,7 @@ class Games(commands.Cog):
             await p.paginate()
         else:
             closest, games_id = await self.closest_games()
+            games = await self.get_games(games_id)
             if closest == "next":
                 sql = "SELECT start_time FROM rcs_events WHERE event_id = $1"
                 next_start = await conn.fetchval(sql, games_id)
@@ -166,7 +183,7 @@ class Games(commands.Cog):
                        "FROM rcs_clan_games "
                        "INNER JOIN rcs_clans on rcs_clans.clan_tag = rcs_clan_games.clan_tag "
                        "WHERE event_id = $1 "
-                       "GROUP BY clan_name"
+                       "GROUP BY clan_name "
                        "ORDER BY clan_total DESC")
                 fetch = await conn.fetch(sql, games_id)
                 data = []
