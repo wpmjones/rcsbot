@@ -23,6 +23,8 @@ class SeasonConfig(commands.Cog, command_attrs=dict(hidden=True)):
         now = datetime.utcnow()
         season_end = get_season_end()
         end = datetime(year=int(season_end[:4]), month=int(season_end[5:7]), day=int(season_end[-2:]), hour=5)
+        self.bot.logger.debug(f"\nCurrent time: {now}\nSeason end: {season_end}\nend: {end}\n"
+                              f"Next Monday: {self.next_last_monday()}")
         if now > end:
             update_season(self.next_last_monday())
 
