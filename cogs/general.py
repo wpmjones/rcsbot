@@ -440,8 +440,8 @@ class General(commands.Cog):
         """Displays a link to specified clan's subreddit"""
         if not clan:
             return await ctx.send("You must provide an RCS clan name or tag.")
-        sql = "SELECT "
-        fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
+        sql = "SELECT subreddit FROM rcs_clans WHERE clan_tag = $1"
+        fetch = await self.bot.pool.fetchrow(sql, clan.tag[1:])
         if fetch['subreddit'] != "":
             await ctx.send(fetch['subreddit'])
         else:
