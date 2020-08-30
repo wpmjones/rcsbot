@@ -12,11 +12,16 @@ class Draft(commands.Cog):
     @commands.command(name="draft")
     @commands.has_role("TDW Leaders")
     async def draft(self, ctx, user: discord.Member):
-        print("ok")
+        """For drafting members in the Draft Wars. Must already have a draft role assigned to draft members to
+        your team.
+
+        **Permissions:**
+        Draft War Leaders
+
+        **Example:**
+        ++draft @TubaKid"""
         draft_roles = [settings['rcs_roles']['innuendo'],
                        settings['rcs_roles']['aardvark'],
-                       settings['rcs_roles']['foxtrot'],
-                       settings['rcs_roles']['heroes']
                        ]
         team_role = None
         try:
@@ -42,12 +47,11 @@ class Draft(commands.Cog):
             self.bot.logger.exception("fail")
 
     @commands.command(name="undraft")
-    @commands.has_role("TDW Leaders")
+    @commands.has_role("TDW Admin")
     async def undraft(self, ctx, user: discord.Member):
+        """For removing members from the draft roles. Must """
         draft_roles = [settings['rcs_roles']['innuendo'],
                        settings['rcs_roles']['aardvark'],
-                       settings['rcs_roles']['foxtrot'],
-                       settings['rcs_roles']['heroes']
                        ]
         guild = ctx.bot.get_guild(settings['discord']['rcsguild_id'])
         for role in draft_roles:
