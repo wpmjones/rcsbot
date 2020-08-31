@@ -10,7 +10,7 @@ class Draft(commands.Cog):
         self.bot = bot
 
     @commands.command(name="draft")
-    @commands.has_role("TDW Leaders")
+    @commands.has_role("TDW Admin")
     async def draft(self, ctx, user: discord.Member):
         """For drafting members in the Draft Wars. Must already have a draft role assigned to draft members to
         your team.

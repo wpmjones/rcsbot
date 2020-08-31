@@ -28,6 +28,7 @@ if enviro == "LIVE":
                           "cogs.background",
                           "cogs.council",
                           "cogs.discordcheck",
+                          "cogs.draft",
                           "cogs.eggs",
                           "cogs.games",
                           "cogs.general",
@@ -45,6 +46,7 @@ elif enviro == "home":
     coc_email = settings['supercell']['user2']
     coc_pass = settings['supercell']['pass2']
     initial_extensions = ["cogs.admin",
+                          "cogs.background",
                           "cogs.council",
                           "cogs.eggs",
                           "cogs.games",
