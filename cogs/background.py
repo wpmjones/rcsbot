@@ -91,9 +91,12 @@ class Background(commands.Cog):
             return
         sql = "SELECT MAX(log_date) AS max_date FROM rcs_task_logs WHERE log_type_id = $1"
         row = await conn.fetchrow(sql, log_types['loc_check'])
-        if row and row['max_date'] > date.today() - timedelta(days=7):
-            # Skip until 7 days are up
-            return
+        if row:
+            if row['max_date'] > date.today() - timedelta(days=7):
+                # Skip until 7 days are up
+                return
+        else:
+            self.bot.logger.info("No log found for clan_checks")
         council_chat = self.guild.get_channel(settings['rcs_channels']['council'])
         bot_dev = self.guild.get_channel(settings['rcs_channels']['bot_dev'])
         fetch = await conn.fetch("SELECT clanTag, classification FROM rcs_data")
