@@ -468,6 +468,7 @@ class General(commands.Cog):
         ++cwl list - Shows list of RCS clans in their leagues
         ++cwl Reddit Example Master II - assigns your clan to the specified league
         """
+        # TODO remove ability to update manually, add clan converter for clan specific request
         conn = self.bot.pool
         # Respond with list
         if args[0] in ["all", "list"]:
