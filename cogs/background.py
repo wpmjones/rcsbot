@@ -254,13 +254,14 @@ class Background(commands.Cog):
                        "SET clan_name = $1, clan_level = $2, member_count = $3, war_frequency = $4, clan_type = $5, "
                        "clan_description = $6, clan_location = $7, badge_url = $8, clan_points = $9, "
                        "clan_vs_points = $10, required_trophies = $11, win_streak = $12, war_wins = $13, "
-                       "war_ties = $14, war_losses = $15, war_log_public = $16 "
-                       "WHERE clan_tag = $17")
+                       "war_ties = $14, war_losses = $15, war_log_public = $16, cwl_league = $17 "
+                       "WHERE clan_tag = $18")
                 try:
+                    cwl_league = clan.war_league.name.replace("League ", "")
                     await conn.execute(sql, clan.name, clan.level, clan.member_count, clan.war_frequency, clan.type,
                                        description, clan.location.name, clan.badge.url, clan.points,
                                        clan.versus_points, clan.required_trophies, clan.war_win_streak, clan.war_wins,
-                                       clan.war_ties, clan.war_losses, clan.public_war_log, clan.tag[1:])
+                                       clan.war_ties, clan.war_losses, clan.public_war_log, cwl_league, clan.tag[1:])
                 except:
                     self.bot.logger.exception("postgreSQL fail")
             if leader_changes and 8 < now.hour < 12:
