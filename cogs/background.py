@@ -211,7 +211,8 @@ class Background(commands.Cog):
                         # This will happen when if there is a value in MS SQL that is not in postgresql
                         # Theoretically, this will never happen since we've upserted above
                         pass
-                self.bot.logger.info(f"Removing: {clan_list}")
+                if len(clan_list) > 0:
+                    self.bot.logger.info(f"Removing: {clan_list}")
                 for tag in clan_list:
                     member_sql = "DELETE FROM rcs_members WHERE clan_tag = $1"
                     clan_sql = "DELETE FROM rcs_clans WHERE clan_tag = $1"
