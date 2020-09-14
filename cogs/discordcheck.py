@@ -53,7 +53,7 @@ class DiscordCheck(commands.Cog):
         async for message in notes_channel.history(limit=None, oldest_first=True):
             if message.content:
                 messages += message.content + " - "
-        regex = r"[tT]ag:\s[PYLQGRJCUV0289]+|#[PYLQGRJCUV0289]{6,}"
+        regex = r"[tT]ag:\s[PYLQGRJCOUV0289]+|#[PYLQGRJOCUV0289]{6,}"
         ban_list = []
         for match in re.finditer(regex, messages):
             if not match.group().startswith("#"):
@@ -92,9 +92,9 @@ class DiscordCheck(commands.Cog):
                                                  player.clan.tag[1:],
                                                  player.tag[1:]))
             except coc.NotFound:
-                self.bot.logger.warning(f"Exception on tag: {tag}")
+                pass
             except:
-                self.bot.logger.exception("Other failure")
+                self.bot.logger.exception(f"Other failure on {tag}")
         try:
             # Add to task log
             sql = ("INSERT INTO rcs_task_logs (log_type_id, log_date, argument) "
