@@ -232,7 +232,7 @@ class Games(commands.Cog):
             sql = ("SELECT player_points "
                    "FROM rcs_events "
                    "WHERE event_type_id = 1 and start_time < NOW() "
-                   "ORDER BY start_time DESC")
+                   "ORDER BY start_time DESC LIMIT 1")
             player_points = await conn.fetchval(sql)
             sql = ("SELECT player_name, points "
                    "FROM rcs_clan_games_players "

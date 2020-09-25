@@ -385,7 +385,7 @@ class General(commands.Cog):
     @link.command(name="list", hidden=True)
     @is_leader_or_mod_or_council()
     async def link_list(self, ctx, clan: ClanConverter = None):
-        """List linked players for the spcified clan
+        """List linked players for the specified clan
 
         **Permissions:**
         RCS Leaders
