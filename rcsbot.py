@@ -6,6 +6,7 @@ import aiohttp
 import asyncio
 
 from discord.ext import commands
+from coc.ext import discordlinks
 from cogs.utils import context, category
 from cogs.utils.db import Table
 from cogs.utils.error_handler import clash_event_error
@@ -46,7 +47,6 @@ elif enviro == "home":
     coc_email = settings['supercell']['user2']
     coc_pass = settings['supercell']['pass2']
     initial_extensions = ["cogs.admin",
-                          "cogs.background",
                           "cogs.council",
                           "cogs.eggs",
                           "cogs.games",
@@ -96,6 +96,9 @@ coc_client = coc.login(coc_email,
                        throttle_limit=25,
                        correct_tags=True)
 
+links_client = discordlinks.login(settings['links']['user'],
+                                  settings['links']['pass'])
+
 
 class RcsBot(commands.Bot):
     def __init__(self):
@@ -104,6 +107,7 @@ class RcsBot(commands.Bot):
                          case_insensitive=True)
         self.remove_command("help")
         self.coc = coc_client
+        self.links = links_client
         self.logger = logger
         self.color = discord.Color.dark_red()
         self.client_id = settings['discord']['rcs_client_id']

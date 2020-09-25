@@ -354,23 +354,14 @@ class General(commands.Cog):
             return await ctx.send("That's not a real Discord user. Try again.")
         if player.clan.tag[1:] in rcs_names_tags().values() or player.clan.name.lower().startswith("reddit"):
             try:
-                # Add to RCS specific link table
-                # TODO Change this to helper functions in db
-                await Psql(self.bot).link_user(player.tag[1:], user.id)
-                # Add to global link table
-                token = get_link_token()
-                header = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-                async with self.bot.session as session:
-                    payload = {"playerTag": player.tag, "discordId": user.id}
-                    async with session.post("http://api.amazingspinach.com/links", json=payload, headers=header) as r:
-                        if r.status > 300:
-                            await ctx.send(f"ERROR: There was a problem adding data to the global repository.\n"
-                                           f"{r.status}: {r.text}")
+                # Add to Mike's Links API database
+                await self.bot.links.add_link(player.tag, user.id)
                 # Add member role to discord user
                 rcs_guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
                 member = rcs_guild.get_member(user.id)
                 if not member:
-                    return await ctx.send(f"{user.display_name} is not a member of the RCS Discord Server.")
+                    return await ctx.send(f"{user.display_name} is not a member of the RCS Discord Server "
+                                          f"so I couldn't add the Member role.")
                 member_role = rcs_guild.get_role(settings['rcs_roles']['members'])
                 await member.add_roles(member_role)
                 await ctx.confirm()
@@ -401,15 +392,19 @@ class General(commands.Cog):
             if not clan:
                 return await ctx.send("You must provide an RCS clan name or tag.")
             tags = [x.tag[1:] for x in clan.members]
-            sql = "SELECT discord_id, player_tag FROM rcs_discord_links WHERE player_tag = any($1::TEXT[])"
-            fetch = await self.bot.pool.fetch(sql, tags)
-            if not fetch:
-                return await ctx.send(f"No linked players found for {clan.name}.")
-            response = ""
-            for row in fetch:
-                player = await self.bot.coc.get_player(row['player_tag'])
-                response += f"<@{row['discord_id']}> is linked to {player.name} ({player.tag})\n"
-        await ctx.send_text(ctx.channel, response)
+            links = await self.bot.links.get_links(*tags)
+            linked = not_linked = ""
+            for player_tag, discord_id in links:
+                player = await self.bot.coc.get_player(player_tag)
+                if discord_id:
+                    linked += f"<@{discord_id}> is linked to {player.name} ({player.tag})\n"
+                else:
+                    not_linked += f"{player.name} ({player.tag}) is not currently linked to a Discord account.\n"
+        if linked:
+            linked = f"**Linked members of {clan.name}**\n" + linked
+        if not_linked:
+            not_linked = f"**Members of {clan.name} who are not linked**\n" + not_linked
+        await ctx.send_text(ctx.channel, linked + not_linked)
 
     @commands.command(name="unlink", hidden=True)
     @is_leader_or_mod_or_council()
@@ -427,12 +422,10 @@ class General(commands.Cog):
         **Other info:**
         I plan to add an unlink all command at some point
         """
-        # TODO USeless, switch to API
         if not player:
             self.bot.logger.error(f"{ctx.author} provided some bad info for the link command.")
             return await ctx.send("I don't particularly care for that player. Wanna try again?")
-        sql = "DELETE FROM rcs_discord_links WHERE player_tag = $1"
-        await self.bot.pool.execute(sql, player.tag[1:])
+        await self.bot.links.delete_link(player.tag)
         await ctx.confirm()
 
     @commands.command(name="reddit", aliases=["subreddit"])
