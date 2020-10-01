@@ -14,6 +14,18 @@ from config import settings, color_pick
 from datetime import datetime
 
 
+def to_time(seconds):
+    d, r = divmod(seconds, 86400)
+    h, r = divmod(r, 3600)
+    m, s = divmod(r, 60)
+    if d > 0:
+        return f"{d:.0f}d {h:.0f}h"
+    elif h > 0:
+        return f"{h:.0f}h {m:.0f}m"
+    else:
+        return f"{m:.0f}m"
+
+
 class CouncilCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -467,6 +479,8 @@ class CouncilCog(commands.Cog):
         async with ctx.typing():
             msg = await ctx.send("Loading...")
             tags = helper.rcs_tags(prefix=True)
+            if "#UUJ28VY" in tags:
+                tags.remove("#UUJ28VY")   # temp fix for Timeout error
             in_prep = ""
             in_war = ""
             in_cwl = ""
@@ -475,13 +489,13 @@ class CouncilCog(commands.Cog):
                     if not war.is_cwl:
                         if war.state == "preparation":
                             in_prep += (f"{war.clan.name} ({war.clan.tag}) has "
-                                        f"{war.start_time.seconds_until // 3600:.2f} hours until war.\n")
+                                        f"{to_time(war.start_time.seconds_until)} until war.\n")
                         if war.state == "inWar":
                             in_war += (f"{war.clan.name} ({war.clan.tag}) has "
-                                       f"{war.end_time.seconds_until // 3600:.2f} hours left in war.\n")
+                                       f"{to_time(war.end_time.seconds_until)} left in war.\n")
                     if war.is_cwl and war.state == "inWar":
                         in_cwl += (f"{war.clan.name} ({war.clan.tag}) has "
-                                   f"{war.end_time.seconds_until // 3600:.2f} hours left in war.\n")
+                                   f"{to_time(war.end_time.seconds_until)} left in war.\n")
                 except coc.PrivateWarLog:
                     pass
                 except Exception as e:
