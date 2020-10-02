@@ -479,8 +479,6 @@ class CouncilCog(commands.Cog):
         async with ctx.typing():
             msg = await ctx.send("Loading...")
             tags = helper.rcs_tags(prefix=True)
-            if "#UUJ28VY" in tags:
-                tags.remove("#UUJ28VY")   # temp fix for Timeout error
             in_prep = ""
             in_war = ""
             in_cwl = ""
