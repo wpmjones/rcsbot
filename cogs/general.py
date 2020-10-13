@@ -3,11 +3,10 @@ import math
 import pathlib
 
 from discord.ext import commands
-from cogs.utils.db import Sql, Psql, get_link_token
 from cogs.utils.checks import is_leader_or_mod_or_council
 from cogs.utils.converters import PlayerConverter, ClanConverter
 from cogs.utils.constants import cwl_league_names, cwl_league_order
-from cogs.utils.helper import rcs_names_tags, get_link_token
+from cogs.utils.helper import rcs_names_tags
 from cogs.utils import formats
 from cogs.utils import season as coc_season
 from PIL import Image, ImageFont, ImageDraw
@@ -418,9 +417,6 @@ class General(commands.Cog):
 
         **Example:**
         ++unlink #UV8QQ0RV
-
-        **Other info:**
-        I plan to add an unlink all command at some point
         """
         if not player:
             self.bot.logger.error(f"{ctx.author} provided some bad info for the link command.")
