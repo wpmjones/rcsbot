@@ -702,8 +702,9 @@ class CouncilCog(commands.Cog):
                 sql = "UPDATE rcs_clans SET notes = $1 WHERE clan_tag = $1"
                 await conn.execute(sql, new_notes, clan.tag[1:])
                 flag += 1
-        sql = "UPDATE rcs_data SET discordServer = ? WHERE clanTag = ?"
-        cursor.execute(sql, (new_discord, clan.tag[1:]))
+        with Sql() as cursor:
+            sql = "UPDATE rcs_data SET discordServer = ? WHERE clanTag = ?"
+            cursor.execute(sql, (new_discord, clan.tag[1:]))
         sql = "UPDATE rcs_clans SET discord_server = $1 WHERE clan_tag = $2"
         await conn.execute(sql, new_discord, clan.tag[1:])
         flag += 1
