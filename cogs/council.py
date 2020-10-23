@@ -688,7 +688,7 @@ class CouncilCog(commands.Cog):
             return await ctx.send("Please provide the new invite link for this Discord server.")
         flag = 0
         conn = self.bot.pool
-        sql = "SELECT notes FROM rcs_data WHERE clanTag = $1"
+        sql = "SELECT notes FROM rcs_clans WHERE clanTag = $1"
         old_notes = await conn.fetchval(sql, clan.tag[1:])
         if old_notes is not None:
             if "Discord: [Invite]" in old_notes:
