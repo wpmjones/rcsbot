@@ -28,14 +28,10 @@ def check_is_council(ctx):
     if ctx.guild.id == 566451504332931073:
         return True
     rcs_guild = ctx.bot.get_guild(settings['discord']['rcsguild_id'])
-    print(rcs_guild.name)
     council_role = rcs_guild.get_role(settings['rcs_roles']['council'])
-    print(council_role.name)
     rcs_member = rcs_guild.get_member(ctx.author.id)
     if not rcs_member:
         return False
-    print(rcs_member.name)
-    print(rcs_member.roles)
     if not rcs_member.roles:
         return False
     if council_role in rcs_member.roles:
