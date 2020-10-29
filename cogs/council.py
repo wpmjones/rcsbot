@@ -152,7 +152,7 @@ class CouncilCog(commands.Cog):
     @commands.command(name="userinfo", aliases=["ui"], hidden=True)
     @is_mod_or_council()
     async def user_info(self, ctx, user: discord.Member):
-        """Command to retreive join date and other info for Discord user.
+        """Command to retrieve join date and other info for Discord user.
 
         **Permissions:**
         Chat Mods
