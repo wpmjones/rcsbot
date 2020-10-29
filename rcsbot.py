@@ -99,12 +99,17 @@ coc_client = coc.login(coc_email,
 links_client = discordlinks.login(settings['links']['user'],
                                   settings['links']['pass'])
 
+intents = discord.Intents.default()
+intents.members = True
+
 
 class RcsBot(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=prefix,
                          description=description,
-                         case_insensitive=True)
+                         case_insensitive=True,
+                         intents=intents,
+                         )
         self.remove_command("help")
         self.coc = coc_client
         self.links = links_client
