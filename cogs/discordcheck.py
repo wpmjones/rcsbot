@@ -3,7 +3,7 @@ import coc
 import re
 
 from discord.ext import commands, tasks
-from datetime import datetime, time, date
+from datetime import datetime, date
 from cogs.utils.constants import log_types
 from cogs.utils.db import Sql
 from cogs.utils.helper import rcs_tags, get_clan

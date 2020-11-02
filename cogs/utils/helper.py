@@ -51,7 +51,7 @@ def get_clan(tag):
         sql = ("SELECT clanName, subReddit, clanLeader, cwlLeague, discordServer, feeder, "
                "classification, discordTag as leaderTag "
                "FROM rcs_data "
-               "WHERE clanTag = %s")
+               "WHERE clanTag = ?")
         cursor.execute(sql, tag)
         clan = cursor.fetchone()
     return clan
