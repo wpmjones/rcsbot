@@ -2,12 +2,12 @@ import discord
 import math
 import time
 
-from discord.ext import commands
+from discord.ext import commands, tasks
 from cogs.utils import formats
 from cogs.utils.converters import ClanConverter
 from cogs.utils.db import Sql
 from cogs.utils.helper import rcs_tags
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class Push(commands.Cog):
@@ -15,9 +15,56 @@ class Push(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.title = "2020 Spring Trophy Push"
-        self.start_time = datetime(2020, 4, 27, 5, 0)
-        self.end_time = datetime(2020, 5, 25, 4, 55)
+        self.title = "2020 Thanksgiving Trophy Push"
+        self.start_time = datetime(2020, 11, 23, 5, 0)
+        self.end_time = datetime(2020, 11, 29, 4, 55)
+        self.update_push.start()
+
+    def cog_unload(self):
+        self.update_push.cancel()
+
+    @tasks.loop(minutes=12)
+    async def update_push(self):
+        """Task to pull API data for the push"""
+        now = datetime.utcnow()
+        if self.start_time < now < self.end_time:
+            with Sql(autocommit=True) as cursor:
+                sql = "SELECT playerTag from rcspush_2020_2"
+                cursor.execute(sql)
+                fetch = cursor.fetchall()
+                player_tags = []
+                for row in fetch:
+                    player_tags.append(row[0])
+                sql_1 = ("UPDATE rcspush_2020_2 "
+                         "SET currentTrophies = ?, currentThLevel = ? "
+                         "WHERE playerTag = ?")
+                sql_2 = "SELECT legendTrophies FROM rcspush_2020_2 WHERE playerTag = ?"
+                sql_3 = ("UPDATE rcspush_2020_2 "
+                         "SET legendTrophies = ? "
+                         "WHERE playerTag = ?")
+                counter = 0
+                try:
+                    for tag in player_tags:
+                        # async for player in self.bot.coc.get_players(player_tags):
+                        player = await self.bot.coc.get_player(tag)
+                        if player.clan:
+                            cursor.execute(sql_1, player.trophies, player.town_hall, player.tag[1:])
+                        if (player.town_hall < 12 and
+                                player.trophies >= 5000 and
+                                datetime.utcnow() > self.end_time - timedelta(days=2)):
+                            cursor.execute(sql_2, player.tag[1:])
+                            row = cursor.fetchrow()
+                            legend_trophies = row[0]
+                            if player.trophies > legend_trophies:
+                                cursor.execute(sql_3, player.trophies, player.tag[1:])
+                        counter += 1
+                except:
+                    self.bot.logger.exception(f"Failed on {player_tags[counter]}")
+            print("push update complete")
+
+    @update_push.before_loop
+    async def before_update_push(self):
+        await self.bot.wait_until_ready()
 
     @commands.group(name="push", invoke_without_command=True)
     async def push(self, ctx):
@@ -64,6 +111,8 @@ class Push(commands.Cog):
     @push.command(name="all")
     async def push_all(self, ctx):
         """Returns list of all clans ranked by score (only top 30 trophies contribute to the score)."""
+        if datetime.utcnow() < self.start_time:
+            return await ctx.invoke(self.push_info)
         with Sql() as cursor:
             cursor.execute("SELECT SUM(clanPoints) AS totals, clanName FROM vRCSPush30 "
                            "GROUP BY clanName "
@@ -78,6 +127,8 @@ class Push(commands.Cog):
     @push.command(name="diff")
     async def push_diff(self, ctx):
         """Returns list of clans ranked by score, showing the differential to the top clan."""
+        if datetime.utcnow() < self.start_time:
+            return await ctx.invoke(self.push_info)
         with Sql() as cursor:
             cursor.execute("SELECT SUM(clanPoints) AS totals, clanName FROM vRCSPush30 "
                            "GROUP BY clanName "
@@ -99,6 +150,8 @@ class Push(commands.Cog):
     @push.command(name="top")
     async def push_top(self, ctx):
         """Returns list of top 10 players for each TH level."""
+        if datetime.utcnow() < self.start_time:
+            return await ctx.invoke(self.push_info)
         # TODO change author icon with TH
         with Sql() as cursor:
             cursor.execute("SELECT currentTrophies, playerName "
@@ -112,6 +165,8 @@ class Push(commands.Cog):
     @push.command(name="th")
     async def push_th(self, ctx, th_level: int):
         """Returns list of top 100 players at the TH specified (there must be a space between th and the number)."""
+        if datetime.utcnow() < self.start_time:
+            return await ctx.invoke(self.push_info)
         if (th_level > 13) or (th_level < 6):
             return await ctx.send("You have not provided a valid town hall level.")
         with Sql() as cursor:
@@ -158,6 +213,8 @@ class Push(commands.Cog):
     @push.command(name="gain", aliases=["gains", "increase"])
     async def push_gain(self, ctx):
         """Returns top 25 players based on number of trophies gained."""
+        if datetime.utcnow() < self.start_time:
+            return await ctx.invoke(self.push_info)
         with Sql() as cursor:
             cursor.execute("SELECT trophyGain, player FROM rcspush_vwGains ORDER BY trophyGain DESC")
             fetch = cursor.fetchall()
@@ -170,6 +227,8 @@ class Push(commands.Cog):
     @push.command(name="clan")
     async def push_clan(self, ctx, clan: ClanConverter = None):
         """Returns a list of players from the specified clan with their push points"""
+        if datetime.utcnow() < self.start_time:
+            return await ctx.invoke(self.push_info)
         if not clan:
             return await ctx.send("Please provide a valid clan name/tag when using this command.")
         print(clan)
@@ -195,68 +254,23 @@ class Push(commands.Cog):
         start = time.perf_counter()
         player_list = []
         async for clan in self.bot.coc.get_clans(rcs_tags()):
-            if clan.tag == "#9L2PRL0U":  # Change to in list if more than one clan bails
-                continue
-            for member in clan.itermembers:
+            for member in clan.members:
                 player_list.append(member.tag)
-        team_boom = ['#20PCPRJ8', '#2QG2C9LG8', '#288UUGPGG', '#YQCVUGJU', '#2G0YV209J', '#9P0PPJV8',
-                     '#9PYP8VY90', '#982V9288G', '#2Q8GQLU9R', '#22LPCGV8', '#RU9LYLG9', '#28VYCQGRU',
-                     '#P2P9QU8C2', '#GVJP200U', '#20CCV90UQ', '#Y9C2909R', '#2UL9UVCC2', '#89QQ9QRJ0',
-                     '#8JQGGU2Q0', '#GPUQYRJC', '#R8JVUGVU', '#V8UQ0G0L', '#G82J00P', '#8VQY0GP2',
-                     '#88Y0YL98P', '#80LPL9PRP', '#Y0RPYJPC', '#9L9VCYQQ2', '#9P8PCUY8L', '#YY82YY2Y',
-                     '#2LQPJVR0', '#2PYQR02GV', '#URLVC082', '#PJ8V0QUU', '#2LJJY8JGQ', '#CYUVGPPQ',
-                     '#PY90C2CY', '#L0GYY8V2', '#8L8PLY2Q2', '#LQY0UUV8V', '#2VVQJ9GG2', '#9Y9GCYRJJ',
-                     '#8R2QVYYG', '#2VCG8PPVU', '#2UPPC0GUC', '#8LVCUQGRG', '#2LQVURL9L', '#PCR8QGY9',
-                     '#2YCV2JRRJ', '#JLPC2GCU']
-        player_list.extend(team_boom)
-        print(len(player_list))
         players_many = []
-        to_insert = []
         async for player in self.bot.coc.get_players(player_list):
-            players_many.append((player.tag[1:], player.clan.tag[1:],
-                                 player.trophies if player.trophies <= 5000 else 5000,
-                                 player.trophies if player.trophies <= 5000 else 5000,
+            players_many.append([player.tag[1:], player.clan.tag[1:],
+                                 player.trophies, player.trophies,
                                  player.best_trophies, player.town_hall, player.name.replace("'", "''"),
-                                 player.clan.name))
-            to_insert.append({
-                "player_tag": player.tag[1:],
-                "clan_tag": player.clan.tag[1:],
-                "starting_trophies": player.trophies if player.trophies <= 5000 else 5000,
-                "current_trophies": player.trophies if player.trophies <= 5000 else 5000,
-                "best_trophies": player.best_trophies,
-                "starting_th_level": player.town_hall,
-                "player_name": player.name.replace("'", "''"),
-                "clan_name": player.clan.name
-            })
-        print("Player list assembled.")
+                                 player.clan.name])
         with Sql() as cursor:
-            sql = (f"INSERT INTO rcspush_2020_1 "
+            cursor.fast_executemany = True
+            sql = (f"INSERT INTO rcspush_2020_2 "
                    f"(playerTag, clanTag, startingTrophies, currentTrophies, "
                    f"bestTrophies, startingThLevel, playerName, clanName) "
                    f"VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
             cursor.executemany(sql, players_many)
-            sql = ("UPDATE rcspush_2020_1 SET clanTag = '9L2PRL0U' "
-                   "WHERE playerTag IN ('#20PCPRJ8', '#2QG2C9LG8', '#288UUGPGG', '#YQCVUGJU', '#2G0YV209J', "
-                   "'#9P0PPJV8', "
-                   "'#9PYP8VY90', '#982V9288G', '#2Q8GQLU9R', '#22LPCGV8', '#RU9LYLG9', '#28VYCQGRU', '#P2P9QU8C2', "
-                   "'#GVJP200U', '#20CCV90UQ', '#Y9C2909R', '#2UL9UVCC2', '#89QQ9QRJ0', '#8JQGGU2Q0', '#GPUQYRJC', "
-                   "'#R8JVUGVU', '#V8UQ0G0L', '#G82J00P', '#8VQY0GP2', '#88Y0YL98P', '#80LPL9PRP', '#Y0RPYJPC', "
-                   "'#9L9VCYQQ2', '#9P8PCUY8L', '#YY82YY2Y', '#2LQPJVR0', '#2PYQR02GV', '#URLVC082', '#PJ8V0QUU', "
-                   "'#2LJJY8JGQ', '#CYUVGPPQ', '#PY90C2CY', '#L0GYY8V2', '#8L8PLY2Q2', '#LQY0UUV8V', '#2VVQJ9GG2', "
-                   "'#9Y9GCYRJJ', '#8R2QVYYG', '#2VCG8PPVU', '#2UPPC0GUC', '#8LVCUQGRG', '#2LQVURL9L', '#PCR8QGY9', "
-                   "'#2YCV2JRRJ', '#JLPC2GCU')")
-            cursor.execute(sql)
-        conn = self.bot.pool
-        sql = ("INSERT INTO rcspush_2020_1 (player_tag, clan_tag, starting_trophies, current_trophies, best_trophies, "
-               "starting_th_level, player_name, clan_name) "
-               "SELECT x.player_tag, x.clan_tag, x.starting_trophies, x.current_trophies, x.best_trophies, "
-               "x.starting_th_level, x.player_name, x.clan_name "
-               "FROM jsonb_to_recordset($1::jsonb) as x (player_tag TEXT, clan_tag TEXT, starting_trophies INTEGER, "
-               "current_trophies INTEGER, best_trophies INTEGER, starting_th_level INTEGER, player_name TEXT, "
-               "clan_name TEXT)")
-        await conn.execute(sql, to_insert)
         await msg.delete()
-        await ctx.send(f"{len(player_list)} members added. Elapsed time: "
+        await ctx.send(f"{len(players_many)} members added. Elapsed time: "
                        f"{(time.perf_counter() - start) / 60:.2f} minutes")
 
 
