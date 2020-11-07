@@ -101,35 +101,6 @@ class CouncilCog(commands.Cog):
                      "`++help clan notes`")
         await ctx.send_text(ctx.channel, response)
 
-    @commands.command(name="cl", hidden=True)
-    @commands.is_owner()
-    async def create_discord_links(self, ctx):
-        url = "http://api.amazingspinach.com/links"
-        conn = self.bot.pool
-        sql = "SELECT player_tag, discord_id FROM rcs_discord_links"
-        fetch = await conn.fetch(sql)
-        for row in fetch:
-            payload = {"playerTag": row['player_tag'], "discordId": row['discord_id']}
-            r = requests.post(url, json=payload)
-            if r.status_code == 500:
-                continue
-            if r.status_code == 400 and "exists" in r.text:
-                # player is already linked
-                continue
-            if r.status_code != 200:
-                await ctx.send(f"ERROR: {r.status_code}\n{r.text}")
-                break
-        await ctx.send("Done")
-
-    @commands.command(name="gl", hidden=True)
-    @commands.is_owner()
-    async def get_discord_link(self, ctx, player: PlayerConverter = None):
-        discord_id = get_discord_id(player.tag)
-        if discord_id:
-            await ctx.send(f"{player.name} ({player.tag}) is linked to <@{discord_id}> ({discord_id})")
-        else:
-            await ctx.send(f"No Discord link exists for {player.name} ({player.tag}).")
-
     @commands.command(name="form", aliases=["magic"], hidden=True)
     @is_council()
     async def magic_form(self, ctx):
@@ -702,7 +673,7 @@ class CouncilCog(commands.Cog):
                 sql = "UPDATE rcs_clans SET notes = $1 WHERE clan_tag = $2"
                 await conn.execute(sql, new_notes, clan.tag[1:])
                 flag += 1
-        with Sql() as cursor:
+        with Sql(autocommit=True) as cursor:
             sql = "UPDATE rcs_data SET discordServer = ? WHERE clanTag = ?"
             cursor.execute(sql, (new_discord, clan.tag[1:]))
         sql = "UPDATE rcs_clans SET discord_server = $1 WHERE clan_tag = $2"
