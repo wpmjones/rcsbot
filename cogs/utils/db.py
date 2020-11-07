@@ -52,8 +52,8 @@ def get_player_tag(discord_id):
 
 
 class Sql:
-    def __init__(self, as_dict=False):
-        self.as_dict = as_dict
+    def __init__(self, autocommit=False):
+        self.autocommit = autocommit
 
     def __enter__(self):
         driver = "ODBC Driver 17 for SQL Server"
@@ -62,10 +62,13 @@ class Sql:
                                    f"DATABASE={settings['database']['database']};"
                                    f"UID={settings['database']['username']};"
                                    f"PWD={settings['database']['password']}")
+        self.conn.autocommit = self.autocommit
         self.cursor = self.conn.cursor()
         return self.cursor
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        if not self.autocommit:
+            self.conn.commit()
         self.conn.close()
 
 
