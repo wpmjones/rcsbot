@@ -20,7 +20,13 @@ class SeasonConfig(commands.Cog, command_attrs=dict(hidden=True)):
     @staticmethod
     def next_last_monday():
         now = date.today()
-        day = now + relativedelta(month=now.month + 2, day=1, weekday=MO(-1))
+        if now.month >= 11:
+            new_month = now.month - 10
+            new_year = now.year + 1
+        else:
+            new_month = now.month + 2
+            new_year = now.year
+        day = now + relativedelta(year=new_year, month=new_month, day=1, weekday=MO(-1))
         return day
 
     @tasks.loop(minutes=15.0)
