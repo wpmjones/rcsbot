@@ -19,6 +19,14 @@ class PlayerConverter(commands.Converter):
             try:
                 return await ctx.coc.get_player(tag)
             except coc.NotFound:
+                for rcs_tag in rcs_tags():
+                    clan = await ctx.coc.get_clan(rcs_tag)
+                    if clan.name == name or clan.tag == tag:
+                        raise commands.BadArgument(f'You appear to be passing '
+                                                   f'the clan tag/name for `{str(clan)}`')
+                    member = clan.get_member_by(name=name)
+                    if member:
+                        return member
                 raise commands.BadArgument('I detected a player tag; and couldn\'t '
                                            'find an account with that tag! '
                                            'If you didn\'t pass in a tag, '
