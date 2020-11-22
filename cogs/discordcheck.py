@@ -94,7 +94,9 @@ class DiscordCheck(commands.Cog):
             except coc.NotFound:
                 pass
             except:
-                self.bot.logger.exception(f"Other failure on {tag}")
+                # really not anything to do here
+                # self.bot.logger.exception(f"Other failure on {tag}")
+                self.bot.logger.debug(f"Tag {tag} doesn't appear to be valid. Skipping")
         try:
             # Add to task log
             sql = ("INSERT INTO rcs_task_logs (log_type_id, log_date, argument) "
