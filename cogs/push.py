@@ -260,14 +260,14 @@ class Push(commands.Cog):
         async for player in self.bot.coc.get_players(player_list):
             players_many.append([player.tag[1:], player.clan.tag[1:],
                                  player.trophies, player.trophies,
-                                 player.best_trophies, player.town_hall, player.name.replace("'", "''"),
-                                 player.clan.name])
+                                 player.best_trophies, player.town_hall, player.town_hall,
+                                 player.name.replace("'", "''"), player.clan.name])
         with Sql() as cursor:
             cursor.fast_executemany = True
             sql = (f"INSERT INTO rcspush_2020_2 "
                    f"(playerTag, clanTag, startingTrophies, currentTrophies, "
-                   f"bestTrophies, startingThLevel, playerName, clanName) "
-                   f"VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+                   f"bestTrophies, startingThLevel, currentThLevel, playerName, clanName) "
+                   f"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
             cursor.executemany(sql, players_many)
         await msg.delete()
         await ctx.send(f"{len(players_many)} members added. Elapsed time: "
