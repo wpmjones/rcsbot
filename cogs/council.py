@@ -2,7 +2,6 @@ import coc
 import discord
 import asyncio
 import re
-import requests
 
 from discord.ext import commands
 from cogs.utils.checks import is_council, is_mod_or_council, is_leader_or_mod_or_council

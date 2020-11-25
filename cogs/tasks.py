@@ -396,13 +396,20 @@ class Tasks(commands.Cog):
                 if prompt == 5:
                     prompt = await ctx.prompt("Did this clan get verified?")
                     if prompt:
+                        # Clan was verified
                         new_status = 5
                     else:
-                        new_status = 6
+                        # Clan was NOT verified
+                        prompt = await ctx.prompt("Can the clan reapply at a later date?")
+                        if prompt:
+                            # Yes, the can reapply
+                            new_status = 6
+                        else:
+                            new_status = 7
                 else:
                     new_status = prompt
             url = f"{settings['google']['comm_log']}?call=verification&status={new_status}&row={task_row}"
-            # TODO ditch requests for aiohttp.clientsession
+            # TODO ditch requests for aiohttp.clientsession or gspread - hmmm
             r = requests.get(url)
             if r.status_code == requests.codes.ok:
                 if r.text == "1":
