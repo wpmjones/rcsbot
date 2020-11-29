@@ -53,7 +53,7 @@ class Push(commands.Cog):
                                 player.trophies >= 5000 and
                                 datetime.utcnow() > (self.end_time - timedelta(days=2))):
                             cursor.execute(sql_2, player.tag[1:])
-                            row = cursor.fetchrow()
+                            row = cursor.fetchone()
                             legend_trophies = row[0]
                             if player.trophies > legend_trophies:
                                 cursor.execute(sql_3, player.trophies, player.tag[1:])
