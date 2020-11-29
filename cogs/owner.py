@@ -151,12 +151,12 @@ class OwnerCog(commands.Cog):
                         reported = True
                     else:
                         reported = False
-                    sql = ("INSERT INTO rcs_wars (clan_tag, clan_attacks, clan_destruction, clan_stars,"
+                    sql = ("INSERT INTO rcs_wars (clan_name, clan_tag, clan_attacks, clan_destruction, clan_stars,"
                            "opponent_tag, opponent_name, opponent_destruction, opponent_stars,"
                            "end_time, war_state, team_size, reported)"
-                           "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)")
-                    await conn.execute(sql, war.clan.tag[1:], war.clan.attacks_used, war.clan.destruction,
-                                       war.clan.stars, war.opponent.tag[1:], war.opponent.name,
+                           "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)")
+                    await conn.execute(sql, war.clan.name, war.clan.tag[1:], war.clan.attacks_used,
+                                       war.clan.destruction, war.clan.stars, war.opponent.tag[1:], war.opponent.name,
                                        war.opponent.destruction, war.opponent.stars,
                                        war.end_time.time, "warEnded", war.team_size, reported)
                     self.bot.logger.info(f"Added war for {war.clan.name} vs {war.opponent.name} ending "
