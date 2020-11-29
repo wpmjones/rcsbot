@@ -1,16 +1,5 @@
-import requests
-
 from cogs.utils.db import Sql
 from functools import lru_cache
-from config import settings
-
-
-def get_link_token(maxsize=1):
-    """Retrieve new token for links API"""
-    payload = {"username": settings['links']['user'], "password": settings['links']['pass']}
-    url = "https://api.amazingspinach.com/login"
-    r = requests.post(url, json=payload)
-    return r.json()['token']
 
 
 @lru_cache(maxsize=4)

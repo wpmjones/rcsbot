@@ -386,12 +386,12 @@ class Tasks(commands.Cog):
                              f"Update in progress...")
         async with ctx.typing():
             if not new_status:
-                prompt = await ctx.prompt(f"Please select a new status:\n"
-                                          f":one: Awaiting a scout\n"
-                                          f":two: Being scouted\n"
-                                          f":three: Awaiting the post-scout surveys\n"
-                                          f":four: Awaiting a decision by Council\n"
-                                          f":five: Mark complete",
+                prompt = await ctx.prompt("Please select a new status:\n"
+                                          ":one: Awaiting a scout\n"
+                                          ":two: Being scouted\n"
+                                          ":three: Awaiting the post-scout surveys\n"
+                                          ":four: Awaiting a decision by Council\n"
+                                          ":five: Mark complete",
                                           additional_options=5)
                 if prompt == 5:
                     prompt = await ctx.prompt("Did this clan get verified?")
@@ -400,12 +400,19 @@ class Tasks(commands.Cog):
                         new_status = 5
                     else:
                         # Clan was NOT verified
-                        prompt = await ctx.prompt("Can the clan reapply at a later date?")
+                        prompt = await ctx.prompt("Can the clan reapply at a later date?\n"
+                                                  ":one: Yes, in 6 weeks.\n"
+                                                  ":two: Yes, in 8 weeks.\n"
+                                                  ":three: Yes, in 12 weeks.\n"
+                                                  ":four: Yes, in 16 weeks.\n"
+                                                  ":five: Yes, in 20+ weeks.\n"
+                                                  ":six: No way, never!",
+                                                  additional_options=6)
                         if prompt:
                             # Yes, the can reapply
-                            new_status = 6
+                            new_status = prompt + 5
                         else:
-                            new_status = 7
+                            new_status = 99
                 else:
                     new_status = prompt
             url = f"{settings['google']['comm_log']}?call=verification&status={new_status}&row={task_row}"

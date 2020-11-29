@@ -7,7 +7,7 @@ from discord.ext import commands
 from cogs.utils.checks import is_council, is_mod_or_council, is_leader_or_mod_or_council
 from cogs.utils.constants import class_names, class_values
 from cogs.utils.converters import ClanConverter, PlayerConverter
-from cogs.utils.db import Sql, get_discord_id
+from cogs.utils.db import Sql
 from cogs.utils import helper
 from config import settings, color_pick
 from datetime import datetime
