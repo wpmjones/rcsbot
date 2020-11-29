@@ -36,6 +36,7 @@ if enviro == "LIVE":
                           "cogs.newhelp",
                           "cogs.new_season",
                           "cogs.owner",
+                          "cogs.plots",
                           "cogs.push",
                           "cogs.tasks",
                           ]
@@ -48,13 +49,10 @@ elif enviro == "home":
     coc_pass = settings['supercell']['pass2']
     initial_extensions = ["cogs.admin",
                           "cogs.council",
-                          "cogs.eggs",
-                          "cogs.games",
                           "cogs.general",
-                          "cogs.new_season",
                           "cogs.newhelp",
                           "cogs.owner",
-                          "cogs.push",
+                          "cogs.plots",
                           ]
 else:
     token = settings['discord']['test_token']
