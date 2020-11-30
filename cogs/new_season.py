@@ -39,12 +39,12 @@ class SeasonConfig(commands.Cog, command_attrs=dict(hidden=True)):
         if now > end:
             update_season(self.next_last_monday())
 
-    @coc.ClientEvents.new_season_start()
-    async def coc_new_season(self):
-        """Just testing new_season_start"""
-        self.bot.logger.info(f"coc has detected a new season\n"
-                             f"{utils.get_season_start()}\n"
-                             f"{utils.get_season_end()}")
+    # @coc.ClientEvents.new_season_start()
+    # async def coc_new_season(self):
+    #     """Just testing new_season_start"""
+    #     self.bot.logger.info(f"coc has detected a new season\n"
+    #                          f"{utils.get_season_start()}\n"
+    #                          f"{utils.get_season_end()}")
 
 
 def setup(bot):
