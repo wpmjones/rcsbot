@@ -11,11 +11,11 @@ class SeasonConfig(commands.Cog, command_attrs=dict(hidden=True)):
     def __init__(self, bot):
         self.bot = bot
         self.start_new_season.start()
-        # self.bot.coc.add_events(self.coc_new_season)
+        self.bot.coc.add_events(self.coc_new_season)
 
     def cog_unload(self):
         self.start_new_season.cancel()
-        # self.bot.coc.remove_events(self.coc_new_season)
+        self.bot.coc.remove_events(self.coc_new_season)
 
     @staticmethod
     def next_last_monday():
@@ -39,12 +39,12 @@ class SeasonConfig(commands.Cog, command_attrs=dict(hidden=True)):
         if now > end:
             update_season(self.next_last_monday())
 
-    # @coc.ClientEvents.new_season_start()
-    # async def coc_new_season(self):
-    #     """Just testing new_season_start"""
-    #     self.bot.logger.info(f"coc has detected a new season\n"
-    #                          f"{utils.get_season_start()}\n"
-    #                          f"{utils.get_season_end()}")
+    @coc.ClientEvents.new_season_start()
+    async def coc_new_season(self):
+        """Just testing new_season_start"""
+        self.bot.logger.info(f"coc has detected a new season\n"
+                             f"{utils.get_season_start()}\n"
+                             f"{utils.get_season_end()}")
 
 
 def setup(bot):

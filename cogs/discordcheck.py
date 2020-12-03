@@ -145,7 +145,7 @@ class DiscordCheck(commands.Cog):
                 # if clan['clan_name'] in ["Ninja Killers", "Faceless Ninjas"]:
                 #     requests.post(settings['rcsHooks']['ninjas'])
             else:
-                await botdev_channel.send(f"No members for {clan['clan_name']}")
+                self.bot.logger.info(f"No members for {clan['clan_name']}")
         # Add to task log
         sql = ("INSERT INTO rcs_task_logs (log_type_id, log_date, argument) "
                "VALUES ($1, $2, $3)")
