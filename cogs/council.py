@@ -135,7 +135,10 @@ class CouncilCog(commands.Cog):
         conn = self.bot.pool
         sql = "SELECT last_message FROM rcs_messages WHERE discord_id = $1"
         row = await conn.fetchrow(sql, user.id)
-        last_message = row[0]
+        if last_message:
+            last_message = row[0]
+        else:
+            last_message = "No messages"
         user_roles = []
         for role in user.roles:
             if role.name != "@everyone":
