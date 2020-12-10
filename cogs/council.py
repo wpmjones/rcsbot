@@ -1002,6 +1002,30 @@ class CouncilCog(commands.Cog):
         content += "\n".join(report)
         await ctx.send_text(ctx.channel, content)
 
+    @commands.group(name="role", hidden=True)
+    @is_mod_or_council()
+    async def role(self, ctx):
+        """[Group] Commands to interact with Discord roles in the RCS Discord Server
+
+        **Permissions:**
+        Council
+        Mods
+
+        **Options:**
+        ++role list [Role ID]"""
+        if ctx.invoked_subcommand is None:
+            await ctx.send_help(ctx.command)
+
+    @role.command(name="list", hidden=True)
+    @is_mod_or_council()
+    async def role_list(self, ctx, role_id: int):
+        guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
+        role = guild.get_role(role_id)
+        content = ""
+        for index, member in enumerate(role.members):
+            content += f"{index + 1}. {member.display_name}\n"
+        return await ctx.send(content)
+
 
 def setup(bot):
     bot.add_cog(CouncilCog(bot))

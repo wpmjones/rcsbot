@@ -342,6 +342,10 @@ class General(commands.Cog):
         **Example:**
         ++link @TubaKid #ABC1234
         ++link 051150854571163648 #ABC1234
+
+        **Options:**
+        ++link list [clan name/tag]
+        ++link check [tag or Discord ID]
         """
         if ctx.invoked_subcommand is not None:
             return
@@ -371,6 +375,29 @@ class General(commands.Cog):
         else:
             await ctx.send(f"I see that {player.name} is in {player.clan} which is not an RCS clan. Try again "
                            f"when {player.name} is in an RCS clan.")
+
+    @link.command(name="check", hidden=True)
+    @is_leader_or_mod_or_council()
+    async def link_check(self, ctx, tag_or_id):
+        if tag_or_id.startswith("#"):
+            # player_tag provided
+            discord_id = await self.bot.links.get_link(tag_or_id)
+            player = await self.bot.coc.get_player(tag_or_id)
+            if discord_id:
+                content = f"{player.name} ({player.tag}) is linked to <@{discord_id}> ({discord_id})."
+            else:
+                content = f"No matching Discord ID found for {player.name} ({player.tag})."
+        else:
+            # assume we have a discord_id
+            tags = await self.bot.links.get_linked_players(tag_or_id)
+            if tags:
+                content = ""
+                for tag in tags:
+                    player = await self.bot.coc.get_player(tag)
+                    content += f"<@{tag_or_id}> ({tag_or_id}) is linked to {player.name} ({player.tag})\n"
+            else:
+                content = f"No matching tags found for {tag_or_id}."
+        return await ctx.send(content)
 
     @link.command(name="list", hidden=True)
     @is_leader_or_mod_or_council()
