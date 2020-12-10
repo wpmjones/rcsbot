@@ -1021,7 +1021,7 @@ class CouncilCog(commands.Cog):
     async def role_list(self, ctx, role_id: int):
         guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
         role = guild.get_role(role_id)
-        content = ""
+        content = f"**Members with the {role.name}:**\n"
         for index, member in enumerate(role.members):
             content += f"{index + 1}. {member.display_name}\n"
         return await ctx.send(content)
