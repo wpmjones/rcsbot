@@ -135,7 +135,7 @@ class CouncilCog(commands.Cog):
         conn = self.bot.pool
         sql = "SELECT last_message FROM rcs_messages WHERE discord_id = $1"
         row = await conn.fetchrow(sql, user.id)
-        if last_message:
+        if row:
             last_message = row[0]
         else:
             last_message = "No messages"
