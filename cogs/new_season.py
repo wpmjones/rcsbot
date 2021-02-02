@@ -10,11 +10,11 @@ from dateutil.relativedelta import relativedelta, MO
 class SeasonConfig(commands.Cog, command_attrs=dict(hidden=True)):
     def __init__(self, bot):
         self.bot = bot
-        self.start_new_season.start()
+        # self.start_new_season.start()
         self.bot.coc.add_events(self.coc_new_season)
 
     def cog_unload(self):
-        self.start_new_season.cancel()
+        # self.start_new_season.cancel()
         self.bot.coc.remove_events(self.coc_new_season)
 
     @staticmethod
