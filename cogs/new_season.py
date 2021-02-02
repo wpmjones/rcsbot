@@ -45,6 +45,7 @@ class SeasonConfig(commands.Cog, command_attrs=dict(hidden=True)):
         self.bot.logger.info(f"coc has detected a new season\n"
                              f"{utils.get_season_start()}\n"
                              f"{utils.get_season_end()}")
+        update_season(utils.get_season_start(), utils.get_season_end())
 
 
 def setup(bot):
