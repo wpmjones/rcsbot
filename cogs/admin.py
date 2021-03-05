@@ -186,7 +186,7 @@ class Admin(commands.Cog):
         # however, things like "fast forward" and files
         # along with the text "already up-to-date" are in stdout
 
-        if stdout.startswith('Already up-to-date.'):
+        if stdout.startswith('Already '):
             return await ctx.send(stdout)
 
         modules = self.find_modules_from_git(stdout)
@@ -219,6 +219,19 @@ class Admin(commands.Cog):
                     statuses.append((ctx.tick(True), module))
 
         await ctx.send('\n'.join(f'{status}: `{module}`' for status, module in statuses))
+
+    @commands.command(name="pull", hidden="true")
+    async def git_pull(self, ctx):
+        async with ctx.typing():
+            stdout, stderr = await self.run_process("git pull")
+        if stderr:
+            return await ctx.send(stderr)
+        if stdout.startswith("Already "):
+            return await ctx.send(stdout)
+        else:
+            modules = self.find_modules_from_git(stdout)
+            mods_text = '\n'.join(f'{index}. `{module}`' for index, (_, module) in enumerate(modules, start=1))
+            await ctx.send(f"The following files were pull from GitHub:\n{mods_text}")
 
     @commands.command(pass_context=True, hidden=True, name='eval')
     async def _eval(self, ctx, *, body: str):
