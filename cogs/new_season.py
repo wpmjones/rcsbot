@@ -47,7 +47,7 @@ class SeasonConfig(commands.Cog, command_attrs=dict(hidden=True)):
         self.bot.logger.info(f"coc has detected a new season\n"
                              f"{season_start}\n"
                              f"{season_end}")
-        update_season(season_start, season_end)
+        update_season(season_start[:10], season_end[:10])
         # Add next games
         season_month = season_end.month
         season_year = season_end.year
