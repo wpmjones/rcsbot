@@ -179,15 +179,15 @@ class Tasks(commands.Cog):
     @is_council()
     async def tasks_verification(self, ctx):
         """Displays all incomplete RCS clan verification requests"""
-        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Verification!A2:I").execute()
+        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Verification!A2:K").execute()
         values = result.get("values", [])
         embed = discord.Embed(title="RCS Council Verification Requests", color=discord.Color.dark_blue())
         for row in values:
-            print(row[1])
             if len(row) < 11:
+                print(row[9])
                 status = "has not been addressed"
-                embed.add_field(name=f"Verification for {row[1]} {status}.\n{row[7]}\nDated {row[0]}",
-                                value=f"Leader: {row[3]}",
+                embed.add_field(name=f"Verification for {row[1]} {status}.\nTask ID: {row[9]}",
+                                value=f"Dated: {row[0]}\nLeader: {row[3]}",
                                 inline=True)
             elif row[10] in ("1", "2", "3", "4"):
                 status = "has not been addressed"
@@ -195,8 +195,8 @@ class Tasks(commands.Cog):
                 if row[10] == "2": status = "is currently being scouted"
                 if row[10] == "3": status = "is awaiting the post-scout survey"
                 if row[10] == "4": status = "is awaiting a decision by Council"
-                embed.add_field(name=f"Verification for {row[1]} {status}.\n{row[7]}\nDated {row[0]}",
-                                value=f"Leader: {row[3]}",
+                embed.add_field(name=f"Verification for {row[1]} {status}.\nTask ID: {row[9]}",
+                                value=f"Dated: {row[0]}\nLeader: {row[3]}",
                                 inline=True)
         embed.set_footer(text="To change status, use ++tasks update <task ID> <new status> "
                               "(e.g. ++tasks update Ver128 3)")
