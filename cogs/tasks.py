@@ -184,17 +184,17 @@ class Tasks(commands.Cog):
         embed = discord.Embed(title="RCS Council Verification Requests", color=discord.Color.dark_blue())
         for row in values:
             print(row[1])
-            if len(row) < 9:
+            if len(row) < 11:
                 status = "has not been addressed"
                 embed.add_field(name=f"Verification for {row[1]} {status}.\n{row[7]}\nDated {row[0]}",
                                 value=f"Leader: {row[3]}",
                                 inline=True)
-            elif row[8] in ("1", "2", "3", "4"):
+            elif row[10] in ("1", "2", "3", "4"):
                 status = "has not been addressed"
-                if row[8] == "1": status = "is awaiting a scout"
-                if row[8] == "2": status = "is currently being scouted"
-                if row[8] == "3": status = "is awaiting the post-scout survey"
-                if row[8] == "4": status = "is awaiting a decision by Council"
+                if row[10] == "1": status = "is awaiting a scout"
+                if row[10] == "2": status = "is currently being scouted"
+                if row[10] == "3": status = "is awaiting the post-scout survey"
+                if row[10] == "4": status = "is awaiting a decision by Council"
                 embed.add_field(name=f"Verification for {row[1]} {status}.\n{row[7]}\nDated {row[0]}",
                                 value=f"Leader: {row[3]}",
                                 inline=True)
@@ -359,18 +359,18 @@ class Tasks(commands.Cog):
         # Fix for user providing Veri107 instead of Ver107
         if len(task_id) == 7:
             task_id = task_id[:3] + task_id[4:]
-        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Verification!A2:I").execute()
+        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Verification!A2:K").execute()
         values = result.get("values", [])
         row_num = 1
         found = 0
         for row in values:
             row_num += 1
-            if row[7].lower() == task_id.lower():
+            if row[9].lower() == task_id.lower():
                 task_row = row_num
                 clan_name = row[1]
                 leader = row[3]
-                if len(row) >= 9:
-                    cur_status_num = row[8]
+                if len(row) >= 11:
+                    cur_status_num = row[10]
                 else:
                     cur_status_num = 0
                 found = 1
