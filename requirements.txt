@@ -13,3 +13,5 @@ PyYAML>=5.3.1
 aiohttp>=3.6.2
 async_property>=0.2
 praw
+pandas
+matplotlib

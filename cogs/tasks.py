@@ -184,7 +184,6 @@ class Tasks(commands.Cog):
         embed = discord.Embed(title="RCS Council Verification Requests", color=discord.Color.dark_blue())
         for row in values:
             if len(row) < 11:
-                print(row[9])
                 status = "has not been addressed"
                 embed.add_field(name=f"Verification for {row[1]} {status}.\nTask ID: {row[9]}",
                                 value=f"Dated: {row[0]}\nLeader: {row[3]}",
