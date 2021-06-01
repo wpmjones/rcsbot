@@ -15,56 +15,56 @@ class Push(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.title = "2020 Thanksgiving Trophy Push"
-        self.start_time = datetime(2020, 11, 23, 5, 0)
-        self.end_time = datetime(2020, 11, 30, 4, 55)
-    #     self.update_push.start()
-    #
-    # def cog_unload(self):
-    #     self.update_push.cancel()
+        self.title = "2021 Summertime Trophy Push"
+        self.start_time = datetime(2021, 6, 14, 5, 0)
+        self.end_time = datetime(2021, 6, 20, 4, 55)
+        self.update_push.start()
 
-    # @tasks.loop(minutes=12)
-    # async def update_push(self):
-    #     """Task to pull API data for the push"""
-    #     now = datetime.utcnow()
-    #     if self.start_time < now < self.end_time:
-    #         with Sql(autocommit=True) as cursor:
-    #             sql = "SELECT playerTag from rcspush_2020_2"
-    #             cursor.execute(sql)
-    #             fetch = cursor.fetchall()
-    #             player_tags = []
-    #             for row in fetch:
-    #                 player_tags.append(row[0])
-    #             sql_1 = ("UPDATE rcspush_2020_2 "
-    #                      "SET currentTrophies = ?, currentThLevel = ? "
-    #                      "WHERE playerTag = ?")
-    #             sql_2 = "SELECT legendTrophies FROM rcspush_2020_2 WHERE playerTag = ?"
-    #             sql_3 = ("UPDATE rcspush_2020_2 "
-    #                      "SET legendTrophies = ? "
-    #                      "WHERE playerTag = ?")
-    #             counter = 0
-    #             try:
-    #                 for tag in player_tags:
-    #                     # async for player in self.bot.coc.get_players(player_tags):
-    #                     player = await self.bot.coc.get_player(tag)
-    #                     if player.clan:
-    #                         cursor.execute(sql_1, player.trophies, player.town_hall, player.tag[1:])
-    #                     if (player.town_hall < 13 and
-    #                             player.trophies >= 5000 and
-    #                             datetime.utcnow() > (self.end_time - timedelta(days=2))):
-    #                         cursor.execute(sql_2, player.tag[1:])
-    #                         row = cursor.fetchone()
-    #                         legend_trophies = row[0]
-    #                         if player.trophies > legend_trophies:
-    #                             cursor.execute(sql_3, player.trophies, player.tag[1:])
-    #                     counter += 1
-    #             except:
-    #                 self.bot.logger.exception(f"Failed on {player_tags[counter]}")
-    #         print("push update complete")
+    def cog_unload(self):
+        self.update_push.cancel()
 
-    # @update_push.before_loop
-    # async def before_update_push(self):
-    #     await self.bot.wait_until_ready()
+    @tasks.loop(minutes=12)
+    async def update_push(self):
+        """Task to pull API data for the push"""
+        now = datetime.utcnow()
+        if self.start_time < now < self.end_time:
+            with Sql(autocommit=True) as cursor:
+                sql = "SELECT playerTag from rcspush_2021_1"
+                cursor.execute(sql)
+                fetch = cursor.fetchall()
+                player_tags = []
+                for row in fetch:
+                    player_tags.append(row[0])
+                sql_1 = ("UPDATE rcspush_2021_1 "
+                         "SET currentTrophies = ?, currentThLevel = ? "
+                         "WHERE playerTag = ?")
+                sql_2 = "SELECT legendTrophies FROM rcspush_2021_1 WHERE playerTag = ?"
+                sql_3 = ("UPDATE rcspush_2021_1 "
+                         "SET legendTrophies = ? "
+                         "WHERE playerTag = ?")
+                counter = 0
+                try:
+                    for tag in player_tags:
+                        # async for player in self.bot.coc.get_players(player_tags):
+                        player = await self.bot.coc.get_player(tag)
+                        if player.clan:
+                            cursor.execute(sql_1, player.trophies, player.town_hall, player.tag[1:])
+                        if (player.town_hall < 13 and
+                                player.trophies >= 5000 and
+                                datetime.utcnow() > (self.end_time - timedelta(days=2))):
+                            cursor.execute(sql_2, player.tag[1:])
+                            row = cursor.fetchone()
+                            legend_trophies = row[0]
+                            if player.trophies > legend_trophies:
+                                cursor.execute(sql_3, player.trophies, player.tag[1:])
+                        counter += 1
+                except:
+                    self.bot.logger.exception(f"Failed on {player_tags[counter]}")
+            print("push update complete")
+
+    @update_push.before_loop
+    async def before_update_push(self):
+        await self.bot.wait_until_ready()
 
     @commands.group(name="push", invoke_without_command=True)
     async def push(self, ctx):
@@ -182,6 +182,10 @@ class Push(commands.Cog):
         p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count, rows_per_table=20)
         await p.paginate()
 
+    @push.command(name="th14", hidden=True)
+    async def push_th14(self, ctx):
+        await ctx.invoke(self.push_th, th_level=14)
+
     @push.command(name="th13", hidden=True)
     async def push_th13(self, ctx):
         await ctx.invoke(self.push_th, th_level=13)
@@ -264,7 +268,7 @@ class Push(commands.Cog):
                                  player.name.replace("'", "''"), player.clan.name])
         with Sql() as cursor:
             cursor.fast_executemany = True
-            sql = (f"INSERT INTO rcspush_2020_2 "
+            sql = (f"INSERT INTO rcspush_2021_1 "
                    f"(playerTag, clanTag, startingTrophies, currentTrophies, "
                    f"bestTrophies, startingThLevel, currentThLevel, playerName, clanName) "
                    f"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
