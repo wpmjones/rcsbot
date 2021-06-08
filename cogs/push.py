@@ -167,7 +167,7 @@ class Push(commands.Cog):
         """Returns list of top 100 players at the TH specified (there must be a space between th and the number)."""
         if datetime.utcnow() < self.start_time:
             return await ctx.invoke(self.push_info)
-        if (th_level > 13) or (th_level < 6):
+        if (th_level > 14) or (th_level < 6):
             return await ctx.send("You have not provided a valid town hall level.")
         with Sql() as cursor:
             cursor.execute(f"SELECT TOP 100 currentTrophies, CAST(clanPoints AS DECIMAL(5,2)) as Pts, "
