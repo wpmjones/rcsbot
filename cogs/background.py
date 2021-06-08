@@ -82,6 +82,17 @@ class Background(commands.Cog):
             msg = f"{prefix}{new_clan.name} just hit **{new_clan.war_wins}** wins! {suffix}"
             await self.media_stats.send(msg)
 
+    # @tasks.loop(hours=1.0)
+    # async def new_verification(self):
+    #     """Check MS SQL - rcs_verify - for new entries and act accordingly"""
+    #     sql = "SELECT clanTag, leaderContact FROM rcs_verify WHERE reported = 0"
+    #     with Sql() as cursor:
+    #         cursor.execute(sql)
+    #         fetch = cursor.fetchall()
+    #         if fetch:
+    #             clan = await self.bot.coc.get_clan(fetch['clanTag'])
+    #             discord_contact = fetch['leaderContact']
+
     @tasks.loop(hours=24.0)
     async def clan_checks(self):
         """Check clans for member count, badge, etc."""
