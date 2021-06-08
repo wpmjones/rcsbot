@@ -247,7 +247,8 @@ class Background(commands.Cog):
                               and row['classification'] != "family"
                               and row['leader_name'] != clan_leader.name)
                 if comparator:
-                    leader_changes += f"{clan.name}: Leader changed from {row['leader_name']} to {clan_leader.name}\n"
+                    leader_changes += (f"{clan.name}: Leader changed from {row['leader_name']} to {clan_leader.name}"
+                                       f"({clan_leader.tag})\n")
                 # Update MS SQL
                 sql = ("UPDATE rcs_data "
                        "SET clanName = ?, clanLevel = ?, members = ?, warFreq = ?, clanType = ?, "
