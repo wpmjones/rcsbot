@@ -33,6 +33,7 @@ def get_render_type(table, type_):
         "push diff": (table.board_1, "Diff"),
         "push top": (table.board_1, "Cups"),
         "push th": (table.board_5, "Cups", "Pts"),
+        "push th14": (table.board_5, "Cups", "Pts"),
         "push th13": (table.board_5, "Cups", "Pts"),
         "push th12": (table.board_5, "Cups", "Pts"),
         "push th11": (table.board_5, "Cups", "Pts"),
