@@ -18,10 +18,10 @@ class Push(commands.Cog):
         self.title = "2021 Summertime Trophy Push"
         self.start_time = datetime(2021, 6, 14, 5, 0)
         self.end_time = datetime(2021, 6, 20, 4, 55)
-        self.update_push.start()
+        # self.update_push.start()
 
-    def cog_unload(self):
-        self.update_push.cancel()
+    # def cog_unload(self):
+    #     self.update_push.cancel()
 
     @tasks.loop(minutes=12)
     async def update_push(self):
@@ -62,9 +62,9 @@ class Push(commands.Cog):
                     self.bot.logger.exception(f"Failed on {player_tags[counter]}")
             print("push update complete")
 
-    @update_push.before_loop
-    async def before_update_push(self):
-        await self.bot.wait_until_ready()
+    # @update_push.before_loop
+    # async def before_update_push(self):
+    #     await self.bot.wait_until_ready()
 
     @commands.group(name="push", invoke_without_command=True)
     async def push(self, ctx):
