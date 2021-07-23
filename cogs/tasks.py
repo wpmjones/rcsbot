@@ -1,24 +1,15 @@
 import discord
+import gspread
 import requests
 
 from discord.ext import commands
 from cogs.utils.checks import is_council
 from cogs.utils.constants import veri_status
-from googleapiclient.discovery import build
-from httplib2 import Http
-from oauth2client import file, client, tools
 from config import settings
 
-# Connect to Google Sheets
-scope = "https://www.googleapis.com/auth/spreadsheets.readonly"
-spreadsheet_id = settings['google']['comm_log_id']
-store = file.Storage("token.json")
-creds = store.get()
-if not creds or creds.invalid:
-    flow = client.flow_from_clientsecrets("credentials.json", scope)
-    creds = tools.run_flow(flow, store)
-service = build("sheets", "v4", http=creds.authorize(Http()), cache_discovery=False)
-sheet = service.spreadsheets()
+# Connect to Google Sheets using gspread
+gc = gspread.service_account(filename="service_account.json")
+spreadsheet = gc.open_by_key(settings['google']['comm_log_id'])
 
 
 class Tasks(commands.Cog):
@@ -54,11 +45,11 @@ class Tasks(commands.Cog):
             await ctx.send("This is a long list. I'm going to send it to your DM. To view items "
                            "in the Council Chat, please request them individually (`++tasks suggestions`).")
         # Suggestions
-        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Suggestions!A2:I").execute()
-        values = result.get("values", [])
+        sheet = spreadsheet.worksheet("Suggestions")
+        results = sheet.get("A2:I")
         embed = discord.Embed(title="RCS Council Suggestions", color=discord.Color.blurple())
         flag = 0
-        for row in values:
+        for row in results:
             if len(row) < 9:
                 embed.add_field(name=f"Suggestion from {row[1]}\n{row[7]}",
                                 value=f"{row[3][:500]}\nDated {row[0]}",
@@ -68,10 +59,10 @@ class Tasks(commands.Cog):
             flag = 1
             await ctx.author.send(embed=embed)
         # Council Nominations
-        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Council!A2:J").execute()
-        values = result.get("values", [])
+        sheet = spreadsheet.worksheet("Council")
+        results = sheet.get("A2:J")
         embed = discord.Embed(title="RCS Council Nominations", color=discord.Color.dark_gold())
-        for row in values:
+        for row in results:
             if row[8] == "":
                 embed.add_field(name=f"Council Nomination for {row[3]}\n{row[9]}",
                                 value=f"Submitted by {row[1]}\nDated {row[0]}",
@@ -81,11 +72,11 @@ class Tasks(commands.Cog):
             flag = 1
             await ctx.author.send(embed=embed)
         # Verification Requests
-        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Verification!A2:I").execute()
-        values = result.get("values", [])
+        sheet = spreadsheet.worksheet("Verification")
+        results = sheet.get("A2:K")
         embed = discord.Embed(title="RCS Council Verification Requests", color=discord.Color.dark_blue())
-        for row in values:
-            if len(row) < 9 or row[8] in ("1", "2", "3", "4"):
+        for row in results:
+            if len(row) < 11 or row[10] in ("1", "2", "3", "4"):
                 status = "has not been addressed"
                 try:
                     if row[8] == "1": status = " is awaiting a scout"
@@ -102,10 +93,10 @@ class Tasks(commands.Cog):
             flag = 1
             await ctx.author.send(embed=embed)
         # Other Submissions
-        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Other!A2:I").execute()
-        values = result.get("values", [])
+        sheet = spreadsheet.worksheet("Other")
+        results = sheet.get("A2:I")
         embed = discord.Embed(title="RCS Council Other Items", color=discord.Color.gold())
-        for row in values:
+        for row in results:
             if len(row) < 9:
                 if len(row[6]) > 1:
                     assigned_to = f"Assigned to: {self.guild.get_member(int(row[6])).display_name}"
@@ -120,10 +111,10 @@ class Tasks(commands.Cog):
             flag = 1
             await ctx.author.send(embed=embed)
         # Tasks (Individual Action Items)
-        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Tasks!A2:I").execute()
-        values = result.get("values", [])
+        sheet = spreadsheet.worksheet("Tasks")
+        results = sheet.get("A2:I")
         embed = discord.Embed(title="RCS Council Action Items", color=discord.Color.dark_magenta())
-        for row in values:
+        for row in results:
             if len(row) < 9:
                 if len(row[6]) > 1:
                     assigned_to = f"Assigned to: {self.guild.get_member(int(row[6])).display_name}"
@@ -143,10 +134,10 @@ class Tasks(commands.Cog):
     @is_council()
     async def tasks_suggestions(self, ctx):
         """Displays all incomplete suggestion tasks"""
-        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Suggestions!A2:I").execute()
-        values = result.get("values", [])
+        sheet = spreadsheet.worksheet("Suggestions")
+        results = sheet.get("A2:I")
         embed = discord.Embed(title="RCS Council Suggestions", color=discord.Color.blurple())
-        for row in values:
+        for row in results:
             if len(row) < 9:
                 embed.add_field(name=f"Suggestion from {row[1]}\n{row[7]}\nDated {row[0]}",
                                 value=row[3][:1023],
@@ -161,10 +152,10 @@ class Tasks(commands.Cog):
     @is_council()
     async def tasks_council(self, ctx):
         """Displays all incomplete council nominations"""
-        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Council!A2:J").execute()
-        values = result.get("values", [])
+        sheet = spreadsheet.worksheet("Council")
+        results = sheet.get("A2:J")
         embed = discord.Embed(title="RCS Council Nominations", color=discord.Color.dark_gold())
-        for row in values:
+        for row in results:
             if row[8] == "":
                 embed.add_field(name=f"Council Nomination for {row[3]}\n{row[9]}\nDated {row[0]}",
                                 value=f"Submitted by {row[1]}",
@@ -179,10 +170,10 @@ class Tasks(commands.Cog):
     @is_council()
     async def tasks_verification(self, ctx):
         """Displays all incomplete RCS clan verification requests"""
-        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Verification!A2:K").execute()
-        values = result.get("values", [])
+        sheet = spreadsheet.worksheet("Verification")
+        results = sheet.get("A2:K")
         embed = discord.Embed(title="RCS Council Verification Requests", color=discord.Color.dark_blue())
-        for row in values:
+        for row in results:
             if len(row) < 11:
                 status = "has not been addressed"
                 embed.add_field(name=f"Verification for {row[1]} {status}.\nTask ID: {row[9]}",
@@ -207,10 +198,10 @@ class Tasks(commands.Cog):
     async def tasks_other(self, ctx):
         """Displays all incomplete tasks from the Other category"""
         try:
-            result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Other!A2:I").execute()
-            values = result.get("values", [])
+            sheet = spreadsheet.worksheet("Other")
+            results = sheet.get("A2:I")
             embed = discord.Embed(title="RCS Council Other Items", color=discord.Color.gold())
-            for row in values:
+            for row in results:
                 if len(row) < 9:
                     if len(row[6]) > 1:
                         assigned_to = f"Assigned to: {self.guild.get_member(int(row[6])).display_name}"
@@ -231,10 +222,10 @@ class Tasks(commands.Cog):
     @is_council()
     async def tasks_action(self, ctx):
         """Displays all incomplete Action Items"""
-        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Tasks!A2:I").execute()
-        values = result.get("values", [])
+        sheet = spreadsheet.worksheet("Tasks")
+        results = sheet.get("A2:I")
         embed = discord.Embed(title="RCS Council Action Items", color=discord.Color.dark_magenta())
-        for row in values:
+        for row in results:
             if len(row) < 9:
                 if len(row[6]) > 1:
                     assigned_to = f"Assigned to: {self.guild.get_member(int(row[6])).display_name}"
@@ -358,11 +349,11 @@ class Tasks(commands.Cog):
         # Fix for user providing Veri107 instead of Ver107
         if len(task_id) == 7:
             task_id = task_id[:3] + task_id[4:]
-        result = sheet.values().get(spreadsheetId=spreadsheet_id, range="Verification!A2:K").execute()
-        values = result.get("values", [])
+        sheet = spreadsheet.worksheet("Verification")
+        results = sheet.get("A2:K")
         row_num = 1
         found = 0
-        for row in values:
+        for row in results:
             row_num += 1
             if row[9].lower() == task_id.lower():
                 task_row = row_num
