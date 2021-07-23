@@ -37,7 +37,7 @@ if enviro == "LIVE":
                           "cogs.new_season",
                           "cogs.owner",
                           "cogs.plots",
-                          "cogs.tasks",
+                          # "cogs.tasks",
                           ]
 elif enviro == "home":
     token = settings['discord']['test_token']
