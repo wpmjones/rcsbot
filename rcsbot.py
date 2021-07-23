@@ -37,7 +37,6 @@ if enviro == "LIVE":
                           "cogs.new_season",
                           "cogs.owner",
                           "cogs.plots",
-                          "cogs.push",
                           "cogs.tasks",
                           ]
 elif enviro == "home":
