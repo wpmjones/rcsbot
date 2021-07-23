@@ -71,7 +71,7 @@ class Games(commands.Cog):
         if row:
             return row['event_id'], row['start_time']
         else:
-            return None
+            return None, None
 
     async def closest_games(self):
         """Get the most recent or next games, depending on which is closest"""

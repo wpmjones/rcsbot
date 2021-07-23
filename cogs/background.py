@@ -1,6 +1,6 @@
 import coc
 import discord
-import praw
+import asyncpraw
 import random
 import re
 
@@ -170,11 +170,11 @@ class Background(commands.Cog):
             leader_alts[row['clan_tag']].append(row['alt_tag'])
         family_link = ("[See Below](https://www.reddit.com/r/RedditClanSystem/wiki/official_reddit_clan_system"
                        "#wiki_4._official_family_clans)")
-        reddit = praw.Reddit(client_id=settings['reddit_speed']['client'],
-                             client_secret=settings['reddit_speed']['secret'],
-                             username=settings['reddit_speed']['username'],
-                             password=settings['reddit_speed']['password'],
-                             user_agent="raspi:com.mayodev.coc_redditclansystem_updater:v0.5 (by /u/TubaKid44)")
+        reddit = asyncpraw.Reddit(client_id=settings['reddit_speed']['client'],
+                                  client_secret=settings['reddit_speed']['secret'],
+                                  username=settings['reddit_speed']['username'],
+                                  password=settings['reddit_speed']['password'],
+                                  user_agent="raspi:com.mayodev.coc_redditclansystem_updater:v0.5 (by /u/TubaKid44)")
         subreddit = "redditclansystem"
 
         def leader(clan_tag, player_tag):
@@ -320,7 +320,8 @@ class Background(commands.Cog):
                     f"{row['notes']} | {family}")
 
         async def update_wiki_page(wiki_page):
-            page = reddit.subreddit(subreddit).wiki[wiki_page]
+            sub = await reddit.subreddit(subreddit)
+            page = await sub.wiki.get_page("official_reddit_clan_system")
             content = page.content_md
             sql = ("SELECT clan_name, subreddit, clan_tag, clan_level, leader_name, leader_reddit, member_count, "
                    "war_frequency, social_media, notes, family_clan "
@@ -363,10 +364,11 @@ class Background(commands.Cog):
             end = content.index(end_marker) + len(end_marker)
             content = content.replace(content[start:end], "{}{}{}".format(start_marker, page_content, end_marker))
             # Push changes to Reddit
-            page.edit(content, reason="Updating Clan Tracking Wikipage")
+            await page.edit(content, reason="Updating Clan Tracking Wikipage")
 
         async def update_records(wiki_page):
-            page = reddit.subreddit(subreddit).wiki[wiki_page]
+            sub = await reddit.subreddit(subreddit)
+            page = await sub.wiki.get_page("clan_records")
             content = page.content_md
             page_content = "| Clan Name | Wins | Losses | Ties | Total Wars | Win %\n"
             page_content += ":--|:--|:-:|:-:|:-:|:-:|:-:"
@@ -389,7 +391,7 @@ class Background(commands.Cog):
             start = content.index(start_marker)
             end = content.index(end_marker) + len(end_marker)
             content = content.replace(content[start:end], "{}{}{}".format(start_marker, page_content, end_marker))
-            page.edit(content, reason="Updating Clan Records")
+            await page.edit(content, reason="Updating Clan Records")
 
         print("Updating database")
         await update_database()

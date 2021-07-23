@@ -116,7 +116,7 @@ class RcsBot(commands.Bot):
         self.messages = {}
         self.categories = {}
         self.active_wars = get_active_wars()
-        self.session = aiohttp.ClientSession(loop=self.loop)
+        self.session = None
         self.loop.create_task(self.after_ready())
 
         for extension in initial_extensions:
@@ -202,6 +202,7 @@ class RcsBot(commands.Bot):
 
     async def after_ready(self):
         await self.wait_until_ready()
+        self.session = aiohttp.ClientSession(loop=self.loop)
         logger.add(self.send_log, level=log_level)
 
 

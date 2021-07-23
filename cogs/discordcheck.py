@@ -41,6 +41,10 @@ class DiscordCheck(commands.Cog):
         async for message in danger_channel.history():
             await message.delete()
 
+    @clear_danger.before_loop
+    async def before_clear_danger(self):
+        await self.bot.wait_until_ready()
+
     @tasks.loop(hours=1)
     async def leader_notes(self):
         """Check the leader-notes channel and see if any of those players are in an RCS clan"""
@@ -108,6 +112,10 @@ class DiscordCheck(commands.Cog):
         except:
             self.bot.logger.exception("RCS Task Log insert error")
 
+    @leader_notes.before_loop
+    async def before_leader_notes(self):
+        await self.bot.wait_until_ready()
+
     @tasks.loop(hours=1)
     async def discord_check(self):
         """Check members and notify clan leaders to confirm they are still in the clan"""
@@ -156,6 +164,10 @@ class DiscordCheck(commands.Cog):
                                         f"{len(daily_clans)} clans processed")
         except:
             self.bot.logger.exception("RCS Task Log insert fail")
+
+    @discord_check.before_loop
+    async def before_discord_check(self):
+        await self.bot.wait_until_ready()
 
     @tasks.loop(hours=1)
     async def no_clan(self):
