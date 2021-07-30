@@ -406,7 +406,7 @@ class Tasks(commands.Cog):
                 else:
                     new_status = prompt
             url = f"{settings['google']['comm_log']}?call=verification&status={new_status}&row={task_row}"
-            self.bot.logger.info(url)
+            self.bot.logger.debug(f"URL for changing verification status: {url}")
             # TODO ditch requests for aiohttp.clientsession or gspread - hmmm
             r = requests.get(url)
             if r.status_code == requests.codes.ok:
