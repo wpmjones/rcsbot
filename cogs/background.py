@@ -393,11 +393,11 @@ class Background(commands.Cog):
             content = content.replace(content[start:end], "{}{}{}".format(start_marker, page_content, end_marker))
             await page.edit(content, reason="Updating Clan Records")
 
-        print("Updating database")
+        self.bot.logger.info("Updating database")
         await update_database()
-        print("Updating wiki page")
+        self.bot.logger.info("Updating wiki page")
         await update_wiki_page("official_reddit_clan_system")
-        print("Updating clan records")
+        self.bot.logger.info("Updating clan records")
         await update_records("clan_records")
 
     @rcs_list.before_loop
