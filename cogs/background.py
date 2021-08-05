@@ -323,7 +323,6 @@ class Background(commands.Cog):
             sub = await reddit.subreddit(subreddit)
             page = await sub.wiki.get_page("official_reddit_clan_system")
             content = page.content_md
-            self.bot.logger.info("- Content retrieved")
             sql = ("SELECT clan_name, subreddit, clan_tag, clan_level, leader_name, leader_reddit, member_count, "
                    "war_frequency, social_media, notes, family_clan "
                    "FROM rcs_clans "
@@ -342,7 +341,6 @@ class Background(commands.Cog):
                 start = content.index(start_marker)
                 end = content.index(end_marker) + len(end_marker)
                 content = content.replace(content[start:end], "{}{}{}".format(start_marker, page_content, end_marker))
-                self.bot.logger.info(f"- Processed info for {category}")
             # Family Clans
             start_marker = "[](#feederStart)"
             end_marker = "[](#feederEnd)"
@@ -362,12 +360,10 @@ class Background(commands.Cog):
                 page_content += (f"\n{row['family_clan'].replace(' ','&nbsp;')} | {row['clan_name'].replace(' ','&nbsp;')}"
                                  f" | [{row['clan_tag']}](https://www.clashofstats.com/clans/{row['clan_tag']}/members)"
                                  f" | {row['member_count']}/50 | {leader_reddit} | {row['notes']}")
-            self.bot.logger.info("- Processed info for Family Clans")
             start = content.index(start_marker)
             end = content.index(end_marker) + len(end_marker)
             content = content.replace(content[start:end], "{}{}{}".format(start_marker, page_content, end_marker))
             # Push changes to Reddit
-            self.bot.logger.info("- pushing content")
             await page.edit(content, reason="Updating Clan Tracking Wikipage")
 
         async def update_records(wiki_page):
