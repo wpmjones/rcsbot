@@ -323,6 +323,7 @@ class Background(commands.Cog):
             sub = await reddit.subreddit(subreddit)
             page = await sub.wiki.get_page("official_reddit_clan_system")
             content = page.content_md
+            self.bot.logger.info(" - Content retrieved")
             sql = ("SELECT clan_name, subreddit, clan_tag, clan_level, leader_name, leader_reddit, member_count, "
                    "war_frequency, social_media, notes, family_clan "
                    "FROM rcs_clans "
@@ -364,6 +365,7 @@ class Background(commands.Cog):
             end = content.index(end_marker) + len(end_marker)
             content = content.replace(content[start:end], "{}{}{}".format(start_marker, page_content, end_marker))
             # Push changes to Reddit
+            self.bot.logger.info(" - pushing content")
             await page.edit(content, reason="Updating Clan Tracking Wikipage")
 
         async def update_records(wiki_page):
