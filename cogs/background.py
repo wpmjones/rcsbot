@@ -385,7 +385,7 @@ class Background(commands.Cog):
                     win_percent = f"{win_percent:0.2f}"
                 else:
                     win_percent = "Private"
-                page_content += (f"\n{i+1}. | [{row['clan_name']}](https://link.clashofclans.com/?action="
+                page_content += (f"\n{i+1}. | [#{row['clan_name']}](https://link.clashofclans.com/?action="
                                  f"OpenClanProfile&tag={row['clan_tag']}) | {row['war_wins']} | {row['war_losses']} | "
                                  f"{row['war_ties']} | {total_wars} | {win_percent}")
             start = content.index(start_marker)
