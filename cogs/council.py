@@ -937,11 +937,13 @@ class CouncilCog(commands.Cog):
                 await member.send(message)
                 counter += 1
             except:
+                await ctx.send(f"Something went wrong trying to send a message to Discord ID {row['discord_tag']}")
                 self.bot.logger.exception("DM send attempt")
         # Send same message to TubaKid so he knows what's going on
         member = ctx.guild.get_member(251150854571163648)
         await member.send(f"**The following has been sent to all RCS leaders by {ctx.author}**\n\n{message}")
-        await msg.edit(f"Message sent to {counter} RCS leaders.")
+        self.bot.logger.debug(f"Message sent to {counter} RCS leaders.")
+        await msg.edit(content=f"Message sent to {counter} RCS leaders.")
 
     @dm.command(name="ayedj", aliases=["dj", "djs"])
     async def dm_djs(self, ctx, *, message):
@@ -965,11 +967,12 @@ class CouncilCog(commands.Cog):
                 await member.send(message)
                 counter += 1
             except:
+                await ctx.send(f"Something went wrong trying to send a message to Discord ID {row['discord_tag']}")
                 self.bot.logger.exception("DM send attempt")
         # Send same message to TubaKid so he knows what's going on
         member = ctx.guild.get_member(251150854571163648)
         await member.send(f"**The following has been sent to all RCS DJs by {ctx.author}**\n\n{message}")
-        await msg.edit(f"Message sent to {counter} RCS DJs.")
+        await msg.edit(content=f"Message sent to {counter} RCS DJs.")
 
     @commands.command(name="find", hidden=True)
     @is_leader_or_mod_or_council()
