@@ -15,26 +15,11 @@ class NewHelp(commands.Cog):
 
         bot.help_command = HelpCommand()
         bot.help_command.cog = self
-        bot.invite = self.invite_link
-
-    @property
-    def invite_link(self):
-        perms = discord.Permissions.none()
-        perms.read_messages = True
-        perms.external_emojis = True
-        perms.send_messages = True
-        perms.manage_channels = True
-        perms.manage_messages = True
-        perms.embed_links = True
-        perms.read_message_history = True
-        perms.add_reactions = True
-        perms.attach_files = True
-        return discord.utils.oauth_url(self.bot.client_id, perms)
 
     @commands.command(aliases=["join"])
     async def invite(self, ctx):
         """Get an invite to add the bot to a server."""
-        await ctx.send(f"<{self.invite_link}>")
+        await ctx.send(f"<https://discord.gg/X8U9XjD>")
 
     @commands.command()
     async def feedback(self, ctx, *, content):

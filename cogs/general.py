@@ -620,35 +620,9 @@ class General(commands.Cog):
         # Currently DISABLED - Remove comment to auto-delete response with command
         # self.bot.messages[ctx.message.id] = response
 
-    @commands.group(invoke_without_subcommands=True)
+    @commands.command(name="season")
     async def season(self, ctx):
-        """Group of commands to deal with the current COC season"""
-        if ctx.invoked_subcommand is None:
-            embed = discord.Embed(title="Season Information", color=discord.Color.green())
-            embed.add_field(name="Season Start", value=coc_season.get_season_start())
-            embed.add_field(name="Season End", value=coc_season.get_season_end())
-            embed.add_field(name="Days Left", value=coc_season.get_days_left())
-            embed.set_thumbnail(url="http://www.mayodev.com/images/clock.png")
-            response = await ctx.send(embed=embed)
-            self.bot.messages[ctx.message.id] = response
-
-    @season.command(name="change", hidden=True)
-    @commands.is_owner()
-    async def change(self, ctx, arg: str = ""):
-        """Command to modify the season information"""
-        if datetime.now() < datetime.strptime(coc_season.get_season_end(), "%Y-%m-%d"):
-            return await ctx.send("I would much prefer it if you waited until the season ends to change the dates.")
-        try:
-            coc_season.update_season(arg)
-        except:
-            self.bot.logger.exception("season change")
-            return
-        response = await ctx.send(f"File updated.  The new season ends in {coc_season.get_days_left()} days.")
-        self.bot.messages[ctx.message.id] = response
-
-    @season.command(name="info")
-    async def season_info(self, ctx):
-        """Command to display the season information"""
+        """Responds with information on the current COC season"""
         embed = discord.Embed(title="Season Information", color=discord.Color.green())
         embed.add_field(name="Season Start", value=coc_season.get_season_start())
         embed.add_field(name="Season End", value=coc_season.get_season_end())
