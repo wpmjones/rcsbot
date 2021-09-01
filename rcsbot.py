@@ -9,9 +9,8 @@ from discord.ext import commands
 from coc.ext import discordlinks
 from cogs.utils import context, category
 from cogs.utils.db import Table
-from cogs.utils.error_handler import clash_event_error
 from cogs.utils.helper import get_active_wars, rcs_tags
-from datetime import datetime
+from cogs.utils.error_handler import error_handler, discord_event_error
 from config import settings
 from loguru import logger
 
@@ -51,7 +50,6 @@ elif enviro == "home":
                           "cogs.general",
                           "cogs.newhelp",
                           "cogs.owner",
-                          "cogs.plots",
                           ]
 else:
     token = settings['discord']['test_token']
@@ -67,8 +65,6 @@ else:
                           "cogs.general",
                           "cogs.newhelp",
                           "cogs.owner",
-                          "cogs.push",
-                          "cogs.tasks",
                           ]
 
 description = """Multi bot to serve the RCS - by TubaKid
@@ -80,14 +76,14 @@ You can use the clan tag (with or without the hashtag) or you can use the clan n
 There are easter eggs. Feel free to try and find them!"""
 
 
-class COCClient(coc.EventsClient):
-    async def on_event_error(self, event_name, exception, *args, **kwargs):
-        await clash_event_error(self.bot, event_name, exception, *args, **kwargs)
+# class COCClient(coc.EventsClient):
+#     async def on_event_error(self, event_name, exception, *args, **kwargs):
+#         await clash_event_error(self.bot, event_name, exception, *args, **kwargs)
 
 
 coc_client = coc.login(coc_email,
                        coc_pass,
-                       client=COCClient,
+                       client=coc.EventsClient,
                        key_count=2,
                        key_names=coc_names,
                        throttle_limit=25,
@@ -96,8 +92,12 @@ coc_client = coc.login(coc_email,
 links_client = discordlinks.login(settings['links']['user'],
                                   settings['links']['pass'])
 
-intents = discord.Intents.default()
+intents = discord.Intents.none()
+intents.guilds = True
+intents.guild_messages = True
+intents.guild_reactions = True
 intents.members = True
+intents.emojis = True
 
 
 class RcsBot(commands.Bot):
@@ -117,6 +117,10 @@ class RcsBot(commands.Bot):
         self.categories = {}
         self.active_wars = get_active_wars()
         self.session = None
+        if enviro == "LIVE":
+            self.live = True
+        else:
+            self.live = False
         self.loop.create_task(self.after_ready())
 
         for extension in initial_extensions:
@@ -161,49 +165,26 @@ class RcsBot(commands.Bot):
         async with ctx.acquire():
             await self.invoke(ctx)
 
-    async def on_command_error(self, ctx, error):
-        if isinstance(error, commands.NoPrivateMessage):
-            await ctx.author.send("This command cannot be used in private messages.")
-        elif isinstance(error, commands.DisabledCommand):
-            await ctx.author.send("Oops. This command is disabled and cannot be used.")
-        elif isinstance(error, commands.CommandInvokeError):
-            original = error.original
-            if not isinstance(original, discord.HTTPException):
-                self.logger.error(f"In {ctx.command.qualified_name}:", file=sys.stderr)
-                traceback.print_tb(original.__traceback__)
-                self.logger.error(f"{original.__class__.__name__}: {original}", file=sys.stderr)
-        else:
-            await ctx.send(error)
+    async def on_command_error(self, ctx, exception):
+        try:
+            return await error_handler(ctx, exception)
+        except Exception as exc:
+            self.logger.exception("Exception when logging command error", exc_info=exc)
 
     async def on_error(self, event_method, *args, **kwargs):
-        e = discord.Embed(title="Discord Event Error", color=0xa32952)
-        e.add_field(name="Event", value=event_method)
-        e.description = f"```py\n{traceback.format_exc()}\n```"
-        e.timestamp = datetime.utcnow()
-
-        args_str = ["```py\n"]
-        for index, arg in enumerate(args):
-            args_str.append(f"[{index}]: {arg!r}")
-        args_str.append("```")
-        e.add_field(name="Args", value="\n".join(args_str), inline=False)
-        try:
-            await self.log_channel.send(embed=e)
-        except:
-            pass
+        return await discord_event_error(self, event_method, *args, **kwargs)
 
     async def on_ready(self):
         activity = discord.Game("Clash of Clans")
         await self.change_presence(status=discord.Status.online, activity=activity)
         self.coc.add_clan_updates(*rcs_tags(prefix=True))
 
-    async def close(self):
-        await super().close()
-        await self.coc.close()
-
     async def after_ready(self):
         await self.wait_until_ready()
         self.session = aiohttp.ClientSession(loop=self.loop)
         logger.add(self.send_log, level=log_level)
+        self.error_webhooks = settings['rcs_hooks']['rcs_log']
+        logger.info("Bot is now ready")
 
 
 if __name__ == "__main__":

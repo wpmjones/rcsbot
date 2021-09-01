@@ -51,6 +51,7 @@ class SeasonConfig(commands.Cog, command_attrs=dict(hidden=True)):
             await self.bot.pool.execute(sql, cwl_start, cwl_end, cwl_season)
         except:
             self.bot.logger.exception("Add CWL failed")
+        self.bot.logger.info("New season process complete.")
 
 
 def setup(bot):

@@ -7,6 +7,7 @@ import re
 from discord.ext import commands, tasks
 from cogs.utils.constants import league_badges, log_types
 from cogs.utils.db import Sql
+from cogs.utils import helper
 from datetime import datetime, date, timedelta
 from random import randint
 from config import settings
@@ -26,6 +27,7 @@ class Background(commands.Cog):
         # Discord tasks
         self.clan_checks.start()
         self.rcs_list.start()
+        self.update_warlog.start()
         bot.loop.create_task(self.cog_init_ready())
 
     def cog_unload(self):
@@ -35,6 +37,7 @@ class Background(commands.Cog):
                                    )
         self.clan_checks.cancel()
         self.rcs_list.cancel()
+        self.update_warlog.cancel()
 
     async def cog_init_ready(self) -> None:
         """Sets the guild properly"""
@@ -403,6 +406,50 @@ class Background(commands.Cog):
     @rcs_list.before_loop
     async def before_rcs_list(self):
         await self.bot.wait_until_ready()
+
+    @tasks.loop(hours=1)
+    async def update_warlog(self):
+        conn = self.bot.pool
+        for tag in helper.rcs_tags():
+            try:
+                war_log = await self.bot.coc.get_warlog(f"#{tag}")
+            except coc.PrivateWarLog:
+                print(f"{tag} has a private war log.")
+                continue
+            for war in war_log:
+                if war.is_league_entry:
+                    # skip all CWL wars
+                    continue
+                sql = ("SELECT war_id, team_size, end_time::timestamp::date, war_state FROM rcs_wars "
+                       "WHERE clan_tag = $1 AND opponent_tag = $2 AND end_time < $3")
+                fetch = await conn.fetch(sql, tag, war.opponent.tag[1:], datetime.utcnow())
+                if fetch:
+                    # Update existing data in the database
+                    for row in fetch:
+                        if row['end_time'] == war.end_time.time.date() and row['war_state'] != "warEnded":
+                            # update database to reflect end of war
+                            sql = ("UPDATE rcs_wars SET war_state = 'warEnded', clan_attacks = $1, "
+                                   "clan_destruction = $2, clan_stars = $3, "
+                                   "opponent_destruction = $4, opponent_stars = $5 WHERE war_id = $6")
+                            await conn.execute(sql, war.clan.attacks_used, war.clan.destruction, war.clan.stars,
+                                               war.opponent.destruction, war.opponent.stars,
+                                               row['war_id'])
+                else:
+                    # War is not in database, add it (happens if bot is down)
+                    if war.end_time.time < datetime.utcnow() - timedelta(days=2):
+                        reported = True
+                    else:
+                        reported = False
+                    sql = ("INSERT INTO rcs_wars (clan_name, clan_tag, clan_attacks, clan_destruction, clan_stars,"
+                           "opponent_tag, opponent_name, opponent_destruction, opponent_stars,"
+                           "end_time, war_state, team_size, reported)"
+                           "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)")
+                    await conn.execute(sql, war.clan.name, war.clan.tag[1:], war.clan.attacks_used,
+                                       war.clan.destruction, war.clan.stars, war.opponent.tag[1:], war.opponent.name,
+                                       war.opponent.destruction, war.opponent.stars,
+                                       war.end_time.time, "warEnded", war.team_size, reported)
+                    self.bot.logger.info(f"Added war for {war.clan.name} vs {war.opponent.name} ending "
+                                         f"{war.end_time.time}.")
 
     @commands.Cog.listener()
     async def on_message(self, message):

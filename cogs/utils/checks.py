@@ -2,6 +2,10 @@ from discord.ext import commands
 from config import settings
 
 
+class NoConfigFailure(commands.CheckFailure):
+    pass
+
+
 async def check_guild_permissions(ctx, perms, check=all):
     if await ctx.bot.is_owner(ctx.author):
         return True

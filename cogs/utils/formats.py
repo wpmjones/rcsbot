@@ -49,6 +49,30 @@ def get_render_type(table, type_):
     return func(*args)
 
 
+def readable_time(delta_seconds):
+    if delta_seconds < 0:
+        ago = True
+        delta_seconds = - delta_seconds
+    else:
+        ago = False
+
+    hours, remainder = divmod(int(delta_seconds), 3600)
+    minutes, seconds = divmod(remainder, 60)
+    days, hours = divmod(hours, 24)
+
+    if days:
+        fmt = "{d}d {h}h {m}m"
+    elif hours:
+        fmt = "{h}h {m}m"
+    else:
+        fmt = "{m}m {s}s"
+
+    fmt = fmt.format(d=days, h=hours, m=minutes, s=seconds)
+    if ago:
+        return f"{fmt} ago"
+    return fmt
+
+
 class plural:
     def __init__(self, value):
         self.value = value
