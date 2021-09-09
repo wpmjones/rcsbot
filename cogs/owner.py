@@ -63,9 +63,11 @@ class OwnerCog(commands.Cog):
         """Displays a list of all guilds on which the bot is installed
         Bot owner only"""
         guild_list = ""
+        member_count = 0
         for counter, guild in enumerate(self.bot.guilds):
             guild_list += f"{guild.name} - {guild.id}\n"
-        guild_list += f"**RCS-Bot is installed on {counter} servers!**"
+            member_count += len(guild.members)
+        guild_list += f"**RCS-Bot is installed on {counter} servers!**\n{member_count} users."
         await ctx.send(guild_list)
 
     @commands.command(name="getroles", hidden=True)
