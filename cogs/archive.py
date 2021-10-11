@@ -145,6 +145,7 @@ class Archive(commands.Cog):
                         doc_width = 450
                     else:
                         doc_width = attachment.width
+                    self.bot.logger.info(attachment.url)
                     requests.append({
                         "insertInlineImage": {
                             "location": {
