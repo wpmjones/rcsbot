@@ -28,7 +28,7 @@ async def error_handler(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
         ctx.bot.logger.info("command missing required argument: %s, author: %s", ctx.invoked_with, ctx.author.id)
         return await ctx.send(f"Oops! That didn't look right... "
-                              f"please see how to use the command with `+help {ctx.command.qualified_name}`")
+                              f"please see how to use the command with `++help {ctx.command.qualified_name}`")
     if isinstance(error, commands.CommandOnCooldown):
         if await ctx.bot.is_owner(ctx.author):
             return await ctx.reinvoke()
@@ -38,7 +38,7 @@ async def error_handler(ctx, error):
     if isinstance(error, coc.HTTPException):
         ctx.bot.logger.info("coc api raised %s for command %s", error, ctx.invoked_with)
         return await ctx.send(f"The COC API returned {error.message}. "
-                              f"If this persists, please join the support server and let us know!")
+                              f"If this persists, please tag TubaKid!")
 
     ctx.command.reset_cooldown(ctx)
 
@@ -75,9 +75,7 @@ async def error_handler(ctx, error):
 
     await ctx.bot.error_webhook.send(embed=e)
     try:
-        await ctx.send("Uh oh! Something broke. This error has been reported; "
-                       "the owner is working on it. Please join the support server: "
-                       "https://discord.gg/ePt8y4V to stay updated!")
+        await ctx.send("Uh oh! Something broke. You might want to tag TubaKid and tell him to get his crap together!")
     except discord.Forbidden:
         pass
 
