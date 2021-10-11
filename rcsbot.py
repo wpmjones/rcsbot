@@ -183,7 +183,8 @@ class RcsBot(commands.Bot):
         await self.wait_until_ready()
         self.session = aiohttp.ClientSession(loop=self.loop)
         logger.add(self.send_log, level=log_level)
-        self.error_webhook = settings['rcs_hooks']['rcs_log']
+        error_webhooks = await self.get_channel(settings['log_channels']['rcs']).webhooks()
+        self.error_webhook = error_webhooks[0]
         logger.info("Bot is now ready")
 
 
