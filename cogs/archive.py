@@ -4,6 +4,7 @@ import asyncio
 from discord.ext import commands
 from datetime import datetime
 from cogs.utils.checks import is_scout_or_council
+from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
 from oauth2client import file, client, tools
 
@@ -183,7 +184,7 @@ class Archive(commands.Cog):
                         }
                     })
                     start += len_attachment + 2
-                except (TypeError, AttributeError) as e:
+                except (TypeError, AttributeError, HttpError) as e:
                     # This should handle non-image attachments and effectively skip them.
                     self.bot.logger.error(f"Error on attachment. Including link only.\n{attachment.url}\n{e}")
                     requests.append({
