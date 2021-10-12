@@ -14,7 +14,7 @@ from cogs.utils.error_handler import error_handler, discord_event_error
 from config import settings
 from loguru import logger
 
-enviro = "LIVE"
+enviro = settings['enviro']
 
 if enviro == "LIVE":
     token = settings['discord']['rcsbot_token']

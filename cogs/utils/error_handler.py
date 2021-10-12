@@ -59,7 +59,7 @@ async def error_handler(ctx, error):
     exc = "".join(
         traceback.format_exception(type(error), error, error.__traceback__, chain=False))
 
-    ctx.bot.logger.exception(f"Unhandled error occurred:\ncommand: {ctx.invoked_with}\nauthor: {ctx.author.id}")
+    ctx.bot.logger.error(f"Unhandled error occurred:\ncommand: {ctx.invoked_with}\nauthor: {ctx.author.id}")
 
     if len(exc) > 2000:
         fp = io.BytesIO(exc.encode("utf-8"))
@@ -67,11 +67,10 @@ async def error_handler(ctx, error):
         return await ctx.send(embed=e, file=discord.File(fp, "traceback.txt"))
 
     e.description = f"```py\n{exc}\n```"
-
     e.timestamp = datetime.datetime.utcnow()
+
     if not ctx.bot.live:
-        await ctx.send(embed=e)
-        return
+        return await ctx.send(embed=e)
 
     await ctx.bot.error_webhook.send(embed=e)
     try:
