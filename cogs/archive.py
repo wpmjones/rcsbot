@@ -219,7 +219,7 @@ class Archive(commands.Cog):
         await self.bot.log_channel.send(embed=embed)
         await msg.edit(content=f"Created document with title: {doc_name}\n<{doc_copy_link}>\n"
                                f"Please check that the entire document was archived properly, then issue the "
-                               f"`/delete` command.")
+                               f"`++delete` command.")
 
     @archive.command(name="list", hidden=True)
     @is_scout_or_council()
