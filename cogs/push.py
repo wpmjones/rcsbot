@@ -15,9 +15,9 @@ class Push(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.title = "2021 Summertime Trophy Push"
-        self.start_time = datetime(2021, 6, 14, 5, 0)
-        self.end_time = datetime(2021, 6, 20, 4, 55)
+        self.title = "2021 Turkey Time Trophy Push"
+        self.start_time = datetime(2021, 11, 22, 5, 0)
+        self.end_time = datetime(2021, 11, 28, 4, 55)
         # self.update_push.start()
 
     # def cog_unload(self):
@@ -29,17 +29,17 @@ class Push(commands.Cog):
         now = datetime.utcnow()
         if self.start_time < now < self.end_time:
             with Sql(autocommit=True) as cursor:
-                sql = "SELECT playerTag from rcspush_2021_1"
+                sql = "SELECT playerTag from rcspush_2021_2"
                 cursor.execute(sql)
                 fetch = cursor.fetchall()
                 player_tags = []
                 for row in fetch:
                     player_tags.append(row[0])
-                sql_1 = ("UPDATE rcspush_2021_1 "
+                sql_1 = ("UPDATE rcspush_2021_2 "
                          "SET currentTrophies = ?, currentThLevel = ? "
                          "WHERE playerTag = ?")
-                sql_2 = "SELECT legendTrophies FROM rcspush_2021_1 WHERE playerTag = ?"
-                sql_3 = ("UPDATE rcspush_2021_1 "
+                sql_2 = "SELECT legendTrophies FROM rcspush_2021_2 WHERE playerTag = ?"
+                sql_3 = ("UPDATE rcspush_2021_2 "
                          "SET legendTrophies = ? "
                          "WHERE playerTag = ?")
                 counter = 0
@@ -49,7 +49,7 @@ class Push(commands.Cog):
                         player = await self.bot.coc.get_player(tag)
                         if player.clan:
                             cursor.execute(sql_1, player.trophies, player.town_hall, player.tag[1:])
-                        if (player.town_hall < 14 and
+                        if (player.town_hall <= 13 and
                                 player.trophies >= 5000 and
                                 datetime.utcnow() > (self.end_time - timedelta(days=2))):
                             cursor.execute(sql_2, player.tag[1:])
@@ -268,7 +268,7 @@ class Push(commands.Cog):
                                  player.name.replace("'", "''"), player.clan.name])
         with Sql() as cursor:
             cursor.fast_executemany = True
-            sql = (f"INSERT INTO rcspush_2021_1 "
+            sql = (f"INSERT INTO rcspush_2021_2 "
                    f"(playerTag, clanTag, startingTrophies, currentTrophies, "
                    f"bestTrophies, startingThLevel, currentThLevel, playerName, clanName) "
                    f"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
