@@ -493,7 +493,8 @@ class General(commands.Cog):
                    "ORDER BY clan_name")
             clans = await conn.fetch(sql)
             content = ""
-            for league in cwl_league_order:
+            sort_leagues = cwl_league_order[::-1]
+            for league in sort_leagues:
                 header = f"**{league}:**\n"
                 temp = ""
                 for clan in clans:
