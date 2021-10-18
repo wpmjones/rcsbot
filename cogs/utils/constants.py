@@ -1,4 +1,4 @@
-cwl_league_names = {
+cwl_league_names = [
     "bronze iii",
     "bronze ii",
     "bronze i",
@@ -17,9 +17,9 @@ cwl_league_names = {
     "champion iii", "champions iii", "champs iii",
     "champion ii", "champions ii", "champs ii",
     "champion i", "champions i", "champs i",
-}
+]
 
-cwl_league_order = {
+cwl_league_order = [
     "Bronze III",
     "Bronze II",
     "Bronze I",
@@ -38,9 +38,9 @@ cwl_league_order = {
     "Champion III",
     "Champion II",
     "Champion I",
-}
+]
 
-trophy_leagues = {
+trophy_leagues = [
     "Bronze III",
     "Bronze II",
     "Bronze I",
@@ -59,7 +59,7 @@ trophy_leagues = {
     "Champion III",
     "Champion II",
     "Champion I",
-}
+]
 
 veri_status = {
     0: "has not been addressed",
@@ -93,7 +93,7 @@ log_types = {
     "loc_check": 7,
 }
 
-league_badges = {
+league_badges = [
     "https://api-assets.clashofclans.com/badges/200/N5MK3JwQAz0ykmo9EBP5DYU1oplUEc0iVTDo1vzC5vI.png",
     "https://api-assets.clashofclans.com/badges/200/s4LVlJNXHQhft0XANMh9yoTqwU1QTn1MwO5mgSF1MOY.png",
     "https://api-assets.clashofclans.com/badges/200/sy3Hd1Au-NdPNpXdZNxBtDVFoKYYbmK_51n5DZDbl1Q.png",
@@ -147,4 +147,4 @@ league_badges = {
     "https://api-assets.clashofclans.com/badges/200/Hl0g6w-hr3qsiX_mAl9YDtgB8UksV_5KsVKgYBTyERE.png",
     "https://api-assets.clashofclans.com/badges/200/dBujq3w_K8rfIWMXVnoECFjrXpyZ9FPeCLGXOGmfczA.png",
     "https://api-assets.clashofclans.com/badges/200/_cdaxnR9DhJfUY-0ptAooMzsj6VrKxnSZxRDx_KFWAc.png",
-}
+]
