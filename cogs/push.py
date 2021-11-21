@@ -16,7 +16,7 @@ class Push(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.title = "2021 Turkey Time Trophy Push"
-        self.start_time = datetime(2021, 11, 22, 5, 0)
+        self.start_time = datetime(2021, 11, 21, 5, 0)
         self.end_time = datetime(2021, 11, 28, 4, 55)
         # self.update_push.start()
 
