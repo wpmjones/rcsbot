@@ -258,6 +258,8 @@ class Push(commands.Cog):
         start = time.perf_counter()
         player_list = []
         async for clan in self.bot.coc.get_clans(rcs_tags()):
+            if clan.tag == "#C0LCCU8":
+                continue
             for member in clan.members:
                 player_list.append(member.tag)
         players_many = []
