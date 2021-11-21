@@ -5,8 +5,8 @@ import pathlib
 from discord.ext import commands
 from cogs.utils.checks import is_leader_or_mod_or_council
 from cogs.utils.converters import PlayerConverter, ClanConverter
-from cogs.utils.constants import cwl_league_names, cwl_league_order
-from cogs.utils.helper import rcs_names_tags
+from cogs.utils.constants import cwl_league_order
+from cogs.utils.helper import rcs_names_tags, rcs_tags
 from cogs.utils import formats
 from cogs.utils import season as coc_season
 from PIL import Image, ImageFont, ImageDraw
@@ -478,86 +478,25 @@ class General(commands.Cog):
 
     @commands.command(name="cwl")
     async def cwl(self, ctx, *args):
-        """Allows for specifying what CWL league your clan is in.
+        """List CWL leagues of all RCS clans
 
         **Example:**
-        ++cwl list - Shows list of RCS clans in their leagues
-        ++cwl Reddit Example Master II - assigns your clan to the specified league
+        ++cwl - Shows list of RCS clans in their leagues
         """
-        # TODO remove ability to update manually, add clan converter for clan specific request
-        conn = self.bot.pool
-        # Respond with list
-        if args[0] in ["all", "list"]:
-            sql = ("SELECT clan_name, clan_tag, cwl_league FROM rcs_clans "
-                   "WHERE cwl_league IS NOT NULL "
-                   "ORDER BY clan_name")
-            clans = await conn.fetch(sql)
-            content = ""
-            sort_leagues = cwl_league_order[::-1]
-            for league in sort_leagues:
-                header = f"**{league}:**\n"
-                temp = ""
-                for clan in clans:
-                    if clan['cwl_league'] == league:
-                        temp += f"  {clan['clan_name']} (#{clan['clan_tag']})\n"
-                if temp:
-                    content += header + temp
-            return await ctx.send(content)
-        # Handle user arguments
-        sql = "SELECT clan_name, clan_tag, discord_tag FROM rcs_clans ORDER BY clan_name"
-        fetch = await conn.fetch(sql)
-        clans = []
-        clans_tag = []
-        for clan in fetch:
-            clans.append(clan['clan_name'].lower())
-            clans_tag.append([clan['clan_tag'], clan['clan_name'], clan['discord_tag']])
-        leagues = cwl_league_names
-        league_num = "I"
-        if args[-1].lower() in ["3", "iii", "three"]:
-            league_num = "III"
-        if args[-1].lower() in ["2", "ii", "two"]:
-            league_num = "II"
-        if len(args) == 4:
-            clan = f"{args[0]} {args[1]}"
-            league = f"{args[2]} {league_num}"
-        elif len(args) == 3:
-            clan = f"{args[0]}"
-            league = f"{args[1]} {league_num}"
-        elif len(args) == 5:
-            clan = f"{args[0]} {args[1]} {args[2]}"
-            league = f"{args[3]} {league_num}"
-        else:
-            return await ctx.send("Please provide a clan name and CWL league in that order. "
-                                  "`++cwl Reddit Example Bronze II`")
-        self.bot.logger.debug(f"{ctx.command} for {ctx.author}\n{args}\n{clan}\n{league}")
-        if clan.lower() in clans and league.lower() in leagues:
-            if args[-2].lower() in ["master", "masters"]:
-                league = f"Master {league_num}"
-            elif args[-2].lower() in ["champ", "champs", "champion", "champions"]:
-                league = f"Champion {league_num}"
-            else:
-                league = f"{args[-2].title()} {league_num}"
-            for clan_tuple in clans_tag:
-                if clan.lower() == clan_tuple[1].lower():
-                    clan = clan_tuple[1]
-                    clan_tag = clan_tuple[0]
-                    leader = clan_tuple[2]
-                    break
-            await conn.execute(f"UPDATE rcs_clans "
-                               f"SET cwl_league = '{league}' "
-                               f"WHERE clan_tag = '{clan_tag}'")
-            await ctx.send("Update complete!")
-            if str(ctx.author.id) != str(leader):
-                try:
-                    leader_spam_chat = self.bot.get_channel(settings["rcs_channels"]["leader_spam"])
-                    await leader_spam_chat.send(f"<@{leader}> {clan}'s CWL league has been updated to {league} "
-                                                f"by {ctx.author.mention}.")
-                    await ctx.send("Update complete!")
-                except:
-                    self.bot.logger.exception("Failed to send to Leader Chat")
-        else:
-            return await ctx.send("Please provide a clan name and CWL league in that order. "
-                                  "`++cwl Reddit Example Bronze ii`")
+        sort_leagues = cwl_league_order[::-1]
+        cwl_clans = {}
+        for league in sort_leagues:
+            cwl_clans[league] = []
+        for tag in rcs_tags():
+            clan = await self.bot.coc.get_clan(tag)
+            league = clan.war_league.name.replace("League ", "")
+            cwl_clans[league].append(f"{clan.name} ({clan.tag})")
+        for league in sort_leagues:
+            content = header_only = f"**{league}:**\n"
+            for clan in cwl_clans[league]:
+                content += f"  {clan}\n"
+            if content != header_only:
+                await ctx.send(content)
 
     @commands.command(name="roll")
     async def roll(self, ctx, *args):
