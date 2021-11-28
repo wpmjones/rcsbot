@@ -49,7 +49,7 @@ class Push(commands.Cog):
                         player = await self.bot.coc.get_player(tag)
                         if player.clan:
                             cursor.execute(sql_1, player.trophies, player.town_hall, player.tag[1:])
-                        if (player.town_hall <= 13 and
+                        if (player.town_hall < 13 and
                                 player.trophies >= 5000 and
                                 datetime.utcnow() > (self.end_time - timedelta(days=2))):
                             cursor.execute(sql_2, player.tag[1:])
