@@ -600,6 +600,38 @@ class CouncilCog(commands.Cog):
         if ctx.invoked_subcommand is None:
             return await ctx.show_help(ctx.command)
 
+    @clan.command(name="names")
+    @is_council()
+    async def clan_names(self, ctx, clan: ClanConverter = None):
+        """Display alt and short names for the designated clan
+
+        **Example:**
+        ++clan names Oak
+        ++clan names "Reddit Epsilon
+        """
+        if not clan:
+            return await ctx.send("Please specify the clan name in your command.")
+
+        explain = ("Alt Name: This is the clan 'nickname' that can be used as an abbreviation when using the clan's "
+                   "name in bot commands.\n"
+                   "Short Names: These are the different possible names used in a Discord name of a player. Danger "
+                   "Bot uses these short names when searching for members of clans.\n\n")
+        conn = self.bot.pool
+        sql = "SELECT alt_name, short_name FROM rcs_clans WHERE clan_tag = $1"
+        fetch = await conn.fetchrow(sql, clan.tag[1:])
+        if fetch is not None:
+            alt_name = fetch[0]
+            short_names = fetch[1].split("/")
+            content = (f"{explain}"
+                       f"**Alt Name:** {alt_name}\n"
+                       f"**Short Names:**\n")
+            for short_name in short_names:
+                content += f"{short_name}\n"
+            await ctx.send(content)
+        else:
+            return await ctx.send("There was a problem retrieving the notes for this clan. Someone ought to "
+                                  "ping that old TubaKid guy and see if he can fix it.")
+
     @clan.command(name="notes")
     @is_council()
     async def clan_notes(self, ctx, clan: ClanConverter = None):
