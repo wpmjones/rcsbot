@@ -571,6 +571,19 @@ class General(commands.Cog):
         response = await ctx.send(embed=embed)
         self.bot.messages[ctx.message.id] = response
 
+    @commands.command(name="get_clan")
+    async def get_clan(self, ctx, clan: ClanConverter = None):
+        """Responds with general information on the specified clan"""
+        if not clan:
+            return await ctx.send("Please provide a valid RCS clan name or tag.")
+        embed = discord.Embed(title=clan.name, color=discord.Color.dark_red(), description=clan.description)
+        embed.set_thumbnail(url=clan.badge.url)
+        embed.add_field(name="Clan Tag", value=clan.tag)
+        embed.add_field(name="Clan Level", value=clan.level)
+        embed.add_field(name="War Log", value="Public" if clan.public_war_log else "Private")
+        embed.set_footer(text=f"War Record: {clan.war_wins}-{clan.war_losses}-{clan.war_ties}")
+        await ctx.send(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(General(bot))
