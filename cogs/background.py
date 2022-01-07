@@ -345,8 +345,8 @@ class Background(commands.Cog):
                 end = content.index(end_marker) + len(end_marker)
                 content = content.replace(content[start:end], "{}{}{}".format(start_marker, page_content, end_marker))
             # Family Clans
-            start_marker = "[](#feederStart)"
-            end_marker = "[](#feederEnd)"
+            start_marker = "[](#familyStart)"
+            end_marker = "[](#familyEnd)"
             sql = ("SELECT a.family_clan, a.clan_name, a.clan_tag, a.social_media, a.member_count, "
                    "b.leader_name, b.leader_reddit, a.notes "
                    "FROM rcs_clans a, rcs_clans b "
