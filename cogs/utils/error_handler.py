@@ -1,18 +1,18 @@
 import datetime
-import discord
+import nextcord
 import textwrap
 import traceback
 import io
 
 import coc
 from cogs.utils import formats, paginator, checks
-from discord.ext import commands
+from nextcord.ext import commands
 
 
 async def error_handler(ctx, error):
     error = getattr(error, "original", error)
 
-    if isinstance(error, (commands.MissingPermissions, RuntimeError, discord.Forbidden)):
+    if isinstance(error, (commands.MissingPermissions, RuntimeError, nextcord.Forbidden)):
         ctx.bot.logger.info("command raised no bot permissions: %s, author: %s, error: %s", ctx.invoked_with, ctx.author.id, error)
         return await ctx.send(str(error) if error else "Please double-check the bot's permissions and try again.")
 
@@ -42,10 +42,10 @@ async def error_handler(ctx, error):
 
     ctx.command.reset_cooldown(ctx)
 
-    if isinstance(error, (discord.Forbidden, discord.NotFound, paginator.CannotPaginate)):
+    if isinstance(error, (nextcord.Forbidden, nextcord.NotFound, paginator.CannotPaginate)):
         return
 
-    e = discord.Embed(title="Command Error", colour=0xcc3366)
+    e = nextcord.Embed(title="Command Error", colour=0xcc3366)
     e.add_field(name="Name", value=ctx.command.qualified_name)
     e.add_field(name="Author", value=f"{ctx.author} (ID: {ctx.author.id})")
 
@@ -64,7 +64,7 @@ async def error_handler(ctx, error):
     if len(exc) > 2000:
         fp = io.BytesIO(exc.encode("utf-8"))
         e.description = "Traceback was too long."
-        return await ctx.send(embed=e, file=discord.File(fp, "traceback.txt"))
+        return await ctx.send(embed=e, file=nextcord.File(fp, "traceback.txt"))
 
     e.description = f"```py\n{exc}\n```"
     e.timestamp = datetime.datetime.utcnow()
@@ -75,12 +75,12 @@ async def error_handler(ctx, error):
     await ctx.bot.error_webhook.send(embed=e)
     try:
         await ctx.send("Uh oh! Something broke. You might want to tag TubaKid and tell him to get his crap together!")
-    except discord.Forbidden:
+    except nextcord.Forbidden:
         pass
 
 
 async def discord_event_error(bot, event_method, *args, **kwargs):
-    e = discord.Embed(title="Discord Event Error", colour=0xa32952)
+    e = nextcord.Embed(title="Discord Event Error", colour=0xa32952)
     e.add_field(name="Event", value=event_method)
     e.description = f"```py\n{traceback.format_exc()}\n```"
     e.timestamp = datetime.datetime.utcnow()
@@ -98,7 +98,7 @@ async def discord_event_error(bot, event_method, *args, **kwargs):
 
 
 async def clash_event_error(bot, event_name, exception, *args, **kwargs):
-    e = discord.Embed(title="COC Event Error", colour=0xa32952)
+    e = nextcord.Embed(title="COC Event Error", colour=0xa32952)
     e.add_field(name="Event", value=event_name)
     e.description = f"```py\n{traceback.format_exc()}\n```"
     e.timestamp = datetime.datetime.utcnow()

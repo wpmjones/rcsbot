@@ -1,7 +1,7 @@
-import discord
+import nextcord
 import coc
 
-from discord.ext import commands, tasks
+from nextcord.ext import commands, tasks
 from cogs.utils.db import Sql
 from cogs.utils import helper
 from datetime import datetime, timedelta
@@ -51,10 +51,10 @@ class OwnerCog(commands.Cog):
     async def presence(self, ctx, *, msg: str = "default"):
         """Command to modify bot presence"""
         if msg.lower() == "default":
-            activity = discord.Game("Clash of Clans")
+            activity = nextcord.Game("Clash of Clans")
         else:
-            activity = discord.Activity(type=discord.ActivityType.watching, name=msg)
-        await self.bot.change_presence(status=discord.Status.online, activity=activity)
+            activity = nextcord.Activity(type=nextcord.ActivityType.watching, name=msg)
+        await self.bot.change_presence(status=nextcord.Status.online, activity=activity)
         print(f"{datetime.now()} - {ctx.author} changed the bot presence to {msg}")
 
     @commands.command(name="server", hidden=True)

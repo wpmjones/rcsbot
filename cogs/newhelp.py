@@ -1,8 +1,8 @@
-import discord
+import nextcord
 import asyncio
 import itertools
 
-from discord.ext import commands
+from nextcord.ext import commands
 from cogs.utils.paginator import Pages
 from datetime import datetime
 from config import emojis
@@ -24,7 +24,7 @@ class NewHelp(commands.Cog):
     @commands.command()
     async def feedback(self, ctx, *, content):
         """Give feedback on the bot."""
-        embed = discord.Embed(title="Feedback", color=discord.Color.green())
+        embed = nextcord.Embed(title="Feedback", color=nextcord.Color.green())
         channel = self.bot.get_channel(640755164004745235)
         if channel is None:
             return
@@ -47,7 +47,7 @@ class HelpPaginator(Pages):
     def __init__(self, help_command, ctx, entries, *, per_page=9):
         super().__init__(ctx, entries=entries, per_page=per_page)
         self.ctx = ctx
-        self.embed.colour = discord.Colour.green()
+        self.embed.colour = nextcord.Colour.green()
         self.title = ""
         self.description = ""
         self.prefix = help_command.clean_prefix
@@ -110,7 +110,7 @@ class HelpPaginator(Pages):
                        f"{emojis['other']['green']} Press :arrow_forward: to proceed.")
 
         self.description = description
-        embed = self.embed.copy() if self.embed else discord.Embed(colour=self.bot.colour)
+        embed = self.embed.copy() if self.embed else nextcord.Embed(colour=self.bot.colour)
         embed.clear_fields()
         embed.description = description
         embed.set_footer(text=f'We were on page {self.current_page} before this message.')
@@ -155,7 +155,7 @@ class HelpCommand(commands.HelpCommand):
             total += len(commands)
             actual_cog = bot.get_cog(cog) or bot.get_category(cog)
             # get the description if it exists (and the cog is valid) or return Empty embed.
-            description = actual_cog.description or discord.Embed.Empty
+            description = actual_cog.description or nextcord.Embed.Empty
             nested_pages.extend((actual_cog, description, commands[i:i + per_page])
                                 for i in range(0, len(commands), per_page
                                                )
@@ -209,7 +209,7 @@ class HelpCommand(commands.HelpCommand):
 
     async def send_command_help(self, command):
         # No pagination necessary for a single command.
-        embed = discord.Embed(colour=discord.Colour.blurple())
+        embed = nextcord.Embed(colour=nextcord.Colour.blurple())
         self.common_command_formatting(embed, command)
         await self.context.send(embed=embed)
 

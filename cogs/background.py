@@ -1,10 +1,10 @@
 import coc
-import discord
+import nextcord
 import asyncpraw
 import random
 import re
 
-from discord.ext import commands, tasks
+from nextcord.ext import commands, tasks
 from cogs.utils.constants import league_badges, log_types
 from cogs.utils.db import Sql
 from cogs.utils import helper
@@ -131,25 +131,25 @@ class Background(commands.Cog):
                 clan_size = 25
             clan = await self.bot.coc.get_clan(f"#{row['clanTag']}")
             if clan.badge.medium not in league_badges:
-                embed = discord.Embed(title=clan.name,
+                embed = nextcord.Embed(title=clan.name,
                                       description=f"Clan Level: {clan.level}",
-                                      color=discord.Color.red())
+                                      color=nextcord.Color.red())
                 embed.set_thumbnail(url=clan.badge.medium)
                 embed.set_footer(text="Incorrect Badge",
                                  icon_url=clan.badge.small)
                 await council_chat.send(embed=embed)
                 await bot_dev.send(f"{clan.name}\n{clan.badge.medium}\nJust in case...")
             if clan.member_count < clan_size and not cwl:
-                embed = discord.Embed(title=clan.name,
+                embed = nextcord.Embed(title=clan.name,
                                       description=clan_desc,
-                                      color=discord.Color.red())
+                                      color=nextcord.Color.red())
                 embed.add_field(name="Low Membership:", value=f"{clan.member_count} Members")
                 embed.add_field(name="In-gameLink", value=f"[Click Here]({clan.share_link})")
                 await council_chat.send(embed=embed)
             if clan.type != "inviteOnly":
-                embed = discord.Embed(title=clan.name,
+                embed = nextcord.Embed(title=clan.name,
                                       description=f"Type: {clan.type}",
-                                      color=discord.Color.red())
+                                      color=nextcord.Color.red())
                 embed.set_thumbnail(url=clan.badge.medium)
                 embed.set_footer(text="Type not set to Invite Only",
                                  icon_url="https://coc.guide/static/imgs/gear_up.png")
@@ -284,7 +284,7 @@ class Background(commands.Cog):
                 except:
                     self.bot.logger.exception("postgreSQL fail")
             if leader_changes and 8 < now.hour < 12:
-                embed = discord.Embed(color=discord.Color.dark_red())
+                embed = nextcord.Embed(color=nextcord.Color.dark_red())
                 embed.add_field(name="Leader Changes", value=leader_changes)
                 embed.add_field(name="Disclaimer", value="These changes may or may not be permanent. "
                                                          "Please investigate as appropriate.")
@@ -454,7 +454,7 @@ class Background(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         """Awards random points to members when posting messages"""
-        if isinstance(message.channel, discord.DMChannel):
+        if isinstance(message.channel, nextcord.DMChannel):
             return
         if message.author.bot or message.guild.id != settings['discord']['rcsguild_id']:
             return

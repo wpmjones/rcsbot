@@ -1,8 +1,8 @@
-import discord
+import nextcord
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from discord.ext import commands
+from nextcord.ext import commands
 from cogs.utils.converters import ClanConverter
 from cogs.utils.helper import rcs_tags
 
@@ -45,7 +45,7 @@ class Plots(commands.Cog):
         df = pd.DataFrame(data.items(), columns=["Town Hall", "Count"])
         df.plot(x="Town Hall", y="Count", kind="bar", xlabel="Town Hall Level", title=clan.name, legend=False, rot=0)
         plt.savefig(fname='plot')
-        await ctx.send(file=discord.File('plot.png'))
+        await ctx.send(file=nextcord.File('plot.png'))
 
     @plot.command(name="war_th", aliases=["warth", ])
     async def plot_war_th(self, ctx, clan: ClanConverter = None):
@@ -63,7 +63,7 @@ class Plots(commands.Cog):
         df = pd.DataFrame({war.clan.name: clan_th, war.opponent.name: oppo_th}, index=index)
         df.plot(kind="bar", rot=0, xlabel="Town Hall Level")
         plt.savefig(fname='plot')
-        await ctx.send(file=discord.File('plot.png'))
+        await ctx.send(file=nextcord.File('plot.png'))
 
     @plot.command(name="trophyattack")
     async def plot_trophy_attack(self, ctx):
@@ -81,7 +81,7 @@ class Plots(commands.Cog):
         df = pd.DataFrame({"Trophy Count": trophies, "Attack Wins": attack_wins})
         df.plot(kind="scatter", y="Attack Wins", x="Trophy Count")
         plt.savefig(fname='plot')
-        await ctx.send(file=discord.File('plot.png'))
+        await ctx.send(file=nextcord.File('plot.png'))
 
     @plot.command(name="by_teamsize", aliases=["avg", ])
     async def plot_by_teamsize(self, ctx, clan: ClanConverter = None):
@@ -110,7 +110,7 @@ class Plots(commands.Cog):
                 xlabel="Team Size", xticks=sizes, style=".-")
         plt.legend(["Avg Stars", "Max Stars", "Avg Attacks", "Max Attacks"])
         plt.savefig(fname='plot')
-        await ctx.send(file=discord.File('plot.png'))
+        await ctx.send(file=nextcord.File('plot.png'))
 
 
 def setup(bot):

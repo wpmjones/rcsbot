@@ -1,8 +1,8 @@
-import discord
+import nextcord
 import asyncio
 import io
 
-from discord.ext import commands
+from nextcord.ext import commands
 
 
 class _ContextDBAcquire:
@@ -124,7 +124,7 @@ class Context(commands.Context):
                   f'2\N{combining enclosing keycap} for option 2, etc.'
 
         author_id = author_id or self.author.id
-        msg = await self.send(embed=discord.Embed(color=self.bot.color, description=fmt))
+        msg = await self.send(embed=nextcord.Embed(color=self.bot.color, description=fmt))
 
         confirm = None
 
@@ -245,12 +245,12 @@ class Context(commands.Context):
         2) If ``escape_mentions`` is ``True`` then it escapes mentions.
         """
         if escape_mentions:
-            content = discord.utils.escape_mentions(content)
+            content = nextcord.utils.escape_mentions(content)
 
         if len(content) > 2000:
             fp = io.BytesIO(content.encode())
             kwargs.pop('file', None)
-            return await self.send(file=discord.File(fp, filename='message_too_long.txt'), **kwargs)
+            return await self.send(file=nextcord.File(fp, filename='message_too_long.txt'), **kwargs)
         else:
             return await self.send(content)
 
@@ -278,10 +278,10 @@ class Context(commands.Context):
             await channel.send(coll)
 
     @staticmethod
-    async def send_embed(channel, header, footer, text, color=discord.Color.red()):
+    async def send_embed(channel, header, footer, text, color=nextcord.Color.red()):
         """ Sends embed to channel, splitting if necessary """
         if len(text) < 1000:
-            embed = discord.Embed(color=color)
+            embed = nextcord.Embed(color=color)
             embed.add_field(name=header, value=text, inline=False)
             embed.set_footer(text=footer)
             await channel.send(embed=embed)
@@ -289,13 +289,13 @@ class Context(commands.Context):
             coll = ""
             for line in text.splitlines(keepends=True):
                 if len(coll) + len(line) > 1000:
-                    embed = discord.Embed(color=color)
+                    embed = nextcord.Embed(color=color)
                     embed.add_field(name=header, value=coll, inline=False)
                     await channel.send(embed=embed)
                     header = "Continued..."
                     coll = ""
                 coll += line
-            embed = discord.Embed(color=color)
+            embed = nextcord.Embed(color=color)
             embed.add_field(name=header, value=coll, inline=False)
             embed.set_footer(text=footer)
             await channel.send(embed=embed)

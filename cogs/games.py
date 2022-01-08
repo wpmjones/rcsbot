@@ -1,7 +1,7 @@
 import math
 import re
 
-from discord.ext import commands, tasks
+from nextcord.ext import commands, tasks
 from cogs.utils.checks import is_leader_or_mod_or_council
 from cogs.utils.converters import ClanConverter, PlayerConverter
 from cogs.utils.helper import rcs_tags

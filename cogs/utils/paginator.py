@@ -1,6 +1,6 @@
 import asyncio
-import discord
-from discord.ext.commands import Paginator as CommandPaginator
+import nextcord
+from nextcord.ext.commands import Paginator as CommandPaginator
 
 
 class CannotPaginate(Exception):
@@ -29,11 +29,11 @@ class Pages:
 
     Attributes
     -----------
-    embed: discord.Embed
+    embed: nextcord.Embed
         The embed object that is being used to send pagination info.
         Feel free to modify this externally. Only the description,
         footer fields, and colour are internally modified.
-    permissions: discord.Permissions
+    permissions: nextcord.Permissions
         Our permissions for the channel.
     """
     def __init__(self, ctx, *, entries, per_page=12, show_entry_count=False):
@@ -47,7 +47,7 @@ class Pages:
         if left_over:
             pages += 1
         self.maximum_pages = pages
-        self.embed = discord.Embed(colour=discord.Colour.blurple())
+        self.embed = nextcord.Embed(colour=nextcord.Colour.blurple())
         self.paginating = len(entries) > per_page
         self.show_entry_count = show_entry_count
         self.reaction_emojis = [
@@ -260,7 +260,7 @@ class FieldPages(Pages):
 
     def prepare_embed(self, entries, page, *, first=False):
         self.embed.clear_fields()
-        self.embed.description = discord.Embed.Empty
+        self.embed.description = nextcord.Embed.Empty
 
         for key, value in entries:
             self.embed.add_field(name=key, value=value, inline=False)

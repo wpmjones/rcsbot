@@ -1,8 +1,8 @@
-import discord
+import nextcord
 import coc
 import re
 
-from discord.ext import commands, tasks
+from nextcord.ext import commands, tasks
 from datetime import datetime, date
 from cogs.utils.constants import log_types
 from cogs.utils.db import Sql
@@ -83,7 +83,7 @@ class DiscordCheck(commands.Cog):
                         if reported < 3:
                             clan = get_clan(player.clan.tag[1:])
                             await danger_channel.send(f"<@{clan['leaderTag']}>")
-                            embed = discord.Embed(color=discord.Color.dark_red())
+                            embed = nextcord.Embed(color=nextcord.Color.dark_red())
                             embed.add_field(name="Leader Note found:",
                                             value=f"{player.name} ({player.tag}) is in {player.clan.name}. Please "
                                                   f"search for `in:leader-notes {player.tag}` for details.")
@@ -217,7 +217,7 @@ class DiscordCheck(commands.Cog):
     async def send_embed(channel, header, text):
         """ Sends embed to channel, splitting if necessary """
         if len(text) < 1000:
-            embed = discord.Embed(color=color_pick(181, 0, 0))
+            embed = nextcord.Embed(color=color_pick(181, 0, 0))
             embed.add_field(name=header, value=text, inline=False)
             embed.set_footer(text="If someone is no longer in your clan, please notify a Chat Mod "
                                   "to have their Member role removed.",
@@ -227,13 +227,13 @@ class DiscordCheck(commands.Cog):
             coll = ""
             for line in text.splitlines(keepends=True):
                 if len(coll) + len(line) > 1000:
-                    embed = discord.Embed(color=color_pick(181, 0, 0))
+                    embed = nextcord.Embed(color=color_pick(181, 0, 0))
                     embed.add_field(name=header, value=coll, inline=False)
                     await channel.send(embed=embed)
                     header = "Continued..."
                     coll = ""
                 coll += line
-            embed = discord.Embed(color=color_pick(181, 0, 0))
+            embed = nextcord.Embed(color=color_pick(181, 0, 0))
             embed.add_field(name=header, value=coll, inline=False)
             embed.set_footer(text="If someone is no longer in your clan, please notify a Chat Mod "
                                   "to have their Member role removed.",

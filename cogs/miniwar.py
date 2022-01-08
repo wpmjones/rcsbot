@@ -1,8 +1,8 @@
 import asyncio
 import coc
-import discord
+import nextcord
 
-from discord.ext import commands
+from nextcord.ext import commands
 from datetime import datetime, timedelta
 from config import settings
 

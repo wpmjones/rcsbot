@@ -1,8 +1,8 @@
-import discord
+import nextcord
 import math
 import pathlib
 
-from discord.ext import commands
+from nextcord.ext import commands
 from cogs.utils.checks import is_leader_or_mod_or_council
 from cogs.utils.converters import PlayerConverter, ClanConverter
 from cogs.utils.constants import cwl_league_order
@@ -331,7 +331,7 @@ class General(commands.Cog):
 
     @commands.group(name="link", invoke_without_command=True, hidden=True)
     @is_leader_or_mod_or_council()
-    async def link(self, ctx, user: discord.User = None, player: PlayerConverter = None):
+    async def link(self, ctx, user: nextcord.User = None, player: PlayerConverter = None):
         """Allows leaders, chat mods or council to link a Discord member to an in-game player tag
         
         **Permissions:**
@@ -556,14 +556,14 @@ class General(commands.Cog):
         final_buffer = BytesIO()
         final_image.save(final_buffer, "png")
         final_buffer.seek(0)
-        response = await ctx.send(file=discord.File(final_buffer, "results.png"))
+        response = await ctx.send(file=nextcord.File(final_buffer, "results.png"))
         # Currently DISABLED - Remove comment to auto-delete response with command
         # self.bot.messages[ctx.message.id] = response
 
     @commands.command(name="season")
     async def season(self, ctx):
         """Responds with information on the current COC season"""
-        embed = discord.Embed(title="Season Information", color=discord.Color.green())
+        embed = nextcord.Embed(title="Season Information", color=nextcord.Color.green())
         embed.add_field(name="Season Start", value=coc_season.get_season_start())
         embed.add_field(name="Season End", value=coc_season.get_season_end())
         embed.add_field(name="Days Left", value=coc_season.get_days_left())
@@ -576,7 +576,7 @@ class General(commands.Cog):
         """Responds with general information on the specified clan"""
         if not clan:
             return await ctx.send("Please provide a valid RCS clan name or tag.")
-        embed = discord.Embed(title=clan.name, color=discord.Color.dark_red(), description=clan.description)
+        embed = nextcord.Embed(title=clan.name, color=nextcord.Color.dark_red(), description=clan.description)
         embed.set_thumbnail(url=clan.badge.url)
         embed.add_field(name="Clan Tag", value=clan.tag)
         embed.add_field(name="Clan Level", value=clan.level)

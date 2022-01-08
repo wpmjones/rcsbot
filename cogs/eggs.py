@@ -1,7 +1,7 @@
-import discord
+import nextcord
 import requests
 
-from discord.ext import commands
+from nextcord.ext import commands
 from config import settings
 
 
@@ -13,7 +13,7 @@ class Eggs(commands.Cog):
         self.bot = bot
 
     @commands.command(name="avatar", hidden=True)
-    async def avatar(self, ctx, user: discord.Member = None):
+    async def avatar(self, ctx, user: nextcord.Member = None):
         """Command to see a larger version of the given member's avatar
 
         Examples:
@@ -23,7 +23,7 @@ class Eggs(commands.Cog):
         """
         if not user:
             user = ctx.author
-        embed = discord.Embed(color=discord.Color.blue())
+        embed = nextcord.Embed(color=nextcord.Color.blue())
         embed.add_field(name=f"{user.name}#{user.discriminator}", value=user.display_name, inline=True)
         embed.add_field(name="Avatar URL", value=user.avatar_url, inline=True)
         embed.set_image(url=user.avatar_url_as(size=128))
@@ -35,13 +35,13 @@ class Eggs(commands.Cog):
     @commands.command(name="zag", aliases=["zag-geek", "zaggeek"], hidden=True)
     async def zag(self, ctx):
         """[Easter Egg] Photo of Zag-geek"""
-        response = await ctx.send(file=discord.File("/home/tuba/rcsbot/cogs/zag.jpg"))
+        response = await ctx.send(file=nextcord.File("/home/tuba/rcsbot/cogs/zag.jpg"))
         self.bot.messages[ctx.message.id] = response
 
     @commands.command(name="tuba", hidden=True)
     async def tuba(self, ctx):
         """[Easter Egg] Not a photo of TubaKid"""
-        response = await ctx.send(file=discord.File("/home/tuba/rcsbot/cogs/tuba.jpg"))
+        response = await ctx.send(file=nextcord.File("/home/tuba/rcsbot/cogs/tuba.jpg"))
         self.bot.messages[ctx.message.id] = response
 
     @commands.command(name="password", hidden=True)

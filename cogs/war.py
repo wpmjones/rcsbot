@@ -1,6 +1,6 @@
 import coc
 
-from discord.ext import commands
+from nextcord.ext import commands
 from cogs.utils.helper import rcs_tags
 from config import settings
 

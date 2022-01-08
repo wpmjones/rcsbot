@@ -1,11 +1,11 @@
-import discord
+import nextcord
 import traceback
 import coc
 import sys
 import aiohttp
 import asyncio
 
-from discord.ext import commands
+from nextcord.ext import commands
 from coc.ext import discordlinks
 from cogs.utils import context, category
 from cogs.utils.db import Table
@@ -92,7 +92,7 @@ coc_client = coc.login(coc_email,
 links_client = discordlinks.login(settings['links']['user'],
                                   settings['links']['pass'])
 
-intents = discord.Intents.none()
+intents = nextcord.Intents.none()
 intents.guilds = True
 intents.guild_messages = True
 intents.guild_reactions = True
@@ -111,7 +111,7 @@ class RcsBot(commands.Bot):
         self.coc = coc_client
         self.links = links_client
         self.logger = logger
-        self.color = discord.Color.dark_red()
+        self.color = nextcord.Color.dark_red()
         self.client_id = settings['discord']['rcs_client_id']
         self.messages = {}
         self.categories = {}
@@ -175,8 +175,8 @@ class RcsBot(commands.Bot):
         return await discord_event_error(self, event_method, *args, **kwargs)
 
     async def on_ready(self):
-        activity = discord.Game("Clash of Clans")
-        await self.change_presence(status=discord.Status.online, activity=activity)
+        activity = nextcord.Game("Clash of Clans")
+        await self.change_presence(status=nextcord.Status.online, activity=activity)
         self.coc.add_clan_updates(*rcs_tags(prefix=True))
 
     async def after_ready(self):

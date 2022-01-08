@@ -1,9 +1,9 @@
 import coc
-import discord
+import nextcord
 import asyncio
 import re
 
-from discord.ext import commands
+from nextcord.ext import commands
 from cogs.utils.checks import is_council, is_mod_or_council, is_leader_or_mod_or_council
 from cogs.utils.constants import class_names, class_values
 from cogs.utils.converters import ClanConverter, PlayerConverter
@@ -121,7 +121,7 @@ class CouncilCog(commands.Cog):
 
     @commands.command(name="userinfo", aliases=["ui"], hidden=True)
     @is_mod_or_council()
-    async def user_info(self, ctx, user: discord.Member):
+    async def user_info(self, ctx, user: nextcord.Member):
         """Command to retrieve join date and other info for Discord user.
 
         **Permissions:**
@@ -143,7 +143,7 @@ class CouncilCog(commands.Cog):
         for role in user.roles:
             if role.name != "@everyone":
                 user_roles.append(role.name)
-        embed = discord.Embed(title=user.display_name,
+        embed = nextcord.Embed(title=user.display_name,
                               description=f"{user.name}#{user.discriminator}",
                               color=color_pick(255, 165, 0))
         embed.set_thumbnail(url=user.avatar_url)
@@ -156,7 +156,7 @@ class CouncilCog(commands.Cog):
 
     @commands.command(name="recommend", hidden=True)
     @is_council()
-    async def recommend(self, ctx, user: discord.Member, *, desc):
+    async def recommend(self, ctx, user: nextcord.Member, *, desc):
         """Command to recommend new Council member.
 
         **Permissions:**
@@ -477,19 +477,19 @@ class CouncilCog(commands.Cog):
                                      "RCS Clan War Status",
                                      "This does not include CWL wars.",
                                      in_prep,
-                                     discord.Color.dark_gold())
+                                     nextcord.Color.dark_gold())
             if in_war != "":
                 await ctx.send_embed(ctx.channel,
                                      "RCS Clan War Status",
                                      "This does not include CWL wars.",
                                      in_war,
-                                     discord.Color.dark_red())
+                                     nextcord.Color.dark_red())
             if in_cwl != "":
                 await ctx.send_embed(ctx.channel,
                                      "RCS CWL War Status",
                                      "These are CWL wars.",
                                      in_cwl,
-                                     discord.Color.dark_blue())
+                                     nextcord.Color.dark_blue())
             if all(x == "" for x in [in_prep, in_war, in_cwl]):
                 await ctx.send("No clans are in war right now.")
 
@@ -499,16 +499,16 @@ class CouncilCog(commands.Cog):
         """Responds with a list of all members who have been banned from the RCS Discord Server"""
         guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
         content = ""
-        async for entry in guild.audit_logs(action=discord.AuditLogAction.ban):
+        async for entry in guild.audit_logs(action=nextcord.AuditLogAction.ban):
             reason = entry.reason
             if not reason:
                 reason = "No reason given"
             content += (f"**{entry.target}** was banned by {entry.user.display_name} on "
                         f"**{entry.created_at.strftime('%Y-%m-%d')}** "
                         f"for:\n{reason}\n\n")
-        embed = discord.Embed(title="Members banned from RCS Discord",
+        embed = nextcord.Embed(title="Members banned from RCS Discord",
                               description=content,
-                              color=discord.Color.dark_red())
+                              color=nextcord.Color.dark_red())
         if ctx.channel.id in (settings['rcs_channels']['council'],
                               settings['rcs_channels']['council_spam'],
                               settings['rcs_channels']['mods']):
@@ -527,16 +527,16 @@ class CouncilCog(commands.Cog):
         """Responds with a list of all members who have been banned from the RCS Discord Server"""
         guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
         content = ""
-        async for entry in guild.audit_logs(action=discord.AuditLogAction.kick):
+        async for entry in guild.audit_logs(action=nextcord.AuditLogAction.kick):
             reason = entry.reason
             if not reason:
                 reason = "No reason given"
             content += (f"**{entry.target}** was kicked by {entry.user.display_name} on "
                         f"**{entry.created_at.strftime('%Y-%m-%d')}** "
                         f"for:\n{reason}\n\n")
-        embed = discord.Embed(title="Members kicked from RCS Discord",
+        embed = nextcord.Embed(title="Members kicked from RCS Discord",
                               description=content,
-                              color=discord.Color.dark_red())
+                              color=nextcord.Color.dark_red())
         if ctx.channel.id in (settings['rcs_channels']['council'],
                               settings['rcs_channels']['council_spam'],
                               settings['rcs_channels']['mods']):
@@ -577,7 +577,7 @@ class CouncilCog(commands.Cog):
                 alt_names += f"{player.name}\n"
         else:
             alt_names = "No alts for this leader"
-        embed = discord.Embed(title=f"Leader Information for {clan.name}",
+        embed = nextcord.Embed(title=f"Leader Information for {clan.name}",
                               color=color_pick(240, 240, 240))
         embed.set_thumbnail(url=badge_url)
         embed.add_field(name="Leader name:",
@@ -835,7 +835,7 @@ class CouncilCog(commands.Cog):
             await ctx.send_help(ctx.command)
 
     @warn.command(name="add")
-    async def warn_add(self, ctx, member: discord.Member = None, *, reason=None):
+    async def warn_add(self, ctx, member: nextcord.Member = None, *, reason=None):
         """Adds a warning for the specified user"""
         if not member:
             return await ctx.send("It would appear that you have not provided a valid Discord user. Please try again.")
@@ -901,7 +901,7 @@ class CouncilCog(commands.Cog):
         await ctx.message.add_reaction('\u2705')
 
     @warn.command(name="list")
-    async def warn_list(self, ctx, member: discord.Member = None):
+    async def warn_list(self, ctx, member: nextcord.Member = None):
         """Lists current warnings for the specified user"""
         if not member:
             return await ctx.send("It would appear that you have not provided a valid Discord user. Please try again.")
@@ -920,9 +920,9 @@ class CouncilCog(commands.Cog):
                         f"\n")
         # Remove extra line at the end of content
         content = content[:-2]
-        embed = discord.Embed(title=f"Warnings for {member.display_name}",
+        embed = nextcord.Embed(title=f"Warnings for {member.display_name}",
                               description=content,
-                              color=discord.Color.dark_red())
+                              color=nextcord.Color.dark_red())
         embed.set_footer(text="To remove a warning, use ++warn remove ##")
         if ctx.channel.id in (settings['rcs_channels']['council'],
                               settings['rcs_channels']['council_spam'],

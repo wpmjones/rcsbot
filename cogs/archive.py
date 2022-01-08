@@ -1,7 +1,7 @@
-import discord
+import nextcord
 import asyncio
 
-from discord.ext import commands
+from nextcord.ext import commands
 from datetime import datetime
 from cogs.utils.checks import is_scout_or_council
 from googleapiclient.errors import HttpError
@@ -212,7 +212,7 @@ class Archive(commands.Cog):
         sql = ("INSERT INTO rcs_archives (doc_title, doc_link, doc_body) "
                "VALUES ($1, $2, $3)")
         await conn.execute(sql, doc_name, doc_copy_id, doc_body)
-        embed = discord.Embed(title="Archive Document Created", color=discord.Color.purple())
+        embed = nextcord.Embed(title="Archive Document Created", color=nextcord.Color.purple())
         embed.add_field(name="Guild", value=ctx.guild.name, inline=False)
         embed.add_field(name="Channel", value=ctx.channel.name, inline=False)
         embed.add_field(name=doc_name, value=doc_copy_link, inline=False)

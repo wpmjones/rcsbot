@@ -1,8 +1,8 @@
-import discord
+import nextcord
 import math
 import time
 
-from discord.ext import commands, tasks
+from nextcord.ext import commands, tasks
 from cogs.utils import formats
 from cogs.utils.converters import ClanConverter
 from cogs.utils.db import Sql
@@ -78,7 +78,7 @@ class Push(commands.Cog):
     async def push_info(self, ctx):
         """Provides current status of the push (start/end time)."""
         now = datetime.utcnow()
-        embed = discord.Embed(title=self.title, color=discord.Color.from_rgb(0, 183, 0))
+        embed = nextcord.Embed(title=self.title, color=nextcord.Color.from_rgb(0, 183, 0))
         embed.set_footer(icon_url="https://openclipart.org/image/300px/svg_to_png/122449/1298569779.png",
                          text="For help with this command, type ++help push")
         embed.add_field(name="Start time (UTC):", value=self.start_time.strftime("%d-%b-%Y %H:%M"), inline=True)

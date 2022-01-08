@@ -1,8 +1,8 @@
-import discord
+import nextcord
 import gspread
 import requests
 
-from discord.ext import commands
+from nextcord.ext import commands
 from cogs.utils.checks import is_council
 from cogs.utils.constants import veri_status
 from config import settings
@@ -41,13 +41,13 @@ class Tasks(commands.Cog):
     @is_council()
     async def tasks_all(self, ctx):
         """Sends all incomplete tasks to requestor via DM"""
-        if isinstance(ctx.channel, discord.TextChannel):
+        if isinstance(ctx.channel, nextcord.TextChannel):
             await ctx.send("This is a long list. I'm going to send it to your DM. To view items "
                            "in the Council Chat, please request them individually (`++tasks suggestions`).")
         # Suggestions
         sheet = spreadsheet.worksheet("Suggestions")
         results = sheet.get("A2:I")
-        embed = discord.Embed(title="RCS Council Suggestions", color=discord.Color.blurple())
+        embed = nextcord.Embed(title="RCS Council Suggestions", color=nextcord.Color.blurple())
         flag = 0
         for row in results:
             if len(row) < 9:
@@ -61,7 +61,7 @@ class Tasks(commands.Cog):
         # Council Nominations
         sheet = spreadsheet.worksheet("Council")
         results = sheet.get("A2:J")
-        embed = discord.Embed(title="RCS Council Nominations", color=discord.Color.dark_gold())
+        embed = nextcord.Embed(title="RCS Council Nominations", color=nextcord.Color.dark_gold())
         for row in results:
             if row[8] == "":
                 embed.add_field(name=f"Council Nomination for {row[3]}\n{row[9]}",
@@ -74,7 +74,7 @@ class Tasks(commands.Cog):
         # Verification Requests
         sheet = spreadsheet.worksheet("Verification")
         results = sheet.get("A2:K")
-        embed = discord.Embed(title="RCS Council Verification Requests", color=discord.Color.dark_blue())
+        embed = nextcord.Embed(title="RCS Council Verification Requests", color=nextcord.Color.dark_blue())
         for row in results:
             if len(row) < 11 or row[10] in ("1", "2", "3", "4"):
                 status = "has not been addressed"
@@ -95,7 +95,7 @@ class Tasks(commands.Cog):
         # Other Submissions
         sheet = spreadsheet.worksheet("Other")
         results = sheet.get("A2:I")
-        embed = discord.Embed(title="RCS Council Other Items", color=discord.Color.gold())
+        embed = nextcord.Embed(title="RCS Council Other Items", color=nextcord.Color.gold())
         for row in results:
             if len(row) < 9:
                 if len(row[6]) > 1:
@@ -113,7 +113,7 @@ class Tasks(commands.Cog):
         # Tasks (Individual Action Items)
         sheet = spreadsheet.worksheet("Tasks")
         results = sheet.get("A2:I")
-        embed = discord.Embed(title="RCS Council Action Items", color=discord.Color.dark_magenta())
+        embed = nextcord.Embed(title="RCS Council Action Items", color=nextcord.Color.dark_magenta())
         for row in results:
             if len(row) < 9:
                 if len(row[6]) > 1:
@@ -136,7 +136,7 @@ class Tasks(commands.Cog):
         """Displays all incomplete suggestion tasks"""
         sheet = spreadsheet.worksheet("Suggestions")
         results = sheet.get("A2:I")
-        embed = discord.Embed(title="RCS Council Suggestions", color=discord.Color.blurple())
+        embed = nextcord.Embed(title="RCS Council Suggestions", color=nextcord.Color.blurple())
         for row in results:
             if len(row) < 9:
                 embed.add_field(name=f"Suggestion from {row[1]}\n{row[7]}\nDated {row[0]}",
@@ -154,7 +154,7 @@ class Tasks(commands.Cog):
         """Displays all incomplete council nominations"""
         sheet = spreadsheet.worksheet("Council")
         results = sheet.get("A2:J")
-        embed = discord.Embed(title="RCS Council Nominations", color=discord.Color.dark_gold())
+        embed = nextcord.Embed(title="RCS Council Nominations", color=nextcord.Color.dark_gold())
         for row in results:
             if row[8] == "":
                 embed.add_field(name=f"Council Nomination for {row[3]}\n{row[9]}\nDated {row[0]}",
@@ -172,7 +172,7 @@ class Tasks(commands.Cog):
         """Displays all incomplete RCS clan verification requests"""
         sheet = spreadsheet.worksheet("Verification")
         results = sheet.get("A2:K")
-        embed = discord.Embed(title="RCS Council Verification Requests", color=discord.Color.dark_blue())
+        embed = nextcord.Embed(title="RCS Council Verification Requests", color=nextcord.Color.dark_blue())
         for row in results:
             if len(row) < 11:
                 status = "has not been addressed"
@@ -200,7 +200,7 @@ class Tasks(commands.Cog):
         try:
             sheet = spreadsheet.worksheet("Other")
             results = sheet.get("A2:I")
-            embed = discord.Embed(title="RCS Council Other Items", color=discord.Color.gold())
+            embed = nextcord.Embed(title="RCS Council Other Items", color=nextcord.Color.gold())
             for row in results:
                 if len(row) < 9:
                     if len(row[6]) > 1:
@@ -224,7 +224,7 @@ class Tasks(commands.Cog):
         """Displays all incomplete Action Items"""
         sheet = spreadsheet.worksheet("Tasks")
         results = sheet.get("A2:I")
-        embed = discord.Embed(title="RCS Council Action Items", color=discord.Color.dark_magenta())
+        embed = nextcord.Embed(title="RCS Council Action Items", color=nextcord.Color.dark_magenta())
         for row in results:
             if len(row) < 9:
                 if len(row[6]) > 1:
@@ -242,7 +242,7 @@ class Tasks(commands.Cog):
 
     @tasks.command(name="add", aliases=["new"])
     @is_council()
-    async def tasks_add(self, ctx, user: discord.Member, *, task):
+    async def tasks_add(self, ctx, user: nextcord.Member, *, task):
         """Adds a new action item and assigns it to the specified Discord user
 
         **Example:**
@@ -263,7 +263,7 @@ class Tasks(commands.Cog):
 
     @tasks.command(name="assign")
     @is_council()
-    async def tasks_assign(self, ctx, user: discord.Member, task_id):
+    async def tasks_assign(self, ctx, user: nextcord.Member, task_id):
         """Assigns the specified tasks to the Discord user provided
 
         **Example:**

@@ -1,7 +1,7 @@
 import coc
 import re
 
-from discord.ext import commands
+from nextcord.ext import commands
 from cogs.utils.helper import rcs_names_tags, rcs_tags
 
 tag_validator = re.compile("^#?[PYLQGRJCUV0289]+$")
