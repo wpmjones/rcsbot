@@ -311,6 +311,30 @@ class Games(commands.Cog):
         await conn.execute(sql, starting_points, games['event_id'], player.tag[1:])
         await ctx.send(f"Points for {player.name} have been updated to {games_points}.")
 
+    @games.command(name="start", hidden=True)
+    @commands.is_owner()
+    async def games_start(self, ctx):
+        """For starting games manually"""
+        conn = self.bot.pool
+        games = await self.get_current_games()
+        games_id = games['games_id']
+        to_insert = []
+        async for clan in self.bot.coc.get_clans(rcs_tags(prefix=True)):
+            counter = 1
+            async for member in clan.get_detailed_members():
+                to_insert.append((counter,
+                                  games_id,
+                                  member.tag[1:],
+                                  clan.tag[1:],
+                                  member.get_achievement("Games Champion").value,
+                                  member.get_achievement("Games Champion").value
+                                  ))
+                counter += 1
+        sql = ("INSERT INTO rcs_clan_games (event_id, player_tag, clan_tag, starting_points, current_points) "
+               "SELECT x.event_id, x.player_tag, x.clan_tag, x.starting_points, x.current_points "
+               "FROM unnest($1::rcs_clan_games[]) as x")
+        await conn.execute(sql, to_insert)
+
 
 def setup(bot):
     bot.add_cog(Games(bot))
