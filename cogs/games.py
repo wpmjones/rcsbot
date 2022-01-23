@@ -334,6 +334,7 @@ class Games(commands.Cog):
                "SELECT x.event_id, x.player_tag, x.clan_tag, x.starting_points, x.current_points "
                "FROM unnest($1::rcs_clan_games[]) as x")
         await conn.execute(sql, to_insert)
+        await ctx.send(f"Added {counter} games records for the current games.")
 
 
 def setup(bot):
