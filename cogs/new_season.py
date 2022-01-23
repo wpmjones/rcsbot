@@ -33,8 +33,8 @@ class SeasonConfig(commands.Cog, command_attrs=dict(hidden=True)):
                 player_points = 5000
                 clan_points = 75000
             sql = ("INSERT INTO rcs_events (event_type, start_time, end_time, player_points, clan_points) "
-                   "VALUES ($1, $2, $3, $4, $5)")
-            await self.bot.pool.execute(sql, 1, games_start, games_end, player_points, clan_points)
+                   "VALUES (1, $1, $2, $3, $4)")
+            await self.bot.pool.execute(sql, games_start, games_end, player_points, clan_points)
         except:
             self.bot.logger.exception("Add games failed")
         # add next CWL
@@ -47,8 +47,7 @@ class SeasonConfig(commands.Cog, command_attrs=dict(hidden=True)):
                 season_month = str(season_month)
             cwl_season = f"{season_year}-{season_month}"
             sql = ("INSERT INTO rcs_events (event_type, start_time, end_time, season) "
-                   "VALUES ($1, $2, $3, $4")
-            await self.bot.pool.execute(sql, 2, cwl_start, cwl_end, cwl_season)
+                   "VALUES (2, $1, $2, $3")
         except:
             self.bot.logger.exception("Add CWL failed")
         self.bot.logger.info("New season process complete.")
