@@ -323,7 +323,6 @@ class ProspectiveCog(commands.Cog):
         channel = await guild.create_text_channel(f"{clan.name.replace(' ', '-')}-notes")
         # TODO maybe create clan channel first, then make notes a sub thread?
 
-
     @tasks.loop(hours=24)
     async def close_empty_threads(self):
         await self.bot.wait_until_ready()
