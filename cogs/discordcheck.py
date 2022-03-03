@@ -172,8 +172,8 @@ class DiscordCheck(commands.Cog):
     @tasks.loop(hours=1)
     async def no_clan(self):
         """Check all discord members to see if they have a clan name in their display name"""
-        # if date.today().weekday() != 0 or datetime.utcnow().hour != 0:
-        #     return
+        if date.today().weekday() != 0 or datetime.utcnow().hour != 0:
+            return
         member_role = self.guild.get_role(settings['rcs_roles']['members'])
         mods_channel = self.guild.get_channel(settings['rcs_channels']['mods'])
         sql = "SELECT short_name, clan_name FROM rcs_clans ORDER BY clan_name"
