@@ -184,7 +184,8 @@ class DiscordCheck(commands.Cog):
                 for clan in row['short_name'].split("/"):
                     clan_list.append(clan)
             else:
-                clan_list.append(row[0])
+                clan_list.append(row['short_name'])
+            clan_list.append(row['clan_name'])
         no_clan_list = []
         for member in self.guild.members:
             if member_role in member.roles:
