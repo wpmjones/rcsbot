@@ -299,10 +299,6 @@ class Background(commands.Cog):
                 sub = f"[Subreddit]({row['subreddit']})"
             else:
                 sub = ""
-            if row['leader_reddit']:
-                leader_reddit = f"[{row['leader_name']}]({row['leader_reddit']})"
-            else:
-                leader_reddit = row['leader_name']
             if row['social_media']:
                 social_media = row['social_media'] + " " + sub
             else:
@@ -319,7 +315,7 @@ class Background(commands.Cog):
             return (f"\n{clan_dot}[{row['clan_name'].replace(' ','&nbsp;')}]"
                     f"(https://link.clashofclans.com/?action=OpenClanProfile&tag={row['clan_tag']}) | "
                     f"[#{row['clan_tag']}](https://www.clashofstats.com/clans/{row['clan_tag']}/members)"
-                    f" | {leader_reddit} | {row['member_count']}/50 | {social_media} | "
+                    f" | {row['leader_name']} | {row['member_count']}/50 | {social_media} | "
                     f"{row['notes']} | {family}")
 
         async def update_wiki_page(wiki_page):
