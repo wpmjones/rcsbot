@@ -356,13 +356,9 @@ class Background(commands.Cog):
             page_content = "Home Clan | Clan Name | Clan Tag | Members | Contact | Notes\n"
             page_content += "-|-|-|:-:|-|-"
             for row in fetch:
-                if row['leader_reddit']:
-                    leader_reddit = f"[{row['leader_name']}]({row['leader_reddit']})"
-                else:
-                    leader_reddit = row['leader_name']
                 page_content += (f"\n{row['family_clan'].replace(' ','&nbsp;')} | {row['clan_name'].replace(' ','&nbsp;')}"
                                  f" | [{row['clan_tag']}](https://www.clashofstats.com/clans/{row['clan_tag']}/members)"
-                                 f" | {row['member_count']}/50 | {leader_reddit} | {row['notes']}")
+                                 f" | {row['member_count']}/50 | {row['leader_name']} | {row['notes']}")
             start = content.index(start_marker)
             end = content.index(end_marker) + len(end_marker)
             content = content.replace(content[start:end], "{}{}{}".format(start_marker, page_content, end_marker))
