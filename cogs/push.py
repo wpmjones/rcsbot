@@ -16,8 +16,8 @@ class Push(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.title = "2022 Summer Trophy Push"
-        self.start_time = datetime(2022, 7, 14, 4, 0)
-        self.end_time = datetime(2021, 7, 15, 3, 55)
+        self.start_time = datetime(2022, 7, 15, 4, 0)
+        self.end_time = datetime(2021, 7, 16, 3, 55)
         self.update_push.start()
 
     def cog_unload(self):
@@ -50,7 +50,6 @@ class Push(commands.Cog):
                         player = await self.bot.coc.get_player(tag)
                         if player.clan:
                             cursor.execute(sql_1, player.trophies, player.town_hall, player.tag[1:])
-                            self.bot.logger.info(f"Updating {player.name} in {player.clan.name}")
                         if (player.town_hall < 13 and
                                 player.trophies >= 5000 and
                                 datetime.utcnow() > (self.end_time - timedelta(days=2))):
