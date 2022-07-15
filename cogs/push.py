@@ -15,9 +15,9 @@ class Push(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.title = "2021 Turkey Time Trophy Push"
-        self.start_time = datetime(2021, 11, 22, 5, 0)
-        self.end_time = datetime(2021, 11, 29, 4, 55)
+        self.title = "2022 Summer Trophy Push"
+        self.start_time = datetime(2022, 7, 14, 4, 0)
+        self.end_time = datetime(2021, 7, 15, 3, 55)
         self.update_push.start()
 
     def cog_unload(self):
@@ -29,17 +29,17 @@ class Push(commands.Cog):
         now = datetime.utcnow()
         if self.start_time < now < self.end_time:
             with Sql(autocommit=True) as cursor:
-                sql = "SELECT playerTag from rcspush_2021_2"
+                sql = "SELECT playerTag from rcspush_2022_1"
                 cursor.execute(sql)
                 fetch = cursor.fetchall()
                 player_tags = []
                 for row in fetch:
                     player_tags.append(row[0])
-                sql_1 = ("UPDATE rcspush_2021_2 "
+                sql_1 = ("UPDATE rcspush_2022_1 "
                          "SET currentTrophies = ?, currentThLevel = ? "
                          "WHERE playerTag = ?")
-                sql_2 = "SELECT legendTrophies FROM rcspush_2021_2 WHERE playerTag = ?"
-                sql_3 = ("UPDATE rcspush_2021_2 "
+                sql_2 = "SELECT legendTrophies FROM rcspush_2022_1 WHERE playerTag = ?"
+                sql_3 = ("UPDATE rcspush_2022_1 "
                          "SET legendTrophies = ? "
                          "WHERE playerTag = ?")
                 counter = 0
@@ -270,7 +270,7 @@ class Push(commands.Cog):
                                  player.name.replace("'", "''"), player.clan.name])
         with Sql() as cursor:
             cursor.fast_executemany = True
-            sql = (f"INSERT INTO rcspush_2021_2 "
+            sql = (f"INSERT INTO rcspush_2022_1 "
                    f"(playerTag, clanTag, startingTrophies, currentTrophies, "
                    f"bestTrophies, startingThLevel, currentThLevel, playerName, clanName) "
                    f"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
