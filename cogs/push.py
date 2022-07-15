@@ -17,7 +17,7 @@ class Push(commands.Cog):
         self.bot = bot
         self.title = "2022 Summer Trophy Push"
         self.start_time = datetime(2022, 7, 15, 4, 0)
-        self.end_time = datetime(2021, 7, 16, 3, 55)
+        self.end_time = datetime(2022, 7, 16, 3, 55)
         self.update_push.start()
 
     def cog_unload(self):
@@ -27,10 +27,7 @@ class Push(commands.Cog):
     async def update_push(self):
         """Task to pull API data for the push"""
         now = datetime.utcnow()
-        self.bot.logger.info(f"Starting push update at {now}\n"
-                             f"{self.start_time}\n{now}\n{self.end_time}")
         if self.start_time < now < self.end_time:
-            self.bot.logger.info("inside")
             with Sql(autocommit=True) as cursor:
                 sql = "SELECT playerTag from rcspush_2022_1"
                 cursor.execute(sql)
