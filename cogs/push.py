@@ -27,9 +27,9 @@ class Push(commands.Cog):
     async def update_push(self):
         """Task to pull API data for the push"""
         now = datetime.utcnow()
-        self.bot.logger.info(f"Starting push update at {now}")
+        self.bot.logger.info(f"Starting push update at {now}\n"
+                             f"{self.start_time}\n{now}\n{self.end_time}")
         if self.start_time < now < self.end_time:
-            print("Inside 1")
             with Sql(autocommit=True) as cursor:
                 sql = "SELECT playerTag from rcspush_2022_1"
                 cursor.execute(sql)
