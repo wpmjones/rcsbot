@@ -30,6 +30,7 @@ class Push(commands.Cog):
         self.bot.logger.info(f"Starting push update at {now}\n"
                              f"{self.start_time}\n{now}\n{self.end_time}")
         if self.start_time < now < self.end_time:
+            self.bot.logger.info("inside")
             with Sql(autocommit=True) as cursor:
                 sql = "SELECT playerTag from rcspush_2022_1"
                 cursor.execute(sql)
