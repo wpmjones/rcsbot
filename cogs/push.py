@@ -16,8 +16,8 @@ class Push(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.title = "2022 Summer Trophy Push"
-        self.start_time = datetime(2022, 7, 15, 4, 0)
-        self.end_time = datetime(2022, 7, 16, 3, 55)
+        self.start_time = datetime(2022, 7, 19, 4, 0)
+        self.end_time = datetime(2022, 7, 25, 3, 55)
         self.update_push.start()
 
     def cog_unload(self):
