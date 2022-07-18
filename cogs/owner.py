@@ -76,7 +76,10 @@ class OwnerCog(commands.Cog):
         for guild in self.bot.guilds:
             for channel in guild.channels:
                 if channel.name == "rcs-bot":
-                    await channel.send(msg)
+                    try:
+                        await channel.send(msg)
+                    except discord.Forbidden:
+                        await ctx.send(f"{guild.name} will not allow me to post in their channel.")
                     await ctx.send(f"I posted your message to {guild.name}.")
                     break
 
