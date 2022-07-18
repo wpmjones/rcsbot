@@ -70,6 +70,17 @@ class OwnerCog(commands.Cog):
         guild_list += f"**RCS-Bot is installed on {counter} servers!**\n{member_count} users."
         await ctx.send(guild_list)
 
+    @commands.command(name="allpost", hidden=True)
+    @commands.is_owner()
+    async def allpost(self, ctx, *, msg):
+        for guild in self.bot.guilds:
+            for channel in guild.channels:
+                if channel.name == "rcs-bot":
+                    await channel.send(msg)
+                    await ctx.send(f"I posted your message to {guild.name}.")
+                    break
+
+
     @commands.command(name="getroles", hidden=True)
     @commands.is_owner()
     async def getroles(self, ctx, guild_id):
