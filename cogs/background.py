@@ -144,7 +144,7 @@ class Background(commands.Cog):
                                       description=clan_desc,
                                       color=discord.Color.red())
                 embed.add_field(name="Low Membership:", value=f"{clan.member_count} Members")
-                embed.add_field(name="In-gameLink", value=f"[Click Here]({clan.share_link})")
+                embed.add_field(name="In-game Link", value=f"[Click Here]({clan.share_link})")
                 await council_chat.send(embed=embed)
             if clan.type != "inviteOnly":
                 embed = discord.Embed(title=clan.name,
