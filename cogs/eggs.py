@@ -1,14 +1,19 @@
 import discord
+import json
 import requests
+import requests_cache
 
 from discord.ext import commands
 from config import settings
+
+requests_cache.install_cache("vin_requests")
 
 
 class Eggs(commands.Cog):
     """Cog for easter egg commands (guess away)
     This is also where I try out some new commands, so it's for testing too.
     """
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -31,6 +36,42 @@ class Eggs(commands.Cog):
                          icon_url="https://discordapp.com/assets/2c21aeda16de354ba5334551a883b481.png")
         response = await ctx.send(embed=embed)
         self.bot.messages[ctx.message.id] = response
+
+    @commands.command(name="vin", hidden=True)
+    async def vin(self, ctx, input_vin):
+        """[Easter Egg] Decodes the input VIN and responds with the make/model information"""
+        api_url = f"http://api.carmd.com/v3.0/decode?vin={input_vin}"
+        headers = {
+            "accept": "application/json",
+            "authorization": settings['api']['vin_key'],
+            "partner-token": settings['api']['vin_token']
+        }
+        r = requests.get(api_url, headers=headers)
+        data = r.json()
+        # data = {'message': {'code': 0, 'message': 'ok', 'credentials': 'valid', 'version': 'v3.0.0',
+        #                     'endpoint': 'decode', 'counter': 1},
+        #         'data': {'year': 2006, 'make': 'HONDA', 'model': 'CIVIC', 'manufacturer': 'HONDA',
+        #                  'engine': 'L4, 1.8L; SOHC; 16V', 'trim': 'EX', 'transmission': 'STANDARD'}
+        #         }
+        made_year = data['data']['year']
+        manufacturer = data['data']['manufacturer']
+        make = data['data']['make']
+        model = data['data']['model']
+        engine = data['data']['engine']
+        trim = data['data']['trim']
+        car_name = f"{made_year} {make} {model}"
+        car_info = ""
+        if make != manufacturer:
+            car_info += f"\nManufactured by: {manufacturer}"
+        car_info += f"\nTrim package: {trim}"
+        car_info += f"\nEngine: {engine}"
+        embed = discord.Embed(title=make, color=discord.Color.red())
+        embed.add_field(name=car_name, value=car_info)
+        logos_json = open("static/car_logos.json")
+        logos_data = json.load(logos_json)
+        if make.lower() in logos_data.keys():
+            embed.set_thumbnail(url=logos_data[make.lower()])
+        await ctx.send(embed=embed)
 
     @commands.command(name="zag", aliases=["zag-geek", "zaggeek"], hidden=True)
     async def zag(self, ctx):
