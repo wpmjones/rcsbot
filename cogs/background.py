@@ -113,7 +113,7 @@ class Background(commands.Cog):
             self.bot.logger.info("No log found for clan_checks")
         council_chat = self.guild.get_channel(settings['rcs_channels']['council'])
         bot_dev = self.guild.get_channel(settings['rcs_channels']['bot_dev'])
-        fetch = await conn.fetch("SELECT clanTag, classification FROM rcs_data")
+        fetch = await conn.fetch("SELECT clan_tag, classification FROM rcs_clans")
         cwl_fetch = conn.fetchrow("SELECT start_time, end_time FROM rcs_events "
                                   "WHERE event_type = 2 AND start_time < CURRENT_TIMESTAMP "
                                   "ORDER BY start_time DESC "
@@ -129,7 +129,7 @@ class Background(commands.Cog):
             else:
                 clan_desc = "Family Clan"
                 clan_size = 25
-            clan = await self.bot.coc.get_clan(f"#{row['clanTag']}")
+            clan = await self.bot.coc.get_clan(f"#{row['clan_tag']}")
             if clan.badge.medium not in league_badges:
                 embed = discord.Embed(title=clan.name,
                                       description=f"Clan Level: {clan.level}",
