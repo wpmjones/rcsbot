@@ -118,7 +118,7 @@ class Background(commands.Cog):
                                         "WHERE event_type_id = 2 AND start_time < CURRENT_TIMESTAMP "
                                         "ORDER BY start_time DESC "
                                         "LIMIT 1")
-        if cwl_fetch['endTime'] > datetime.utcnow():
+        if cwl_fetch['end_time'] > datetime.utcnow():
             cwl = True
         else:
             cwl = False
