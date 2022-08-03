@@ -106,7 +106,7 @@ class Background(commands.Cog):
         sql = "SELECT MAX(log_date) AS max_date FROM rcs_task_logs WHERE log_type_id = $1"
         row = await conn.fetchrow(sql, log_types['loc_check'])
         if row:
-            if row['max_date'] > date.today() - timedelta(days=7):
+            if row['max_date'] > datetime.utcnow() - timedelta(days=7):
                 # Skip until 7 days are up
                 return
         else:
@@ -154,6 +154,9 @@ class Background(commands.Cog):
                 embed.set_footer(text="Type not set to Invite Only",
                                  icon_url="https://coc.guide/static/imgs/gear_up.png")
                 await council_chat.send(embed=embed)
+        # Update db logs
+        sql = "INSERT INTO rcs_task_logs (log_type_id, log_date) VALUES ($1, $2)"
+        await conn.execute(sql, log_types['loc_check'], datetime.utcnow())
 
     @clan_checks.before_loop
     async def before_clan_checks(self):
