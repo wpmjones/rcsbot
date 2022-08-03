@@ -115,7 +115,7 @@ class Background(commands.Cog):
         bot_dev = self.guild.get_channel(settings['rcs_channels']['bot_dev'])
         fetch = await conn.fetch("SELECT clan_tag, classification FROM rcs_clans")
         cwl_fetch = await conn.fetchrow("SELECT start_time, end_time FROM rcs_events "
-                                        "WHERE event_type = 2 AND start_time < CURRENT_TIMESTAMP "
+                                        "WHERE event_type_id = 2 AND start_time < CURRENT_TIMESTAMP "
                                         "ORDER BY start_time DESC "
                                         "LIMIT 1")
         if cwl_fetch['endTime'] > datetime.utcnow():
