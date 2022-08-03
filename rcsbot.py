@@ -99,7 +99,8 @@ intents.guild_messages = True
 intents.guild_reactions = True
 intents.members = True
 intents.emojis = True
-intents.message_content = True
+if enviro != "LIVE":
+    intents.message_content = True
 
 
 class RcsBot(commands.Bot):
