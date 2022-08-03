@@ -147,4 +147,12 @@ league_badges = [
     "https://api-assets.clashofclans.com/badges/200/Hl0g6w-hr3qsiX_mAl9YDtgB8UksV_5KsVKgYBTyERE.png",
     "https://api-assets.clashofclans.com/badges/200/dBujq3w_K8rfIWMXVnoECFjrXpyZ9FPeCLGXOGmfczA.png",
     "https://api-assets.clashofclans.com/badges/200/_cdaxnR9DhJfUY-0ptAooMzsj6VrKxnSZxRDx_KFWAc.png",
+    "https://api-assets.clashofclans.com/badges/200/uFuGQyWEaz5wiffYOEY9EPjSXZk1VBmyqEN3ClACjO0.png",
+    "https://api-assets.clashofclans.com/badges/200/cDGb44uVx9D1IglE5vj0pRcPnvSf-WwIwy5oE4yXb44.png",
+    "https://api-assets.clashofclans.com/badges/200/KBtwIToS85C-c3ROYqXdkB7DkmMY4zUP3BjJ8IDK1Qw.png",
+    "https://api-assets.clashofclans.com/badges/200/Yrd9aOK78-xnYjDIb-D2gLzEP5_BpvNLDM6P5bp7Dfc.png",
+    "https://api-assets.clashofclans.com/badges/200/EuwRqrD9Pz0OUjlHW-_JMQswZJa51vhHnSTGvX6WWHg.png",
+    "https://api-assets.clashofclans.com/badges/200/SWbnIR_7T4HHtT2li0SzBeB5qFs7PAW2BToeOifJ3n0.png",
+    "https://api-assets.clashofclans.com/badges/200/gJoboXW6seHlcO2FMKrz4ySoJzUoiDDAYOuUycp369w.png",
+    "https://api-assets.clashofclans.com/badges/200/PFufY610p6gFjN4APhPDEVorwo6GNCH1fNZIJWZAQpE.png",
 ]
