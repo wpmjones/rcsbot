@@ -88,7 +88,7 @@ class BgSheets(commands.Cog):
                     elif "post-survey" in title:
                         # This is the post scout survey from the clan leader
                         self.bot.logger.info("Post Survey")
-                        end = title.find(" Post")
+                        end = title.find(" post")
                         clan_name = title[:end]
                         channel_name = f"{clan_name.replace(' ', '-').lower()}-notes"
                         self.bot.logger.info(channel_name)
@@ -99,7 +99,7 @@ class BgSheets(commands.Cog):
                     elif "post scout report" in title:
                         # This is a scouting report
                         self.bot.logger.info("Scouting Report")
-                        end = title.find(" Post")
+                        end = title.find(" post")
                         start = title.find("-") + 2
                         clan_name = title[:end]
                         scout_name = title[start:]
