@@ -108,6 +108,7 @@ class BgSheets(commands.Cog):
                         for channel in guild.channels:
                             if channel.name == channel_name:
                                 content = f"{clan_name} scouting report by {scout_name}: <{doc_link}>"
+                                await channel.send(content)
             if "newStartPageToken" in response:
                 # Last page, save this token for the next polling interval
                 with open("drive_token.txt", "w") as f:
