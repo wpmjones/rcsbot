@@ -74,12 +74,13 @@ class BgSheets(commands.Cog):
                     doc = drive_service.files().get(fileId=key).execute()
                     doc_link = f"https://docs.google.com/document/d/{key}/edit"
                     title = doc['name'].lower()
-                    self.bot.logger.info(f"Evaluating {title}\n{doc_link}")
+                    self.bot.logger.info(f"Evaluating {title}")
                     if "application" in title and "scout" not in title:
                         # This is a verification application
                         self.bot.logger.info("Verification")
                         clan_name = title[:-12]
                         channel_name = f"{clan_name.replace(' ', '-').lower()}-notes"
+                        self.bot.logger.info(channel_name)
                         for channel in guild.channels:
                             if channel.name == channel_name:
                                 content = f"We have received the pre-scout survey for {clan_name}.\n<{doc_link}>"
@@ -90,6 +91,7 @@ class BgSheets(commands.Cog):
                         end = title.find(" Post")
                         clan_name = title[:end]
                         channel_name = f"{clan_name.replace(' ', '-').lower()}-notes"
+                        self.bot.logger.info(channel_name)
                         for channel in guild.channels:
                             if channel.name == channel_name:
                                 content = f"We have receive the post-scout survey for {clan_name}.\n<{doc_link}>"
@@ -102,6 +104,7 @@ class BgSheets(commands.Cog):
                         clan_name = title[:end]
                         scout_name = title[start:]
                         channel_name = f"{clan_name.replace(' ', '-').lower()}-notes"
+                        self.bot.logger.info(channel_name)
                         for channel in guild.channels:
                             if channel.name == channel_name:
                                 content = f"{clan_name} scouting report by {scout_name}: <{doc_link}>"
