@@ -59,6 +59,9 @@ class BgSheets(commands.Cog):
 
     @tasks.loop(hours=1.0)
     async def fetch_changes(self):
+        conn = self.bot.pool
+        sql_check = "SELECT reported FROM rcs_reports WHERE google_key = $1"
+        sql_insert = "INSERT INTO rcs_reports (google_key) VALUES ($1)"
         guild = self.bot.get_guild(settings['discord']['prospectguild_id'])
         with open("drive_token.txt", "r") as f:
             page_token = int(f.readline())
@@ -71,6 +74,9 @@ class BgSheets(commands.Cog):
                 except gspread.exceptions.APIError:
                     # If we get here, it should be a Google Doc and we can do something with it
                     key = change.get("fileId")
+                    reported = await conn.fetchval(sql_check, key)
+                    if reported:
+                        continue
                     doc = drive_service.files().get(fileId=key).execute()
                     doc_link = f"https://docs.google.com/document/d/{key}/edit"
                     title = doc['name'].lower()
@@ -86,6 +92,7 @@ class BgSheets(commands.Cog):
                                 content = (f"We have received the pre-scout survey for {clan_name.title()}.\n"
                                            f"<{doc_link}>")
                                 await channel.send(content)
+                                await conn.execute(sql_insert, key)
                     elif "post-survey" in title:
                         # This is the post scout survey from the clan leader
                         self.bot.logger.info("Post Survey")
@@ -98,6 +105,7 @@ class BgSheets(commands.Cog):
                                 content = (f"We have receive the post-scout survey for {clan_name.title()}.\n"
                                            f"<{doc_link}>")
                                 await channel.send(content)
+                                await conn.execute(sql_insert, key)
                     elif "post scout report" in title:
                         # This is a scouting report
                         self.bot.logger.info("Scouting Report")
@@ -111,6 +119,7 @@ class BgSheets(commands.Cog):
                             if channel.name == channel_name:
                                 content = f"{clan_name.title()} scouting report by {scout_name.title()}: <{doc_link}>"
                                 await channel.send(content)
+                                await conn.execute(sql_insert, key)
             if "newStartPageToken" in response:
                 # Last page, save this token for the next polling interval
                 with open("drive_token.txt", "w") as f:
