@@ -30,7 +30,7 @@ class Background(commands.Cog):
         self.update_warlog.start()
         bot.loop.create_task(self.cog_init_ready())
 
-    def cog_unload(self):
+    def cog_unload(self) -> None:
         self.bot.coc.remove_events(self.on_clan_war_win_streak_change,
                                    self.on_clan_level_change,
                                    self.on_clan_war_win_change,
