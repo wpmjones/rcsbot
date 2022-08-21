@@ -83,7 +83,8 @@ class BgSheets(commands.Cog):
                         self.bot.logger.info(channel_name)
                         for channel in guild.channels:
                             if channel.name == channel_name:
-                                content = f"We have received the pre-scout survey for {clan_name}.\n<{doc_link}>"
+                                content = (f"We have received the pre-scout survey for {clan_name.title()}.\n"
+                                           f"<{doc_link}>")
                                 await channel.send(content)
                     elif "post-survey" in title:
                         # This is the post scout survey from the clan leader
@@ -94,7 +95,8 @@ class BgSheets(commands.Cog):
                         self.bot.logger.info(channel_name)
                         for channel in guild.channels:
                             if channel.name == channel_name:
-                                content = f"We have receive the post-scout survey for {clan_name}.\n<{doc_link}>"
+                                content = (f"We have receive the post-scout survey for {clan_name.title()}.\n"
+                                           f"<{doc_link}>")
                                 await channel.send(content)
                     elif "post scout report" in title:
                         # This is a scouting report
@@ -107,7 +109,7 @@ class BgSheets(commands.Cog):
                         self.bot.logger.info(channel_name)
                         for channel in guild.channels:
                             if channel.name == channel_name:
-                                content = f"{clan_name} scouting report by {scout_name}: <{doc_link}>"
+                                content = f"{clan_name.title()} scouting report by {scout_name.title()}: <{doc_link}>"
                                 await channel.send(content)
             if "newStartPageToken" in response:
                 # Last page, save this token for the next polling interval
