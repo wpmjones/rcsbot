@@ -77,6 +77,7 @@ class BgSheets(commands.Cog):
                     self.bot.logger.info(f"Evaluating {title}\n{doc_link}")
                     if "application" in title and "scout" not in title:
                         # This is a verification application
+                        self.bot.logger.info("Verification")
                         clan_name = title[:-12]
                         channel_name = f"{clan_name.replace(' ', '-').lower()}-notes"
                         for channel in guild.channels:
@@ -85,6 +86,7 @@ class BgSheets(commands.Cog):
                                 await channel.send(content)
                     elif "post-survey" in title:
                         # This is the post scout survey from the clan leader
+                        self.bot.logger.info("Post Survey")
                         end = title.find(" Post")
                         clan_name = title[:end]
                         channel_name = f"{clan_name.replace(' ', '-').lower()}-notes"
@@ -94,6 +96,7 @@ class BgSheets(commands.Cog):
                                 await channel.send(content)
                     elif "post scout report" in title:
                         # This is a scouting report
+                        self.bot.logger.info("Scouting Report")
                         end = title.find(" Post")
                         start = title.find("-") + 2
                         clan_name = title[:end]
