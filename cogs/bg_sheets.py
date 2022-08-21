@@ -110,6 +110,10 @@ class BgSheets(commands.Cog):
                     f.write(response.get('newStartPageToken'))
             page_token = response.get('nextPageToken')
 
+    @fetch_changes.before_loop
+    async def before_fetch_changes(self):
+        await self.bot.wait_until_ready()
+
     @tasks.loop(hours=1.0)
     async def check_sheets(self):
         """Check RCS sheets for new rows"""
