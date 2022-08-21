@@ -140,11 +140,11 @@ class BgSheets(commands.Cog):
                 notes_channel = await guild.create_text_channel(f"{clan['name'].replace(' ', '-')}-notes",
                                                                 topic=topic,
                                                                 category=category)
-                clan = await self.bot.coc.get_clan(clan['tag'])
+                coc_clan = await self.bot.coc.get_clan(clan['tag'])
                 cos = 0
                 elder = 0
                 badgeless = 0
-                for member in clan.members:
+                for member in coc_clan.members:
                     if str(member.role) == "Co-Leader":
                         cos += 0
                     if str(member.role) == "Elder":
@@ -156,7 +156,7 @@ class BgSheets(commands.Cog):
                            f"Please send Pre-scout Survey and invite {clan['leader']} ({clan['leader_discord']}) to "
                            f"{clan_channel.mention}\nLeader timezone: {clan['timezone']}\n"
                            f"War times: {clan['war_freq']}\n"
-                           f"Public war log? {clan.public_war_log}\n\n"
+                           f"Public war log? {coc_clan.public_war_log}\n\n"
                            f"Clan Tag: {clan['tag']}\n\n"
                            f"In-game link: <{clan['ingame_link']}>\n"
                            f"Discord server invite: {clan['discord']}\n\n"
