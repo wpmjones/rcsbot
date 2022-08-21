@@ -1,4 +1,3 @@
-import discord
 import gspread
 
 from config import settings
@@ -61,8 +60,6 @@ class BgSheets(commands.Cog):
     @tasks.loop(hours=1.0)
     async def fetch_changes(self):
         guild = self.bot.get_guild(settings['discord']['prospectguild_id'])
-        category = self.bot.get_channel(364153344203423765)
-        template_names = ["Post Scout Report", "Application", "Post-Survey"]
         with open("drive_token.txt", "r") as f:
             page_token = int(f.readline())
         while page_token is not None:
@@ -77,6 +74,7 @@ class BgSheets(commands.Cog):
                     doc = drive_service.files().get(fileId=key).execute()
                     doc_link = f"https://docs.google.com/document/d/{key}/edit"
                     title = doc['name'].lower()
+                    self.bot.logger.info(f"Evaluating {title}\n{doc_link}")
                     if "application" in title and "scout" not in title:
                         # This is a verification application
                         clan_name = title[:-12]
@@ -146,10 +144,10 @@ class BgSheets(commands.Cog):
                 badgeless = 0
                 for member in coc_clan.members:
                     if str(member.role) == "Co-Leader":
-                        cos += 0
+                        cos += 1
                     if str(member.role) == "Elder":
                         elder += 1
-                    if member.league == "Unranked":
+                    if member.league.name == "Unranked":
                         badgeless += 1
                 content = (f"{clan['name']} ({clan['tag']}) has applied to become a verified RCS clan.\n"
                            f"Clash of Stats link: <{clan['cos']}>\n"
@@ -169,13 +167,14 @@ class BgSheets(commands.Cog):
                            f"Leader: {clan['leader']} ({clan['leader_discord']})\n"
                            f"Leader timezone: {clan['timezone']}\n"
                            f"War times: {clan['war_freq']}\n"
-                           f"More information is available on the Prspectives Server\n\n"
+                           f"More information is available on the Prospectives Server\n\n"
                            f"In-game link: <{clan['ingame_link']}>\n"
                            f"Discord server invite: {clan['discord']}\n\n")
                 await council_channel.send(content)
                 c += 1
             with open("app.txt", "w") as f:
                 f.write(str(c))
+            # TODO Can we add buttons or something to bring in the leader?
         # Check for new pre-scout surveys
         # with open("pre.txt", "r") as f:
         #     prev_last_row = int(f.readline())
