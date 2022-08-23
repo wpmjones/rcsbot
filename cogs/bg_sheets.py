@@ -4,6 +4,7 @@ from config import settings
 from datetime import datetime
 from discord.ext import commands, tasks
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from oauth2client import file, client, tools
 
 # Connect to Google Drive
@@ -77,7 +78,10 @@ class BgSheets(commands.Cog):
                     reported = await conn.fetchval(sql_check, key)
                     if reported:
                         continue
-                    doc = drive_service.files().get(fileId=key).execute()
+                    try:
+                        doc = drive_service.files().get(fileId=key).execute()
+                    except HttpError:
+                        continue
                     doc_link = f"https://docs.google.com/document/d/{key}/edit"
                     title = doc['name'].lower()
                     self.bot.logger.info(f"Evaluating {title}")
