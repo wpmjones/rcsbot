@@ -186,6 +186,11 @@ class DiscordCheck(commands.Cog):
             else:
                 clan_list.append(row['short_name'])
             clan_list.append(row['clan_name'].lower())
+        # Remove duplicates
+        clan_list = [*set(clan_list)]
+        # Move reddit to the end so it catches other names first
+        clan_list.remove("reddit")
+        clan_list.append("reddit")
         no_clan_list = []
         for member in self.guild.members:
             if member_role in member.roles:
