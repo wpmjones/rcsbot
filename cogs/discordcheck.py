@@ -172,7 +172,7 @@ class DiscordCheck(commands.Cog):
     @tasks.loop(hours=1)
     async def no_clan(self):
         """Check all discord members to see if they have a clan name in their display name"""
-        if date.today().weekday() != 0 or datetime.utcnow().hour != 0:
+        if date.today().weekday() != 2 or datetime.utcnow().hour != 0:
             return
         member_role = self.guild.get_role(settings['rcs_roles']['members'])
         mods_channel = self.guild.get_channel(settings['rcs_channels']['mods'])
@@ -180,12 +180,13 @@ class DiscordCheck(commands.Cog):
         fetch = await self.bot.pool.fetch(sql)
         clan_list = []
         for row in fetch:
+            clan_list.append(row['clan_name'].lower())
             if "/" in row['short_name']:
                 for clan in row['short_name'].split("/"):
                     clan_list.append(clan)
             else:
-                clan_list.append(row['short_name'])
-            clan_list.append(row['clan_name'].lower())
+                clan_list.append(row['short_name'].lower())
+            clan_list.append(row['short_name'].lower())
         # Remove duplicates
         clan_list = [*set(clan_list)]
         # Move reddit to the end so it catches other names first
@@ -200,6 +201,7 @@ class DiscordCheck(commands.Cog):
                         test = 1
                         break
                 if test == 0:
+                    self.bot.logger.info(f"No clan for {member.display_name}")
                     no_clan_list.append(f"{member.mention} did not identify with any clan.")
         if no_clan_list:
             log_message = f"{len(no_clan_list)} members found without a clan"
