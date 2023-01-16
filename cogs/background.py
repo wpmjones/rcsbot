@@ -1,5 +1,6 @@
 import coc
 import nextcord
+import asyncio
 import asyncpraw
 import random
 import re
@@ -99,6 +100,7 @@ class Background(commands.Cog):
     @tasks.loop(hours=24.0)
     async def clan_checks(self):
         """Check clans for member count, badge, etc."""
+        await asyncio.sleep(30)
         conn = self.bot.pool
         print("Starting clan checks")
         if date.today().weekday() != 2:
@@ -165,6 +167,7 @@ class Background(commands.Cog):
     @tasks.loop(hours=3.0)
     async def rcs_list(self):
         """Update database with latest info then update the wiki"""
+        await asyncio.sleep(30)
         print("Starting RCS List")
         now = datetime.utcnow()
         conn = self.bot.pool
@@ -404,6 +407,7 @@ class Background(commands.Cog):
 
     @tasks.loop(hours=1)
     async def update_warlog(self):
+        await asyncio.sleep(30)
         conn = self.bot.pool
         for tag in helper.rcs_tags():
             try:

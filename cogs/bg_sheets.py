@@ -1,4 +1,5 @@
 import gspread
+import asyncio
 
 from config import settings
 from datetime import datetime
@@ -165,6 +166,7 @@ class BgSheets(commands.Cog):
     @tasks.loop(hours=1.0)
     async def check_sheets(self):
         """Check RCS sheets for new rows"""
+        await asyncio.sleep(30)
 
         NEW_THREAD_ANNOUNCE = ("{clan} has applied to become a verified RCS clan.\nClash of Stats link: {cos}\n"
                                "Please send a Pre-Scout Survey and invite the leader to {channel}.")
@@ -188,7 +190,8 @@ class BgSheets(commands.Cog):
                 clan_channel = await guild.create_text_channel(clan['name'].replace(" ", "-"),
                                                                topic=topic,
                                                                category=category)
-                thread = await clan_channel.create_thread(f"{clan['name'].replace(' ', '-')}-notes")
+                thread_name = f"{clan['name'].replace(' ', '-')}-notes"
+                thread = await clan_channel.create_thread(thread_name)
                 coc_clan = await self.bot.coc.get_clan(clan['tag'])
                 cos_link = f"https://www.clashofstats.com/clans/{coc_clan.tag[1:]}"
                 await thread.send(NEW_THREAD_ANNOUNCE.format(clan=f"{coc_clan.name} ({coc_clan.tag})",
