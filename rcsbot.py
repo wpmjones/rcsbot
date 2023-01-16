@@ -1,16 +1,18 @@
-import discord
+import asyncpg
+import nextcord
 import traceback
 import coc
 import sys
 import aiohttp
 import asyncio
 
-from discord.ext import commands
+from nextcord.ext import commands
+from nextcord.ext.commands import errors
 from coc.ext import discordlinks
-from cogs.utils import context, category
-from cogs.utils.db import Table
+from cogs.utils import context
+from cogs.utils.constants import bot_guilds
 from cogs.utils.helper import get_active_wars, rcs_tags
-from cogs.utils.error_handler import error_handler, discord_event_error
+from cogs.utils.error_handler import discord_event_error
 from config import settings
 from loguru import logger
 
@@ -23,6 +25,7 @@ if enviro == "LIVE":
     coc_names = "galaxy"
     coc_email = settings['supercell']['user']
     coc_pass = settings['supercell']['pass']
+    guild_ids = bot_guilds
     initial_extensions = ["cogs.admin",
                           "cogs.archive",
                           "cogs.background",
@@ -33,12 +36,12 @@ if enviro == "LIVE":
                           "cogs.eggs",
                           "cogs.games",
                           "cogs.general",
-                          "cogs.newhelp",
                           "cogs.new_season",
                           "cogs.owner",
                           "cogs.plots",
                           "cogs.push",
                           "cogs.tasks",
+                          "cogs.verify",
                           ]
 elif enviro == "home":
     token = settings['discord']['test_token']
@@ -47,11 +50,12 @@ elif enviro == "home":
     coc_names = "ubuntu"
     coc_email = settings['supercell']['user2']
     coc_pass = settings['supercell']['pass2']
+    guild_ids = [settings['discord']['botlogguild_id']]
     initial_extensions = ["cogs.admin",
                           "cogs.council",
                           "cogs.general",
-                          "cogs.newhelp",
                           "cogs.owner",
+                          "cogs.push",
                           ]
 else:
     token = settings['discord']['test_token']
@@ -60,12 +64,12 @@ else:
     coc_names = "dev"
     coc_email = settings['supercell']['user2']
     coc_pass = settings['supercell']['pass2']
+    guild_ids = [settings['discord']['botlogguild_id']]
     initial_extensions = ["cogs.admin",
                           "cogs.council",
                           "cogs.eggs",
                           "cogs.games",
                           "cogs.general",
-                          "cogs.newhelp",
                           "cogs.owner",
                           ]
 
@@ -94,7 +98,7 @@ coc_client = coc.login(coc_email,
 links_client = discordlinks.login(settings['links']['user'],
                                   settings['links']['pass'])
 
-intents = discord.Intents.none()
+intents = nextcord.Intents.none()
 intents.guilds = True
 intents.guild_messages = True
 intents.guild_reactions = True
@@ -110,17 +114,19 @@ class RcsBot(commands.Bot):
                          description=description,
                          case_insensitive=True,
                          intents=intents,
+                         default_guild_ids=guild_ids
                          )
-        self.remove_command("help")
         self.coc = coc_client
         self.links = links_client
         self.logger = logger
-        self.color = discord.Color.dark_red()
+        self.color = nextcord.Color.dark_red()
         self.client_id = settings['discord']['rcs_client_id']
         self.messages = {}
         self.categories = {}
         self.active_wars = get_active_wars()
         self.session = None
+        self.error_webhook = None
+        self.pool = None
         if enviro == "LIVE":
             self.live = True
         else:
@@ -148,39 +154,41 @@ class RcsBot(commands.Bot):
     def send_log(self, message):
         asyncio.ensure_future(self.send_message(message))
 
-    def get_category(self, name) -> category.Category:
-        return self.categories.get(name)
-
     async def on_message(self, message):
         if message.author.bot:
             return
         await self.process_commands(message)
 
-    async def on_message_delete(self, message):
-        if message.id in self.messages:
-            del_message = self.messages[message.id]
-            await del_message.delete()
-            del self.messages[message.id]
+    async def get_context(self, message: nextcord.Message, *, cls=context.Context):
+        return await super().get_context(message, cls=cls)
 
-    async def process_commands(self, message):
-        ctx = await self.get_context(message, cls=context.Context)
-        if ctx.command is None:
+    def get_interaction(self, data, *, cls=context.MyInteraction):
+        return super().get_interaction(data, cls=cls)
+
+    async def on_command_error(self, ctx, error):
+        if isinstance(error, errors.CommandNotFound):
             return
-        async with ctx.acquire():
-            await self.invoke(ctx)
-
-    async def on_command_error(self, ctx, exception):
-        try:
-            return await error_handler(ctx, exception)
-        except Exception as exc:
-            self.logger.exception("Exception when logging command error", exc_info=exc)
+        elif isinstance(error, errors.TooManyArguments):
+            return await ctx.send("You are providing too many arguments!")
+        elif isinstance(error, errors.BadArgument):
+            return await ctx.send("The library ran into an error attempting to parse your argument.")
+        elif isinstance(error, errors.MissingRequiredArgument):
+            return await ctx.send("You're missing a required argument.")
+        # kinda annoying and useless error.
+        elif isinstance(error, nextcord.NotFound) and "Unknown interaction" in str(error):
+            return
+        elif isinstance(error, errors.MissingRole):
+            role = ctx.guild.get_role(int(error.missing_role))  # type: ignore
+            return await ctx.send(f'"{role.name}" is required to use this command.')  # type: ignore
+        else:
+            await ctx.send(f"This command raised an exception: `{type(error)}:{str(error)}`")
 
     async def on_error(self, event_method, *args, **kwargs):
         return await discord_event_error(self, event_method, *args, **kwargs)
 
     async def on_ready(self):
-        activity = discord.Game("Clash of Clans")
-        await self.change_presence(status=discord.Status.online, activity=activity)
+        activity = nextcord.Game("Clash of Clans")
+        await self.change_presence(status=nextcord.Status.online, activity=activity)
         self.coc.add_clan_updates(*rcs_tags(prefix=True))
 
     async def after_ready(self):
@@ -189,16 +197,18 @@ class RcsBot(commands.Bot):
         logger.add(self.send_log, level=log_level)
         error_webhooks = await self.get_channel(settings['log_channels']['rcs']).webhooks()
         self.error_webhook = error_webhooks[0]
+        self.pool = await asyncpg.create_pool(f"{settings['pg']['uri']}/tubadata")
         logger.info("Bot is now ready")
 
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
+    # loop = asyncio.new_event_loop()
+    # asyncio.set_event_loop(loop)
     try:
-        pool = loop.run_until_complete(Table.create_pool(f"{settings['pg']['uri']}/tubadata"))
+        # pool = loop.run_until_complete(Table.create_pool(f"{settings['pg']['uri']}/tubadata"))
         bot = RcsBot()
-        bot.pool = pool
-        bot.loop = loop
+        # bot.pool = pool
+        # bot.loop = loop
         bot.run(token, reconnect=True)
     except:
         traceback.print_exc()

@@ -1,10 +1,8 @@
-import discord
-import coc
+import nextcord
 
-from discord.ext import commands, tasks
-from cogs.utils.db import Sql
+from nextcord.ext import commands
 from cogs.utils import helper
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 class OwnerCog(commands.Cog):
@@ -51,10 +49,10 @@ class OwnerCog(commands.Cog):
     async def presence(self, ctx, *, msg: str = "default"):
         """Command to modify bot presence"""
         if msg.lower() == "default":
-            activity = discord.Game("Clash of Clans")
+            activity = nextcord.Game("Clash of Clans")
         else:
-            activity = discord.Activity(type=discord.ActivityType.watching, name=msg)
-        await self.bot.change_presence(status=discord.Status.online, activity=activity)
+            activity = nextcord.Activity(type=nextcord.ActivityType.watching, name=msg)
+        await self.bot.change_presence(status=nextcord.Status.online, activity=activity)
         print(f"{datetime.now()} - {ctx.author} changed the bot presence to {msg}")
 
     @commands.command(name="server", hidden=True)
@@ -78,7 +76,7 @@ class OwnerCog(commands.Cog):
                 if channel.name == "rcs-bot":
                     try:
                         await channel.send(msg)
-                    except discord.Forbidden:
+                    except nextcord.Forbidden:
                         await ctx.send(f"{guild.name} will not allow me to post in their channel.")
                     await ctx.send(f"I posted your message to {guild.name}.")
                     break
@@ -97,25 +95,6 @@ class OwnerCog(commands.Cog):
             await ctx.send_text(ctx.channel, role_list)
         except:
             self.bot.logger.exception(f"Failed to serve role list")
-
-    @commands.command(name="new_cwl", hidden=True)
-    @commands.is_owner()
-    async def new_cwl(self, ctx, start_date, cwl_length: int = 9):
-        """Command to add new CWL dates to SQL database
-        Bot owner only"""
-        # TODO Automate this in cwl cog
-        with Sql(as_dict=True) as cursor:
-            start_day = int(start_date[8:9])
-            end_day = str(start_day + cwl_length)
-            end_date = start_date[:9] + end_day
-            season = start_date[:7]
-            cursor.execute("SELECT MAX(eventId) as eventId FROM rcs_events WHERE eventType = 11")
-            row = cursor.fetchone()
-            event_id = row['eventId'] + 1
-            sql = (f"INSERT INTO rcs_events (eventId, eventType, startTime, endTime, season) "
-                   f"VALUES (%d, %d, %s, %s, %s)")
-            cursor.execute(sql, (event_id, 11, start_date, end_date, season))
-        await ctx.send(f"New cwl info added to database.")
 
     @commands.command(name="cc", hidden=True)
     @commands.is_owner()

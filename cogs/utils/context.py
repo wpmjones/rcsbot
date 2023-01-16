@@ -2,6 +2,7 @@ import discord
 import asyncio
 import io
 
+import nextcord.interactions
 from discord.ext import commands
 
 
@@ -21,6 +22,13 @@ class _ContextDBAcquire:
 
     async def __aexit__(self, *args):
         await self.ctx.release()
+
+
+class MyInteraction(nextcord.interactions.Interaction):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.pool = self.client.pool
+        self.coc = self.client.coc
 
 
 class Context(commands.Context):

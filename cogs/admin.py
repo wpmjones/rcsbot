@@ -1,6 +1,6 @@
 import asyncio
 import traceback
-import discord
+import nextcord
 import inspect
 import textwrap
 import importlib
@@ -12,60 +12,16 @@ import copy
 import time
 import subprocess
 
-from discord.ext import commands
+from nextcord.ext import commands
 from cogs.utils.db import Sql
 from contextlib import redirect_stdout
 from typing import Optional
-from .utils.formats import TabularData, plural
+from cogs.utils.formats import TabularData, plural
 
 
 # to expose to the eval command
 # import datetime
 # from collections import Counter
-
-
-class PerformanceMocker:
-    """A mock object that can also be used in await expressions."""
-
-    def __init__(self):
-        self.loop = asyncio.get_event_loop()
-
-    def permissions_for(self, obj):
-        # Lie and say we don't have permissions to embed
-        # This makes it so pagination sessions just abruptly end on __init__
-        # Most checks based on permission have a bypass for the owner anyway
-        # So this lie will not affect the actual command invocation.
-        perms = discord.Permissions.all()
-        perms.administrator = False
-        perms.embed_links = False
-        perms.add_reactions = False
-        return perms
-
-    def __getattr__(self, attr):
-        return self
-
-    def __call__(self, *args, **kwargs):
-        return self
-
-    def __repr__(self):
-        return '<PerformanceMocker>'
-
-    def __await__(self):
-        future = self.loop.create_future()
-        future.set_result(self)
-        return future.__await__()
-
-    async def __aenter__(self):
-        return self
-
-    async def __aexit__(self, *args):
-        return self
-
-    def __len__(self):
-        return 0
-
-    def __bool__(self):
-        return False
 
 
 class GlobalChannel(commands.Converter):
@@ -364,9 +320,9 @@ class Admin(commands.Cog):
                         await ctx.send('Content too big to be printed.')
                     else:
                         await ctx.send(fmt)
-            except discord.Forbidden:
+            except nextcord.Forbidden:
                 pass
-            except discord.HTTPException as e:
+            except nextcord.HTTPException as e:
                 await ctx.send(f'Unexpected error: `{e}`')
 
     @commands.command(hidden=True)
@@ -404,7 +360,7 @@ class Admin(commands.Cog):
         fmt = f'```{query}\n\n{render}\n```\n*Returned {plural(rows):row} in {dt:.2f}ms*'
         if len(fmt) > 2000:
             fp = io.BytesIO(fmt.encode('utf-8'))
-            await ctx.send('Too many results...', file=discord.File(fp, 'results.txt'))
+            await ctx.send('Too many results...', file=nextcord.File(fp, 'results.txt'))
         else:
             await ctx.send(fmt)
 
@@ -441,14 +397,14 @@ class Admin(commands.Cog):
         fmt = f'```{query}\n\n{render}\n```\n*Returned {plural(rows):row} in {dt:.2f}ms*'
         if len(fmt) > 2000:
             fp = io.BytesIO(fmt.encode('utf-8'))
-            await ctx.send('Too many results...', file=discord.File(fp, 'results.txt'))
+            await ctx.send('Too many results...', file=nextcord.File(fp, 'results.txt'))
         else:
             await ctx.send(fmt)
 
     @commands.command(hidden=True)
     async def sql_table(self, ctx, *, table_name: str):
         """Runs a query describing the table schema."""
-        from .utils.formats import TabularData
+        from cogs.utils.formats import TabularData
 
         query = """SELECT column_name, data_type, column_default, is_nullable
                    FROM INFORMATION_SCHEMA.COLUMNS
@@ -466,12 +422,12 @@ class Admin(commands.Cog):
         fmt = f'```\n{render}\n```'
         if len(fmt) > 2000:
             fp = io.BytesIO(fmt.encode('utf-8'))
-            await ctx.send('Too many results...', file=discord.File(fp, 'results.txt'))
+            await ctx.send('Too many results...', file=nextcord.File(fp, 'results.txt'))
         else:
             await ctx.send(fmt)
 
     @commands.command(hidden=True)
-    async def sudo(self, ctx, channel: Optional[GlobalChannel], who: discord.User, *, command: str):
+    async def sudo(self, ctx, channel: Optional[GlobalChannel], who: nextcord.User, *, command: str):
         """Run a command as another user optionally in another channel."""
         msg = copy.copy(ctx.message)
         channel = channel or ctx.channel
@@ -481,18 +437,6 @@ class Admin(commands.Cog):
         new_ctx = await self.bot.get_context(msg, cls=type(ctx))
         new_ctx._db = ctx._db
         await self.bot.invoke(new_ctx)
-
-    @commands.command(hidden=True)
-    async def do(self, ctx, times: int, *, command):
-        """Repeats a command a specified number of times."""
-        msg = copy.copy(ctx.message)
-        msg.content = ctx.prefix + command
-
-        new_ctx = await self.bot.get_context(msg, cls=type(ctx))
-        new_ctx._db = ctx._db
-
-        for i in range(times):
-            await new_ctx.reinvoke()
 
     @commands.command(hidden=True)
     async def sh(self, ctx, *, command):
@@ -512,39 +456,6 @@ class Admin(commands.Cog):
             await pages.paginate()
         except Exception as e:
             await ctx.send(str(e))
-
-    @commands.command(hidden=True)
-    async def perf(self, ctx, *, command):
-        """Checks the timing of a command, attempting to suppress HTTP and DB calls."""
-
-        msg = copy.copy(ctx.message)
-        msg.content = ctx.prefix + command
-
-        new_ctx = await self.bot.get_context(msg, cls=type(ctx))
-        new_ctx._db = PerformanceMocker()
-
-        # Intercepts the Messageable interface a bit
-        new_ctx._state = PerformanceMocker()
-        new_ctx.channel = PerformanceMocker()
-
-        if new_ctx.command is None:
-            return await ctx.send('No command found')
-
-        start = time.perf_counter()
-        try:
-            await new_ctx.command.invoke(new_ctx)
-        except commands.CommandError:
-            end = time.perf_counter()
-            success = False
-            try:
-                await ctx.send(f'```py\n{traceback.format_exc()}\n```')
-            except discord.HTTPException:
-                pass
-        else:
-            end = time.perf_counter()
-            success = True
-
-        await ctx.send(f'Status: {ctx.tick(success)} Time: {(end - start) * 1000:.2f}ms')
 
 
 def setup(bot):

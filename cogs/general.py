@@ -1,490 +1,313 @@
-import discord
+import nextcord
 import math
 import pathlib
 
-from discord.ext import commands
-from cogs.utils.checks import is_leader_or_mod_or_council
-from cogs.utils.converters import PlayerConverter, ClanConverter
+from nextcord import SlashOption
+from nextcord.ext import commands, menus
+from cogs.utils.converters import ClanConverter
 from cogs.utils.constants import cwl_league_order
-from cogs.utils.helper import rcs_names_tags, rcs_tags
-from cogs.utils import formats
+from cogs.utils.emoji_lookup import nums
+from cogs.utils.helper import rcs_tags
+from cogs.utils.page_sources import MainEmbedPageSource, MainFieldPageSource
 from cogs.utils import season as coc_season
 from PIL import Image, ImageFont, ImageDraw
 from io import BytesIO
 from random import randint
-from datetime import datetime
 from config import settings
+
+GUILD_IDS = [settings['discord']['rcsguild_id'], settings['discord']['botlogguild_id']]
 
 
 class General(commands.Cog):
     """Cog for General bot commands"""
     def __init__(self, bot):
         self.bot = bot
-        # TODO Add command for ++clan to show all clan info
         # TODO move non game related commands elsewhere
 
-    @commands.command(name="attacks", aliases=["att", "attack", "attackwin", "attackwins"])
-    async def attacks(self, ctx, *, clan: ClanConverter = None):
-        """Attack wins for the whole clan
-
-        **Example:**
-        ++attacks Reddit Example
-        """
-        if not clan:
-            return await ctx.send("You have not provided a valid clan name or clan tag.")
-        async with ctx.typing():
-            sql = "SELECT attack_wins, player_name FROM rcs_members WHERE clan_tag = $1 ORDER BY attack_wins DESC"
-            fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
-            page_count = math.ceil(len(fetch) / 25)
-            title = f"Attack Wins for {clan.name}"
-            ctx.icon = "https://cdn.discordapp.com/emojis/635642869750824980.png"
-            p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
-        await p.paginate()
-
-    @commands.command(name="defenses", aliases=["defences", "def", "defense", "defence", "defends",
-                                                "defend", "defensewins", "defencewins"])
-    async def defenses(self, ctx, *, clan: ClanConverter = None):
-        """Defense wins for the whole clan
-
-        **Example:**
-        ++def Reddit Example
-        """
-        if not clan:
-            return await ctx.send("You have not provided a valid clan name or clan tag.")
-        async with ctx.typing():
-            sql = "SELECT defense_wins, player_name FROM rcs_members WHERE clan_tag = $1 ORDER BY defense_wins DESC"
-            fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
-            page_count = math.ceil(len(fetch) / 25)
-            title = f"Defense Wins for {clan.name}"
-            ctx.icon = "https://cdn.discordapp.com/emojis/635642869373468704.png"
-            p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
-        await p.paginate()
-
-    @commands.command(name="donations", aliases=["don", "dons", "donate", "donates", "donation"])
-    async def donations(self, ctx, *, clan: ClanConverter = None):
-        """Donations for the whole clan
-
-        **Example:**
-        ++don Reddit Example
-        """
-        if not clan:
-            return await ctx.send("You have not provided a valid clan name or clan tag.")
-        sql = ("SELECT donations, donations_received, player_name FROM rcs_members WHERE clan_tag = $1 "
-               "ORDER BY donations DESC")
+    @nextcord.slash_command(name="attacks", description="Attack wins for the specified clan")
+    async def attacks(self, interaction, clan: ClanConverter = SlashOption(name="clan", required=True)):
+        """Attack wins for the whole clan"""
+        sql = ("SELECT ROW_NUMBER () OVER (ORDER BY attack_wins DESC) as row_num, attack_wins, player_name "
+               "FROM rcs_members WHERE clan_tag = $1")
         fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
-        page_count = math.ceil(len(fetch) / 25)
-        title = f"Donations for {clan.name}"
-        ctx.icon = "https://cdn.discordapp.com/emojis/301032036779425812.png"
-        p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
-        await p.paginate()
+        data = []
+        for row in fetch:
+            formatted = f"{nums[row[0]]}`⠀{row[1]:\u00A0>4}⠀` `⠀{row[2]:\u00A0>22.22}⠀`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, f"Attack Wins for {clan.name}", 25),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-    @commands.command(name="level", aliases=["levels", "lvl", "xp", "exp", "harr"])
-    async def levels(self, ctx, *, clan: ClanConverter = None):
-        """Exp Level for the whole clan
+    @nextcord.slash_command(name="defenses", description="Defense wins for the specified clan")
+    async def defenses(self, interaction, clan: ClanConverter = SlashOption(name="clan", required=True)):
+        """Defense wins for the whole clan"""
+        sql = ("SELECT ROW_NUMBER () OVER (ORDER BY defense_wins DESC) as row_num, defense_wins, player_name "
+               "FROM rcs_members WHERE clan_tag = $1")
+        fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
+        data = []
+        for row in fetch:
+            formatted = f"{nums[row[0]]}`⠀{row[1]:\u00A0>4}⠀` `⠀{row[2]:\u00A0>22.22}⠀`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, f"Defense Wins for {clan.name}", 25),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-        **Example:**
-        ++xp Reddit Oak
-        ++level Oak
-        ++lvl #CVCJR89"""
-        if not clan:
-            return await ctx.send("You have not provided a valid clan name or clan tag.")
-        async with ctx.typing():
-            sql = "SELECT exp_level, player_name FROM rcs_members WHERE clan_tag = $1 ORDER BY exp_level DESC"
-            fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
-            page_count = math.ceil(len(fetch) / 25)
-            title = f"Exp Levels for {clan.name}"
-            ctx.icon = "http://cdn.discordapp.com/emojis/748585659085881444.png"
-            p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
-        await p.paginate()
+    @nextcord.slash_command(name="donations", description="Donations for the specified clan")
+    async def donations(self, interaction, clan: ClanConverter = SlashOption(name="clan", required=True)):
+        """Donations for the whole clan"""
+        sql = ("SELECT ROW_NUMBER () OVER (ORDER BY donations DESC) as row_num, donations, "
+               "donations_received, player_name FROM rcs_members WHERE clan_tag = $1")
+        fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
+        data = []
+        for row in fetch:
+            formatted = f"{nums[row[0]]}`⠀{row[1]:\u00A0>4}⠀` `⠀{row[2]:\u00A0>4}⠀` `⠀{row[3]:\u00A0>18.18}⠀`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, f"Donations for {clan.name}", 25),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-    @commands.command(name="trophies", aliases=["trophy"])
-    async def trophies(self, ctx, *, clan: ClanConverter = None):
-        """Trophy count for the whole clan
+    @nextcord.slash_command(name="level", description="XP levels for the specified clan")
+    async def levels(self, interaction, clan: ClanConverter = SlashOption(name="clan", required=True)):
+        """Exp Level for the whole clan"""
+        sql = ("SELECT ROW_NUMBER () OVER (ORDER BY exp_level DESC) as row_num, exp_level, player_name "
+               "FROM rcs_members WHERE clan_tag = $1")
+        fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
+        data = []
+        for row in fetch:
+            formatted = f"{nums[row[0]]}`⠀{row[1]:\u00A0>4}⠀` `⠀{row[2]:\u00A0>22.22}⠀`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, f"XP Levels for {clan.name}", 25),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-        **Example:**
-        ++trophies Reddit Example
-        """
-        if not clan:
-            return await ctx.send("You have not provided a valid clan name or clan tag.")
-        async with ctx.typing():
-            sql = "SELECT trophies, player_name FROM rcs_members WHERE clan_tag = $1 ORDER BY trophies DESC"
-            fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
-            page_count = math.ceil(len(fetch) / 25)
-            title = f"Trophies for {clan.name}"
-            ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
-            p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
-        await p.paginate()
+    @nextcord.slash_command(name="trophies", description="Trophy counts for the specified clan")
+    async def trophies(self, interaction, clan: ClanConverter = SlashOption(name="clan", required=True)):
+        """Trophy count for the whole clan"""
+        sql = ("SELECT ROW_NUMBER () OVER (ORDER BY trophies DESC) as row_num, trophies, player_name "
+               "FROM rcs_members WHERE clan_tag = $1")
+        fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
+        data = []
+        for row in fetch:
+            formatted = f"{nums[row[0]]}`⠀{row[1]:\u00A0>4}⠀` `⠀{row[2]:\u00A0>22.22}⠀`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, f"Trophy Counts for {clan.name}", 25),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-    @commands.command(name="bhtrophies", aliases=["bhtrophy", "bh_trophies"])
-    async def bh_trophies(self, ctx, *, clan: ClanConverter = None):
-        """Trophy count for the whole clan
+    @nextcord.slash_command(name="bhtrophies", description="Builder Trophies for the specified clan")
+    async def bh_trophies(self, interaction, clan: ClanConverter = SlashOption(name="clan", required=True)):
+        """Trophy count for the whole clan"""
+        sql = ("SELECT ROW_NUMBER () OVER (ORDER BY vs_trophies DESC) as row_num, vs_trophies, player_name "
+               "FROM rcs_members WHERE clan_tag = $1")
+        fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
+        data = []
+        for row in fetch:
+            formatted = f"{nums[row[0]]}`⠀{row[1]:\u00A0>4}⠀` `⠀{row[2]:\u00A0>22.22}⠀`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, f"Builder Trophies for {clan.name}", 25),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-        **Example:**
-        ++bhtrophies Reddit Example
-        """
-        if not clan:
-            return await ctx.send("You have not provided a valid clan name or clan tag.")
-        async with ctx.typing():
-            sql = "SELECT vs_trophies, player_name FROM rcs_members WHERE clan_tag = $1 ORDER BY vs_trophies DESC"
-            fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
-            page_count = math.ceil(len(fetch) / 25)
-            title = f"Builder Trophies for {clan.name}"
-            ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
-            p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
-        await p.paginate()
+    @nextcord.slash_command(name="besttrophies", description="Best trophy counts for the specified clan")
+    async def besttrophies(self, interaction, clan: ClanConverter = SlashOption(name="clan", required=True)):
+        """Best trophy count for the whole clan"""
+        sql = ("SELECT ROW_NUMBER () OVER (ORDER BY best_trophies DESC) as row_num, best_trophies, player_name "
+               "FROM rcs_members WHERE clan_tag = $1")
+        fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
+        data = []
+        for row in fetch:
+            formatted = f"{nums[row[0]]}`⠀{row[1]:\u00A0>4}⠀` `⠀{row[2]:\u00A0>22.22}⠀`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, f"Best Trophy Counts for {clan.name}", 25),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-    @commands.command(name="besttrophies", aliases=["besttrophy", "mosttrophies"])
-    async def besttrophies(self, ctx, *, clan: ClanConverter = None):
-        """Best trophy count for the whole clan
+    @nextcord.slash_command(name="townhalls", description="Clan Members by Town Hall Level")
+    async def townhalls(self, interaction, clan: ClanConverter = SlashOption(name="clan", required=True)):
+        """List of clan members by town hall level"""
+        sql = ("SELECT ROW_NUMBER () OVER (ORDER BY th_level DESC, player_name) as row_num, th_level, player_name "
+               "FROM rcs_members WHERE clan_tag = $1")
+        fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
+        data = []
+        for row in fetch:
+            formatted = f"{nums[row[0]]}`⠀{row[1]:\u00A0>4}⠀` `⠀{row[2]:\u00A0>22.22}⠀`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, f"TH Levels for {clan.name}", 25),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-        **Example:**
-        ++besttrophies Reddit Example
-        """
-        if not clan:
-            return await ctx.send("You have not provided a valid clan name or clan tag.")
-        async with ctx.typing():
-            sql = "SELECT best_trophies, player_name FROM rcs_members WHERE clan_tag = $1 ORDER BY best_trophies DESC"
-            fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
-            page_count = math.ceil(len(fetch) / 25)
-            title = f"Best Trophies for {clan.name}"
-            ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
-            p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
-        await p.paginate()
+    @nextcord.slash_command(name="builderhalls", description="Clan Members by Builder Hall Level")
+    async def builderhalls(self, interaction, clan: ClanConverter = SlashOption(name="clan", required=True)):
+        """List of clan members by builder hall level"""
+        sql = ("SELECT ROW_NUMBER () OVER (ORDER BY bh_level DESC, player_name) as row_num, bh_level, player_name "
+               "FROM rcs_members WHERE clan_tag = $1")
+        fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
+        data = []
+        for row in fetch:
+            formatted = f"{nums[row[0]]}`⠀{row[1]:\u00A0>4}⠀` `⠀{row[2]:\u00A0>22.22}⠀`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, f"BH Levels for {clan.name}", 25),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-    @commands.command(name="townhalls", aliases=["townhall", "th"])
-    async def townhalls(self, ctx, *, clan: ClanConverter = None):
-        """List of clan members by town hall level
-
-        **Example:**
-        ++th Reddit Example
-        """
-        if not clan:
-            return await ctx.send("You have not provided a valid clan name or clan tag.")
-        async with ctx.typing():
-            sql = "SELECT th_level, player_name FROM rcs_members WHERE clan_tag = $1 ORDER BY th_level DESC"
-            fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
-            page_count = math.ceil(len(fetch) / 25)
-            title = f"Town Halls for {clan.name}"
-            ctx.icon = "https://cdn.discordapp.com/emojis/513119024188489738.png"
-            p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
-        await p.paginate()
-
-    @commands.command(name="builderhalls", aliases=["builderhall", "bh"])
-    async def builderhalls(self, ctx, *, clan: ClanConverter = None):
-        """List of clan members by builder hall level
-
-        **Example:**
-        ++bh Reddit Example
-        """
-        if not clan:
-            return await ctx.send("You have not provided a valid clan name or clan tag.")
-        async with ctx.typing():
-            sql = "SELECT bh_level, player_name FROM rcs_members WHERE clan_tag = $1 ORDER BY bh_level DESC"
-            fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
-            page_count = math.ceil(len(fetch) / 25)
-            title = f"Builder Halls for {clan.name}"
-            ctx.icon = "https://cdn.discordapp.com/emojis/513119024188489738.png"
-            p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
-        await p.paginate()
-
-    @commands.command(name="warstars", aliases=["stars"])
-    async def warstars(self, ctx, *, clan: ClanConverter = None):
-        """List of clan members by war stars earned
-
-        **Example:**
-        ++stars Reddit Example
-        """
-        if not clan:
-            return await ctx.send("You have not provided a valid clan name or clan tag.")
-        async with ctx.typing():
-            sql = "SELECT war_stars, player_name FROM rcs_members WHERE clan_tag = $1 ORDER BY war_stars DESC"
-            fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
-            page_count = math.ceil(len(fetch) / 25)
-            title = f"War Stars for {clan.name}"
-            ctx.icon = "https://cdn.discordapp.com/emojis/635642870350741514.png"
-            p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
-        await p.paginate()
+    @nextcord.slash_command(name="warstars", description="War stars for the specified clan")
+    async def warstars(self, interaction, clan: ClanConverter = SlashOption(name="clan", required=True)):
+        """List of clan members by war stars earned"""
+        sql = ("SELECT ROW_NUMBER () OVER (ORDER BY war_stars DESC, player_name) as row_num, war_stars, player_name "
+               "FROM rcs_members WHERE clan_tag = $1")
+        fetch = await self.bot.pool.fetch(sql, clan.tag[1:])
+        data = []
+        for row in fetch:
+            formatted = f"{nums[row[0]]}`⠀{row[1]:\u00A0>4}⠀` `⠀{row[2]:\u00A0>22.22}⠀`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, f"War Stars for {clan.name}", 25),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
     async def get_member_list(self, field):
-        sql = (f"SELECT {field}, player_name || ' (' || alt_name || ')' as pname FROM rcs_members "
+        sql = (f"SELECT ROW_NUMBER () OVER (ORDER BY {field} DESC, player_name) as row_num, {field}, "
+               f"player_name || ' (' || alt_name || ')' as pname FROM rcs_members "
                f"INNER JOIN rcs_clans ON rcs_clans.clan_tag = rcs_members.clan_tag "
                f"ORDER BY {field} DESC LIMIT 10")
         fetch = await self.bot.pool.fetch(sql)
         return fetch
 
-    @commands.group()
-    async def top(self, ctx):
-        """[Group] Lists top ten
-        (warstars, attacks, defenses, trophies, bhtrophies, donations, games)
-        """
-        if ctx.invoked_subcommand is None:
-            return await ctx.send_help(ctx.command)
+    @nextcord.slash_command(name="top", description="Slash group for top commands")
+    async def top(self, interaction):
+        """This is the slash group and will never be called"""
+        pass
 
-    @top.command(name="attacks", aliases=["att", "attack", "attackwin", "attackwins"])
-    async def top_attacks(self, ctx):
+    @top.subcommand(name="attacks", description="Top ten attack win totals for the RCS")
+    async def top_attacks(self, interaction):
         """Displays top ten attack win totals for all of the RCS"""
-        async with ctx.typing():
-            data = await self.get_member_list("attack_wins")
-            title = "RCS Top Ten for Attack Wins"
-            ctx.icon = "https://cdn.discordapp.com/emojis/635642869750824980.png"
-            p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
-        await p.paginate()
+        fetch = await self.get_member_list("attack_wins")
+        title = "RCS Top Ten for Attack Wins"
+        data = []
+        for row in fetch:
+            formatted = f"{nums[row[0]]}`⠀{row[1]:\u00A0>4}⠀` `⠀{row[2]:\u00A0>22.22}⠀`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, title, 10),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-    @top.command(name="defenses", aliases=["defences", "def", "defense", "defence", "defends",
-                                           "defend", "defensewins", "defencewins"])
-    async def top_defenses(self, ctx):
+    @top.subcommand(name="defenses", description="Top ten defense win totals for the RCS")
+    async def top_defenses(self, interaction):
         """Displays top ten defense win totals for all of the RCS"""
-        async with ctx.typing():
-            data = await self.get_member_list("defense_wins")
-            title = "RCS Top Ten for Defense Wins"
-            ctx.icon = "https://cdn.discordapp.com/emojis/635642869373468704.png"
-            p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
-        await p.paginate()
+        fetch = await self.get_member_list("defense_wins")
+        title = "RCS Top Ten for Defense Wins"
+        data = []
+        for row in fetch:
+            formatted = f"{nums[row[0]]}`⠀{row[1]:\u00A0>4}⠀` `⠀{row[2]:\u00A0>22.22}⠀`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, title, 10),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-    @top.command(name="donates", aliases=["donate", "donations", "donation"])
-    async def top_donations(self, ctx):
+    @top.subcommand(name="donates", description="Top ten donation counts for the RCS")
+    async def top_donations(self, interaction):
         """Displays top ten donation totals for all of the RCS"""
-        async with ctx.typing():
-            data = await self.get_member_list("donations")
-            title = "RCS Top Ten for Donations"
-            ctx.icon = "https://cdn.discordapp.com/emojis/301032036779425812.png"
-            p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
-        await p.paginate()
+        fetch = await self.get_member_list("donations")
+        title = "RCS Top Ten for Donations"
+        data = []
+        for row in fetch:
+            formatted = f"{nums[row[0]]}`⠀{row[1]:\u00A0>4}⠀` `⠀{row[2]:\u00A0>22.22}⠀`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, title, 10),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-    @top.command(name="level", aliases=["levels", "lvl", "xp", "exp", "harr"])
-    async def top_levels(self, ctx):
+    @top.subcommand(name="level", description="Top ten XP levels for the RCS")
+    async def top_levels(self, interaction):
         """Displays top ten Exp Levels for all of the RCS"""
-        async with ctx.typing():
-            data = await self.get_member_list("exp_level")
-            title = "RCS Top Ten for Exp Level"
-            ctx.icon = "https://cdn.discordapp.com/emojis/748585659085881444.png"
-            p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
-        await p.paginate()
+        fetch = await self.get_member_list("exp_level")
+        title = "RCS Top Ten for Exp Level"
+        data = []
+        for row in fetch:
+            formatted = f"{nums[row[0]]}`⠀{row[1]:\u00A0>4}⠀` `⠀{row[2]:\u00A0>22.22}⠀`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, title, 10),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-    @top.command(name="trophies", aliases=["trophy"])
-    async def top_trophies(self, ctx):
+    @top.subcommand(name="trophies", description="Top ten trophy counts for the RCS")
+    async def top_trophies(self, interaction):
         """Displays top ten trophy counts for all of the RCS"""
-        async with ctx.typing():
-            data = await self.get_member_list("trophies")
-            title = "RCS Top Ten for Trophies"
-            ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
-            p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
-        await p.paginate()
+        fetch = await self.get_member_list("trophies")
+        title = "RCS Top Ten for Trophies"
+        data = []
+        for row in fetch:
+            formatted = f"{nums[row[0]]}`⠀{row[1]:\u00A0>4}⠀` `⠀{row[2]:\u00A0>22.22}⠀`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, title, 10),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-    @top.command(name="bhtrophies", aliases=["bhtrophy", "bh_trophies"])
-    async def top_bh_trophies(self, ctx):
+    @top.subcommand(name="bhtrophies", description="Top ten BH trophies for the RCS")
+    async def top_bh_trophies(self, interaction):
         """Displays top ten vs trophy counts for all of the RCS"""
-        async with ctx.typing():
-            data = await self.get_member_list("vs_trophies")
-            title = "RCS Top Ten for Builder Trophies"
-            ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
-            p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
-        await p.paginate()
+        fetch = await self.get_member_list("vs_trophies")
+        title = "RCS Top Ten for Builder Trophies"
+        data = []
+        for row in fetch:
+            formatted = f"{nums[row[0]]}`⠀{row[1]:\u00A0>4}⠀` `⠀{row[2]:\u00A0>22.22}⠀`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, title, 10),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-    @top.command(name="besttrophies", aliases=["besttrophy", "mosttrophies"])
-    async def top_best_trophies(self, ctx):
+    @top.subcommand(name="besttrophies", description="Top ten best trophies for the RCS")
+    async def top_best_trophies(self, interaction):
         """Displays top ten best trophy counts for all of the RCS"""
-        async with ctx.typing():
-            data = await self.get_member_list("best_trophies")
-            title = "RCS Top Ten for Best Trophies"
-            ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
-            p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
-        await p.paginate()
+        fetch = await self.get_member_list("best_trophies")
+        title = "RCS Top Ten for Best Trophies"
+        data = []
+        for row in fetch:
+            formatted = f"{nums[row[0]]}`⠀{row[1]:\u00A0>4}⠀` `⠀{row[2]:\u00A0>22.22}⠀`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, title, 10),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-    @top.command(name="warstars", aliases=["stars"])
-    async def top_warstars(self, ctx):
+    @top.subcommand(name="warstars", description="Top ten war stars for the RCS")
+    async def top_warstars(self, interaction):
         """Displays top ten war star totals for all of the RCS"""
-        async with ctx.typing():
-            data = await self.get_member_list("war_stars")
-            title = "RCS Top Ten for War Stars"
-            ctx.icon = "https://cdn.discordapp.com/emojis/635642870350741514.png"
-            p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
-        await p.paginate()
+        fetch = await self.get_member_list("war_stars")
+        title = "RCS Top Ten for War Stars"
+        data = []
+        for row in fetch:
+            formatted = f"{nums[row[0]]}`⠀{row[1]:\u00A0>4}⠀` `⠀{row[2]:\u00A0>22.22}⠀`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, title, 10),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-    @top.command(name="games")
-    async def top_games(self, ctx):
-        """Displays top ten clan games points for all of the RCS (current or most recent games)"""
-        async with ctx.typing():
-            now = datetime.utcnow()
-            conn = self.bot.pool
-            row = await conn.fetchrow("SELECT MAX(start_time) as start_time, event_id "
-                                      "FROM rcs_events WHERE event_type_id = 1 AND start_time < $1 "
-                                      "GROUP BY event_id "
-                                      "ORDER BY start_time DESC "
-                                      "LIMIT 1", now)
-            event_id = row['event_id']
-            sql = ("SELECT player_tag, (current_points - starting_points) as points "
-                   "FROM rcs_clan_games "
-                   "WHERE event_id = $1 "
-                   "ORDER BY points DESC "
-                   "LIMIT 10")
-            fetch = await conn.fetch(sql, event_id)
-            data = []
-            for row in fetch:
-                player = await self.bot.coc.get_player(row['player_tag'])
-                clan = player.clan.name.replace("Reddit ", "")
-                data.append([row['points'], f"{player.name} ({clan})"])
-            title = "RCS Top Ten for Clan Games"
-            ctx.icon = "https://cdn.discordapp.com/emojis/635642869750824980.png"
-            p = formats.TablePaginator(ctx, data=data, title=title, page_count=1)
-        await p.paginate()
-
-    @commands.group(name="link", invoke_without_command=True, hidden=True)
-    @is_leader_or_mod_or_council()
-    async def link(self, ctx, user: discord.User = None, player: PlayerConverter = None):
-        """Allows leaders, chat mods or council to link a Discord member to an in-game player tag
-        
-        **Permissions:**
-        RCS Leaders
-        Chat Mods
-        Council
-        
-        **Example:**
-        ++link @TubaKid #ABC1234
-        ++link 051150854571163648 #ABC1234
-
-        **Options:**
-        ++link list [clan name/tag]
-        ++link check [tag or Discord ID]
-        """
-        if ctx.invoked_subcommand is not None:
-            return
-
-        if not player:
-            self.bot.logger.error(f"{ctx.author} provided some bad info for the link command.")
-            return await ctx.send("I don't particularly care for that player. Wanna try again?")
-        if not user:
-            return await ctx.send("That's not a real Discord user. Try again.")
-        if player.clan.tag[1:] in rcs_names_tags().values() or player.clan.name.lower().startswith("reddit"):
-            try:
-                # Add to Mike's Links API database
-                await self.bot.links.add_link(player.tag, user.id)
-                # Add member role to discord user
-                rcs_guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
-                member = rcs_guild.get_member(user.id)
-                if not member:
-                    return await ctx.send(f"{user.display_name} is not a member of the RCS Discord Server "
-                                          f"so I couldn't add the Member role.")
-                member_role = rcs_guild.get_role(settings['rcs_roles']['members'])
-                await member.add_roles(member_role)
-                await ctx.confirm()
-            except:
-                self.bot.logger.exception("Something went wrong while adding a discord link")
-                await ctx.send("I'm sorry, but something has gone wrong. I notified the important people and they will "
-                               "look into it for you.")
-        else:
-            await ctx.send(f"I see that {player.name} is in {player.clan} which is not an RCS clan. Try again "
-                           f"when {player.name} is in an RCS clan.")
-
-    @link.command(name="check", hidden=True)
-    @is_leader_or_mod_or_council()
-    async def link_check(self, ctx, tag_or_id):
-        if tag_or_id.startswith("#"):
-            # player_tag provided
-            discord_id = await self.bot.links.get_link(tag_or_id)
-            player = await self.bot.coc.get_player(tag_or_id)
-            if discord_id:
-                content = f"{player.name} ({player.tag}) is linked to <@{discord_id}> ({discord_id})."
-            else:
-                content = f"No matching Discord ID found for {player.name} ({player.tag})."
-        else:
-            # assume we have a discord_id
-            tags = await self.bot.links.get_linked_players(tag_or_id)
-            if tags:
-                content = ""
-                for tag in tags:
-                    player = await self.bot.coc.get_player(tag)
-                    content += f"<@{tag_or_id}> ({tag_or_id}) is linked to {player.name} ({player.tag})\n"
-            else:
-                content = f"No matching tags found for {tag_or_id}."
-        return await ctx.send(content)
-
-    @link.command(name="list", hidden=True)
-    @is_leader_or_mod_or_council()
-    async def link_list(self, ctx, clan: ClanConverter = None):
-        """List linked players for the specified clan
-
-        **Permissions:**
-        RCS Leaders
-        Chat Mods
-        Council
-
-        **Example:**
-        ++link list Chi
-        ++link list #CVCJR89
-        ++link list Reddit Snow
-        """
-        async with ctx.typing():
-            if not clan:
-                return await ctx.send("You must provide an RCS clan name or tag.")
-            tags = [x.tag[1:] for x in clan.members]
-            links = await self.bot.links.get_links(*tags)
-            linked = not_linked = ""
-            for player_tag, discord_id in links:
-                player = await self.bot.coc.get_player(player_tag)
-                if discord_id:
-                    linked += f"<@{discord_id}> is linked to {player.name} ({player.tag})\n"
-                else:
-                    not_linked += f"{player.name} ({player.tag}) is not currently linked to a Discord account.\n"
-        if linked:
-            linked = f"**Linked members of {clan.name}**\n" + linked
-        if not_linked:
-            not_linked = f"**Members of {clan.name} who are not linked**\n" + not_linked
-        await ctx.send_text(ctx.channel, linked + not_linked)
-
-    @commands.command(name="unlink", hidden=True)
-    @is_leader_or_mod_or_council()
-    async def unlink(self, ctx, player: PlayerConverter = None):
-        """Unlink player tag from Discord
-
-        **Permissions:**
-        RCS Council
-        Chat Mods
-        Leaders
-
-        **Example:**
-        ++unlink #UV8QQ0RV
-        """
-        if not player:
-            self.bot.logger.error(f"{ctx.author} provided some bad info for the link command.")
-            return await ctx.send("I don't particularly care for that player. Wanna try again?")
-        await self.bot.links.delete_link(player.tag)
-        await ctx.confirm()
-
-    @commands.command(name="reddit", aliases=["subreddit"])
-    async def reddit(self, ctx, *, clan: ClanConverter = None):
+    @nextcord.slash_command(name="reddit", description="Displays the subreddit for the specified clan")
+    async def reddit(self, interaction, clan: ClanConverter = SlashOption(name="clan", required=True)):
         """Displays a link to specified clan's subreddit"""
-        if not clan:
-            return await ctx.send("You must provide an RCS clan name or tag.")
         sql = "SELECT subreddit FROM rcs_clans WHERE clan_tag = $1"
         fetch = await self.bot.pool.fetchrow(sql, clan.tag[1:])
         if fetch['subreddit'] != "":
-            await ctx.send(fetch['subreddit'])
+            await interaction.response.send_message(fetch['subreddit'])
         else:
-            await ctx.send("This clan does not have a subreddit.")
+            await interaction.response.send_message("This clan does not have a subreddit.")
 
-    @commands.command(name="discord")
-    async def discord(self, ctx, *, clan: ClanConverter = None):
+    @nextcord.slash_command(name="discord", description="Displays the link to the clan's Discord server")
+    async def discord(self, interaction, clan: ClanConverter = SlashOption(name="clan", required=True)):
         """Displays a link to specified clan's Discord server"""
-        if not clan:
-            return await ctx.send("Here is the link to the RCS Discord Server.  https://discord.gg/X8U9XjD")
-        async with ctx.typing():
-            sql = "SELECT discord_server FROM rcs_clans WHERE clan_tag = $1"
-            fetch = await self.bot.pool.fetchrow(sql, clan.tag[1:])
+        sql = "SELECT discord_server FROM rcs_clans WHERE clan_tag = $1"
+        fetch = await self.bot.pool.fetchrow(sql, clan.tag[1:])
         if fetch['discord_server']:
-            await ctx.send(fetch['discord_server'])
+            await interaction.response.send_message(fetch['discord_server'])
         else:
-            await ctx.send("This clan does not have a Discord server.")
+            await interaction.response.send_message("This clan does not have a Discord server.")
 
-    @commands.command(name="cwl")
-    async def cwl(self, ctx, *args):
-        """List CWL leagues of all RCS clans
-
-        **Example:**
-        ++cwl - Shows list of RCS clans in their leagues
-        """
+    @nextcord.slash_command(name="cwl", description="Lists CWL leagues for all RCS clans")
+    async def cwl(self, interaction):
+        """List CWL leagues of all RCS clans"""
+        await interaction.response.defer()
         sort_leagues = cwl_league_order[::-1]
         cwl_clans = {}
+        data = []
         for league in sort_leagues:
             cwl_clans[league] = []
         for tag in rcs_tags():
@@ -492,11 +315,14 @@ class General(commands.Cog):
             league = clan.war_league.name.replace("League ", "")
             cwl_clans[league].append(f"{clan.name} ({clan.tag})")
         for league in sort_leagues:
-            content = header_only = f"**{league}:**\n"
+            content = ""
             for clan in cwl_clans[league]:
-                content += f"  {clan}\n"
-            if content != header_only:
-                await ctx.send(content)
+                content += f"{clan}\n"
+            if content:
+                data.append((league, content))
+        pages = menus.ButtonMenuPages(source=MainFieldPageSource(data, "RCS CWL Leagues", 3),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
     @commands.command(name="roll")
     async def roll(self, ctx, *args):
@@ -556,33 +382,30 @@ class General(commands.Cog):
         final_buffer = BytesIO()
         final_image.save(final_buffer, "png")
         final_buffer.seek(0)
-        response = await ctx.send(file=discord.File(final_buffer, "results.png"))
+        response = await ctx.send(file=nextcord.File(final_buffer, "results.png"))
         # Currently DISABLED - Remove comment to auto-delete response with command
         # self.bot.messages[ctx.message.id] = response
 
-    @commands.command(name="season")
+    @nextcord.slash_command(name="season", description="Responds with information on the current COC season")
     async def season(self, ctx):
         """Responds with information on the current COC season"""
-        embed = discord.Embed(title="Season Information", color=discord.Color.green())
+        embed = nextcord.Embed(title="Season Information", color=nextcord.Color.green())
         embed.add_field(name="Season Start", value=coc_season.get_season_start())
         embed.add_field(name="Season End", value=coc_season.get_season_end())
         embed.add_field(name="Days Left", value=coc_season.get_days_left())
         embed.set_thumbnail(url="http://www.mayodev.com/images/clock.png")
         response = await ctx.send(embed=embed)
-        self.bot.messages[ctx.message.id] = response
 
-    @commands.command(name="get_clan")
-    async def get_clan(self, ctx, clan: ClanConverter = None):
+    @nextcord.slash_command(name="get_clan", description="Responds with general information on the specified clan")
+    async def get_clan(self, interaction, clan: ClanConverter = SlashOption(name="clan", required=True)):
         """Responds with general information on the specified clan"""
-        if not clan:
-            return await ctx.send("Please provide a valid RCS clan name or tag.")
-        embed = discord.Embed(title=clan.name, color=discord.Color.dark_red(), description=clan.description)
+        embed = nextcord.Embed(title=clan.name, color=nextcord.Color.dark_red(), description=clan.description)
         embed.set_thumbnail(url=clan.badge.url)
         embed.add_field(name="Clan Tag", value=clan.tag)
         embed.add_field(name="Clan Level", value=clan.level)
         embed.add_field(name="War Log", value="Public" if clan.public_war_log else "Private")
         embed.set_footer(text=f"War Record: {clan.war_wins}-{clan.war_losses}-{clan.war_ties}")
-        await ctx.send(embed=embed)
+        await interaction.response.send_message(embed=embed)
 
 
 def setup(bot):

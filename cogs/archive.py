@@ -1,9 +1,13 @@
-import discord
+import nextcord
 import asyncio
+import io
+import os
 
-from discord.ext import commands
+from nextcord.ext import commands
 from datetime import datetime
 from cogs.utils.checks import is_scout_or_council
+from cogs.utils import chat_exporter
+from config import settings
 from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
 from oauth2client import file, client, tools
@@ -18,11 +22,33 @@ if not creds or creds.invalid:
 service = build("docs", "v1", credentials=creds)
 drive_service = build("drive", "v3", credentials=creds)
 
+GUILD_IDS = [settings['discord']['rcsguild_id'], settings['discord']['botlogguild_id']]
+
 
 class Archive(commands.Cog):
     """Admin only cog for archiving Discord channels"""
     def __init__(self, bot):
         self.bot = bot
+
+    @nextcord.slash_command(name="archive", description="Archive current channel", guild_ids=GUILD_IDS)
+    async def slash_archive(self, interaction: nextcord.Interaction):
+        """Archives the current channel to an html file"""
+        transcript = await chat_exporter.export(interaction.channel, bot=self.bot)
+        if transcript is None:
+            return await interaction.response.send_message("Nothing to export")
+        self.bot.logger.info(type(transcript))
+        filename = f"archive-{interaction.channel.name.replace(' ', '-')}.html"
+        transcript_file = nextcord.File(io.BytesIO(transcript.encode()),
+                                        filename=filename
+                                        )
+        directory = "archive"
+        if not os.path.isdir(directory):
+            os.mkdir(directory)
+        file = open(os.path.join(directory, filename), "w")
+        file.write(transcript)
+        file.close()
+        await interaction.response.send_message(file=transcript_file)
+
 
     @staticmethod
     def read_paragraph_element(paragraph):
@@ -212,7 +238,7 @@ class Archive(commands.Cog):
         sql = ("INSERT INTO rcs_archives (doc_title, doc_link, doc_body) "
                "VALUES ($1, $2, $3)")
         await conn.execute(sql, doc_name, doc_copy_id, doc_body)
-        embed = discord.Embed(title="Archive Document Created", color=discord.Color.purple())
+        embed = nextcord.Embed(title="Archive Document Created", color=nextcord.Color.purple())
         embed.add_field(name="Guild", value=ctx.guild.name, inline=False)
         embed.add_field(name="Channel", value=ctx.channel.name, inline=False)
         embed.add_field(name=doc_name, value=doc_copy_link, inline=False)

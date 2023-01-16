@@ -8,3 +8,5 @@ venv
 *.pyc
 *.yaml
 *.sqlite
+*.html
+*.htm

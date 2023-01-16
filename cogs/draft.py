@@ -1,6 +1,6 @@
-import discord
+import nextcord
 
-from discord.ext import commands
+from nextcord.ext import commands
 from config import settings
 
 
@@ -11,7 +11,7 @@ class Draft(commands.Cog):
 
     @commands.command(name="draft")
     @commands.has_role("TDW Admin")
-    async def draft(self, ctx, user: discord.Member):
+    async def draft(self, ctx, user: nextcord.Member):
         """For drafting members in the Draft Wars. Must already have a draft role assigned to draft members to
         your team.
 
@@ -48,7 +48,7 @@ class Draft(commands.Cog):
 
     @commands.command(name="undraft")
     @commands.has_role("TDW Admin")
-    async def undraft(self, ctx, user: discord.Member):
+    async def undraft(self, ctx, user: nextcord.Member):
         """For removing members from the draft roles. Must """
         draft_roles = [settings['rcs_roles']['innuendo'],
                        settings['rcs_roles']['aardvark'],

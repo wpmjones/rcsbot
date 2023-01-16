@@ -1,13 +1,25 @@
-import discord
-import math
+import nextcord
 import time
 
-from discord.ext import commands, tasks
-from cogs.utils import formats
+from nextcord import SlashOption
+from nextcord.ext import commands, tasks, menus
 from cogs.utils.converters import ClanConverter
+from cogs.utils.page_sources import MainEmbedPageSource, TopTenSource
 from cogs.utils.db import Sql
 from cogs.utils.helper import rcs_tags
 from datetime import datetime, timedelta
+
+th_choices = {
+    "Town Hall 15": 15,
+    "Town Hall 14": 14,
+    "Town Hall 13": 13,
+    "Town Hall 12": 12,
+    "Town Hall 11": 11,
+    "Town Hall 10": 10,
+    "Town Hall 9": 9,
+    "Town Hall 8": 8,
+    "Town Hall 7": 7,
+}
 
 
 class Push(commands.Cog):
@@ -15,9 +27,9 @@ class Push(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.title = "2022 Summer Trophy Push"
-        self.start_time = datetime(2022, 7, 18, 4, 0)
-        self.end_time = datetime(2022, 7, 25, 3, 55)
+        self.title = "2023 Wonderful Winter Trophy Push"
+        self.start_time = datetime(2023, 1, 18, 5, 0)
+        self.end_time = datetime(2023, 1, 27, 2, 55)
         self.update_push.start()
 
     def cog_unload(self):
@@ -28,28 +40,27 @@ class Push(commands.Cog):
         """Task to pull API data for the push"""
         now = datetime.utcnow()
         if self.start_time < now < self.end_time:
+            self.bot.logger.info("Starting push update")
             with Sql(autocommit=True) as cursor:
-                sql = "SELECT playerTag from rcspush_2022_1"
+                sql = "SELECT playerTag from rcspush_2023_1"
                 cursor.execute(sql)
                 fetch = cursor.fetchall()
                 player_tags = []
                 for row in fetch:
                     player_tags.append(row[0])
-                sql_1 = ("UPDATE rcspush_2022_1 "
+                sql_1 = ("UPDATE rcspush_2023_1 "
                          "SET currentTrophies = ?, currentThLevel = ? "
                          "WHERE playerTag = ?")
-                sql_2 = "SELECT legendTrophies FROM rcspush_2022_1 WHERE playerTag = ?"
-                sql_3 = ("UPDATE rcspush_2022_1 "
+                sql_2 = "SELECT legendTrophies FROM rcspush_2023_1 WHERE playerTag = ?"
+                sql_3 = ("UPDATE rcspush_2023_1 "
                          "SET legendTrophies = ? "
                          "WHERE playerTag = ?")
                 counter = 0
                 try:
-                    for tag in player_tags:
-                        # async for player in self.bot.coc.get_players(player_tags):
-                        player = await self.bot.coc.get_player(tag)
+                    async for player in self.bot.coc.get_players(player_tags):
                         if player.clan:
                             cursor.execute(sql_1, player.trophies, player.town_hall, player.tag[1:])
-                        if (player.town_hall < 13 and
+                        if (player.town_hall < 14 and
                                 player.trophies >= 5000 and
                                 datetime.utcnow() > (self.end_time - timedelta(days=2))):
                             cursor.execute(sql_2, player.tag[1:])
@@ -60,27 +71,37 @@ class Push(commands.Cog):
                         counter += 1
                 except:
                     self.bot.logger.exception(f"Failed on {player_tags[counter]}")
-            print("push update complete")
+            self.bot.logger.info("push update complete")
 
     @update_push.before_loop
     async def before_update_push(self):
         await self.bot.wait_until_ready()
 
-    @commands.group(name="push", invoke_without_command=True)
-    async def push(self, ctx):
+    async def get_push_embed(self):
+        delta = self.start_time - datetime.utcnow()
+        embed = nextcord.Embed(title=self.title, color=nextcord.Color.from_rgb(0, 183, 0))
+        embed.add_field(name="Start time (UTC):", value=self.start_time.strftime("%d-%b-%Y %H:%M"), inline=True)
+        embed.add_field(name="End time (UTC):", value=self.end_time.strftime("%d-%b-%Y %H:%M"), inline=True)
+        if delta.days > 0:
+            start_info = f"Starting in {delta.days} day(s)."
+        else:
+            hours, _ = divmod(delta.total_seconds(), 3600)
+            start_info = f"Starting in {hours:02} hour(s)."
+        embed.set_author(name=start_info,
+                         icon_url="https://cdn.discordapp.com/emojis/641101630351212567.png")
+        return embed
+
+    @nextcord.slash_command(name="push",
+                            description="Provides information on the push event")
+    async def push(self, interaction: nextcord.Interaction):
+        """This is the slash group and will never be called"""
+        pass
+
+    @push.subcommand(name="info", description="Provides information on the push event")
+    async def push_info(self, interaction: nextcord.Interaction):
         """The main push command for the event and provides information relating to the status of the push."""
-        if ctx.invoked_subcommand is not None:
-            return
-
-        await ctx.invoke(self.push_info)
-
-    @push.command(name="info")
-    async def push_info(self, ctx):
-        """Provides current status of the push (start/end time)."""
         now = datetime.utcnow()
-        embed = discord.Embed(title=self.title, color=discord.Color.from_rgb(0, 183, 0))
-        embed.set_footer(icon_url="https://openclipart.org/image/300px/svg_to_png/122449/1298569779.png",
-                         text="For help with this command, type ++help push")
+        embed = nextcord.Embed(title=self.title, color=nextcord.Color.from_rgb(0, 183, 0))
         embed.add_field(name="Start time (UTC):", value=self.start_time.strftime("%d-%b-%Y %H:%M"), inline=True)
         embed.add_field(name="End time (UTC):", value=self.end_time.strftime("%d-%b-%Y %H:%M"), inline=True)
         if now < self.start_time:
@@ -106,69 +127,80 @@ class Push(commands.Cog):
             # TODO other cool stats here
             embed.set_author(name="Event complete!",
                              icon_url="https://cdn.discordapp.com/emojis/641101630342692884.png")
-        await ctx.send(embed=embed)
+        await interaction.response.send_message(embed=embed)
 
-    @push.command(name="all")
-    async def push_all(self, ctx):
+    @push.subcommand(name="all", description="Lists all clans ranked by score")
+    async def push_all(self, interaction: nextcord.Interaction):
         """Returns list of all clans ranked by score (only top 30 trophies contribute to the score)."""
         if datetime.utcnow() < self.start_time:
-            return await ctx.invoke(self.push_info)
+            embed = await self.get_push_embed()
+            return await interaction.response.send_message(embed=embed)
         with Sql() as cursor:
-            cursor.execute("SELECT SUM(clanPoints) AS totals, clanName FROM vRCSPush30 "
+            cursor.execute("SELECT clanName, SUM(clanPoints) AS totals FROM vRCSPush30 "
                            "GROUP BY clanName "
                            "ORDER BY totals DESC")
             fetch = cursor.fetchall()
-        page_count = math.ceil(len(fetch) / 20)
-        title = "RCS Push Rankings"
-        ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
-        p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count, rows_per_table=20)
-        await p.paginate()
-
-    @push.command(name="diff")
-    async def push_diff(self, ctx):
-        """Returns list of clans ranked by score, showing the differential to the top clan."""
-        if datetime.utcnow() < self.start_time:
-            return await ctx.invoke(self.push_info)
-        with Sql() as cursor:
-            cursor.execute("SELECT SUM(clanPoints) AS totals, clanName FROM vRCSPush30 "
-                           "GROUP BY clanName "
-                           "ORDER BY totals DESC")
-            fetch = cursor.fetchall()
-        top_score = fetch[0][0]
         data = []
         for row in fetch:
-            if row[0] == top_score:
-                data.append([f"{top_score:.0f}", row[1]])
-            else:
-                data.append([f"-{top_score - row[0]:.0f}", row[1]])
-        page_count = math.ceil(len(fetch) / 20)
-        title = "RCS Push Ranking Differentials"
-        ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
-        p = formats.TablePaginator(ctx, data=data, title=title, page_count=page_count, rows_per_table=20)
-        await p.paginate()
+            formatted = f"`{row[0]:\u00A0<20.20} {row[1]:\u00A0>7.7}`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, "All Clans", 20), clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-    @push.command(name="top")
-    async def push_top(self, ctx):
+    @push.subcommand(name="diff", description="Lists all clans rank by score as compared to top clan")
+    async def push_diff(self, interaction: nextcord.Interaction):
+        """Returns list of clans ranked by score, showing the differential to the top clan."""
+        if datetime.utcnow() < self.start_time:
+            embed = await self.get_push_embed()
+            return await interaction.response.send_message(embed=embed)
+        with Sql() as cursor:
+            cursor.execute("SELECT clanName, SUM(clanPoints) AS totals FROM vRCSPush30 "
+                           "GROUP BY clanName "
+                           "ORDER BY totals DESC")
+            fetch = cursor.fetchall()
+        top_score = fetch[0][1]
+        data = []
+        for row in fetch:
+            if row[1] == top_score:
+                title = f"{row[0]:\u00A0<20.20} {row[1]:\u00A0>7.7}"
+            else:
+                formatted = f"`{row[0]:\u00A0<20.20} {-1 * (top_score - row[1]):\u00A0>7.7}`"
+                data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, f"Push Score Differential\n{title}", 20),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
+
+    @push.subcommand(name="top", description="List of top 10 players for each TH level")
+    async def push_top(self, interaction: nextcord.Interaction):
         """Returns list of top 10 players for each TH level."""
         if datetime.utcnow() < self.start_time:
-            return await ctx.invoke(self.push_info)
+            embed = await self.get_push_embed()
+            return await interaction.response.send_message(embed=embed)
         # TODO change author icon with TH
         with Sql() as cursor:
-            cursor.execute("SELECT currentTrophies, playerName "
+            cursor.execute("SELECT playerName, currentTrophies "
                            "FROM rcspush_vwTopTenByTh "
                            "ORDER BY th DESC, currentTrophies DESC")
             fetch = cursor.fetchall()
-        ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
-        p = formats.TopTenPaginator(ctx, data=fetch)
-        await p.paginate()
+        data = []
+        for row in fetch:
+            formatted = f"`{row[0].replace('`', ''):\u00A0<24} {row[1]:\u00A0>7}`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=TopTenSource(data),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-    @push.command(name="th")
-    async def push_th(self, ctx, th_level: int):
-        """Returns list of top 100 players at the TH specified (there must be a space between th and the number)."""
+    @push.subcommand(name="th", description="Top 100 by TH level")
+    async def push_th(self,
+                      interaction: nextcord.Interaction,
+                      th_level: int = nextcord.SlashOption(
+                          name="th_level",
+                          choices=th_choices)
+                      ):
+        """Returns list of top 100 players at the TH specified"""
         if datetime.utcnow() < self.start_time:
-            return await ctx.invoke(self.push_info)
-        if (th_level > 14) or (th_level < 6):
-            return await ctx.send("You have not provided a valid town hall level.")
+            embed = await self.get_push_embed()
+            return await interaction.response.send_message(embed=embed)
         with Sql() as cursor:
             cursor.execute(f"SELECT TOP 100 currentTrophies, CAST(clanPoints AS DECIMAL(5,2)) as Pts, "
                            f"playerName + ' (' + COALESCE(altName, clanName) + ')' as Name "
@@ -176,66 +208,38 @@ class Push(commands.Cog):
                            f"WHERE currentThLevel = {th_level} "
                            f"ORDER BY clanPoints DESC")
             fetch = cursor.fetchall()
-        page_count = math.ceil(len(fetch) / 20)
-        title = f"RCS Push Top Points for TH{th_level}"
-        ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
-        p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count, rows_per_table=20)
-        await p.paginate()
+        data = []
+        for row in fetch:
+            formatted = f"`{row[0]:<4} {row[1]:>6} {row[2].replace('`', ''):\u00A0<23}`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, f"TH{th_level} Scores", 10),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-    @push.command(name="th14", hidden=True)
-    async def push_th14(self, ctx):
-        await ctx.invoke(self.push_th, th_level=14)
-
-    @push.command(name="th13", hidden=True)
-    async def push_th13(self, ctx):
-        await ctx.invoke(self.push_th, th_level=13)
-
-    @push.command(name="th12", hidden=True)
-    async def push_th12(self, ctx):
-        await ctx.invoke(self.push_th, th_level=12)
-
-    @push.command(name="th11", hidden=True)
-    async def push_th11(self, ctx):
-        await ctx.invoke(self.push_th, th_level=11)
-
-    @push.command(name="th10", hidden=True)
-    async def push_th10(self, ctx):
-        await ctx.invoke(self.push_th, th_level=10)
-
-    @push.command(name="th9", hidden=True)
-    async def push_th9(self, ctx):
-        await ctx.invoke(self.push_th, th_level=9)
-
-    @push.command(name="th8", hidden=True)
-    async def push_th8(self, ctx):
-        await ctx.invoke(self.push_th, th_level=8)
-
-    @push.command(name="th7", hidden=True)
-    async def push_th7(self, ctx):
-        await ctx.invoke(self.push_th, th_level=7)
-
-    @push.command(name="gain", aliases=["gains", "increase"])
-    async def push_gain(self, ctx):
+    @push.subcommand(name="gain", description="Top 25 by trophies gained")
+    async def push_gain(self, interaction: nextcord.Interaction):
         """Returns top 25 players based on number of trophies gained."""
         if datetime.utcnow() < self.start_time:
-            return await ctx.invoke(self.push_info)
+            embed = await self.get_push_embed()
+            return await interaction.response.send_message(embed=embed)
         with Sql() as cursor:
             cursor.execute("SELECT trophyGain, player FROM rcspush_vwGains ORDER BY trophyGain DESC")
             fetch = cursor.fetchall()
-        page_count = math.ceil(len(fetch) / 25)
-        title = "RCS Push Top Trophy Gains"
-        ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
-        p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
-        await p.paginate()
+        data = []
+        for row in fetch:
+            formatted = f"`{row[1].replace('`', ''):\u00A0<24} {row[0]:\u00A0>7}`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, "Trophy Gains", 25),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-    @push.command(name="clan")
-    async def push_clan(self, ctx, clan: ClanConverter = None):
+    @push.subcommand(name="clan", description="Push score for specified clan")
+    async def push_clan(self, interaction,
+                        clan: ClanConverter = SlashOption(name="clan", required=True)):
         """Returns a list of players from the specified clan with their push points"""
         if datetime.utcnow() < self.start_time:
-            return await ctx.invoke(self.push_info)
-        if not clan:
-            return await ctx.send("Please provide a valid clan name/tag when using this command.")
-        print(clan)
+            embed = await self.get_push_embed()
+            return await interaction.response.send_message(embed=embed)
         with Sql() as cursor:
             cursor.execute(f"SELECT CAST(clanPoints as decimal(5,2)), "
                            f"playerName + ' (TH' + CAST(currentThLevel as varchar(2)) + ')' "
@@ -244,13 +248,15 @@ class Push(commands.Cog):
                            f"ORDER BY clanPoints DESC",
                            clan.name)
             fetch = cursor.fetchall()
-        page_count = math.ceil(len(fetch) / 25)
-        title = f"RCS Push - {clan.name} Points"
-        ctx.icon = "https://cdn.discordapp.com/emojis/635642869738111016.png"
-        p = formats.TablePaginator(ctx, data=fetch, title=title, page_count=page_count)
-        await p.paginate()
+        data = []
+        for row in fetch:
+            formatted = f"`{row[1].replace('`', ''):\u00A0<24} {row[0]:\u00A0>7}`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, f"Scores for {clan.name}", 25),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
 
-    @push.command(name="start", hidden=True)
+    @commands.command(name="push_start", hidden=True)
     @commands.is_owner()
     async def push_start(self, ctx):
         msg = await ctx.send("Starting process...")
@@ -258,8 +264,6 @@ class Push(commands.Cog):
         start = time.perf_counter()
         player_list = []
         async for clan in self.bot.coc.get_clans(rcs_tags()):
-            if clan.tag == "#C0LCCU8":
-                continue
             for member in clan.members:
                 player_list.append(member.tag)
         players_many = []
@@ -270,7 +274,7 @@ class Push(commands.Cog):
                                  player.name.replace("'", "''"), player.clan.name])
         with Sql() as cursor:
             cursor.fast_executemany = True
-            sql = (f"INSERT INTO rcspush_2022_1 "
+            sql = (f"INSERT INTO rcspush_2023_1 "
                    f"(playerTag, clanTag, startingTrophies, currentTrophies, "
                    f"bestTrophies, startingThLevel, currentThLevel, playerName, clanName) "
                    f"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")

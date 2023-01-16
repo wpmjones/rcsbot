@@ -1,7 +1,9 @@
 import coc
+import nextcord
 import re
 
-from discord.ext import commands
+from nextcord.ext import commands
+from cogs.utils.context import MyInteraction
 from cogs.utils.helper import rcs_names_tags, rcs_tags
 
 tag_validator = re.compile("^#?[PYLQGRJCUV0289]+$")
@@ -45,8 +47,8 @@ class PlayerConverter(commands.Converter):
         raise commands.BadArgument(f"Invalid tag or IGN. Please try again.")
 
 
-class ClanConverter(commands.Converter):
-    async def convert(self, ctx, argument) -> coc.Clan:
+class ClanConverter(nextcord.OptionConverter):
+    async def convert(self, interaction: MyInteraction, argument) -> coc.Clan:
         if isinstance(argument, coc.Clan):
             return argument
 
@@ -58,7 +60,7 @@ class ClanConverter(commands.Converter):
         if tag_validator.match(tag):
             try:
                 if tag[1:] in clans.values():
-                    clan = await ctx.coc.get_clan(tag)
+                    clan = await interaction.coc.get_clan(tag)
                 else:
                     raise commands.BadArgument(f"{tag} is not a valid RCS clan.")
             except coc.NotFound:
@@ -76,7 +78,7 @@ class ClanConverter(commands.Converter):
             raise commands.BadArgument(f"{name} is not a valid RCS clan.")
 
         try:
-            clan = await ctx.coc.get_clan(tag)
+            clan = await interaction.coc.get_clan(tag)
         except coc.NotFound:
             raise commands.BadArgument(f"{tag} is not a valid clan tag.")
 

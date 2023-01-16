@@ -1,9 +1,9 @@
 import coc
-import discord
+import nextcord
 import asyncio
 import re
 
-from discord.ext import commands
+from nextcord.ext import commands
 from cogs.utils.checks import is_council, is_mod_or_council, is_leader_or_mod_or_council
 from cogs.utils.constants import class_names, class_values
 from cogs.utils.converters import ClanConverter, PlayerConverter
@@ -121,7 +121,7 @@ class CouncilCog(commands.Cog):
 
     @commands.command(name="userinfo", aliases=["ui"], hidden=True)
     @is_mod_or_council()
-    async def user_info(self, ctx, user: discord.Member):
+    async def user_info(self, ctx, user: nextcord.Member):
         """Command to retrieve join date and other info for Discord user.
 
         **Permissions:**
@@ -143,9 +143,9 @@ class CouncilCog(commands.Cog):
         for role in user.roles:
             if role.name != "@everyone":
                 user_roles.append(role.name)
-        embed = discord.Embed(title=user.display_name,
-                              description=f"{user.name}#{user.discriminator}",
-                              color=color_pick(255, 165, 0))
+        embed = nextcord.Embed(title=user.display_name,
+                               description=f"{user.name}#{user.discriminator}",
+                               color=color_pick(255, 165, 0))
         embed.set_thumbnail(url=user.avatar_url)
         embed.add_field(name="Joined RCS Server on", value=f"{join_date}\n({join_delta} days ago)", inline=True)
         embed.add_field(name="Discord Creation Date", value=f"{create_date}\n({create_delta} days ago)", inline=True)
@@ -156,7 +156,7 @@ class CouncilCog(commands.Cog):
 
     @commands.command(name="recommend", hidden=True)
     @is_council()
-    async def recommend(self, ctx, user: discord.Member, *, desc):
+    async def recommend(self, ctx, user: nextcord.Member, *, desc):
         """Command to recommend new Council member.
 
         **Permissions:**
@@ -477,19 +477,19 @@ class CouncilCog(commands.Cog):
                                      "RCS Clan War Status",
                                      "This does not include CWL wars.",
                                      in_prep,
-                                     discord.Color.dark_gold())
+                                     nextcord.Color.dark_gold())
             if in_war != "":
                 await ctx.send_embed(ctx.channel,
                                      "RCS Clan War Status",
                                      "This does not include CWL wars.",
                                      in_war,
-                                     discord.Color.dark_red())
+                                     nextcord.Color.dark_red())
             if in_cwl != "":
                 await ctx.send_embed(ctx.channel,
                                      "RCS CWL War Status",
                                      "These are CWL wars.",
                                      in_cwl,
-                                     discord.Color.dark_blue())
+                                     nextcord.Color.dark_blue())
             if all(x == "" for x in [in_prep, in_war, in_cwl]):
                 await ctx.send("No clans are in war right now.")
 
@@ -499,16 +499,16 @@ class CouncilCog(commands.Cog):
         """Responds with a list of all members who have been banned from the RCS Discord Server"""
         guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
         content = ""
-        async for entry in guild.audit_logs(action=discord.AuditLogAction.ban):
+        async for entry in guild.audit_logs(action=nextcord.AuditLogAction.ban):
             reason = entry.reason
             if not reason:
                 reason = "No reason given"
             content += (f"**{entry.target}** was banned by {entry.user.display_name} on "
                         f"**{entry.created_at.strftime('%Y-%m-%d')}** "
                         f"for:\n{reason}\n\n")
-        embed = discord.Embed(title="Members banned from RCS Discord",
-                              description=content,
-                              color=discord.Color.dark_red())
+        embed = nextcord.Embed(title="Members banned from RCS Discord",
+                               description=content,
+                               color=nextcord.Color.dark_red())
         if ctx.channel.id in (settings['rcs_channels']['council'],
                               settings['rcs_channels']['council_spam'],
                               settings['rcs_channels']['mods']):
@@ -527,16 +527,16 @@ class CouncilCog(commands.Cog):
         """Responds with a list of all members who have been banned from the RCS Discord Server"""
         guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
         content = ""
-        async for entry in guild.audit_logs(action=discord.AuditLogAction.kick):
+        async for entry in guild.audit_logs(action=nextcord.AuditLogAction.kick):
             reason = entry.reason
             if not reason:
                 reason = "No reason given"
             content += (f"**{entry.target}** was kicked by {entry.user.display_name} on "
                         f"**{entry.created_at.strftime('%Y-%m-%d')}** "
                         f"for:\n{reason}\n\n")
-        embed = discord.Embed(title="Members kicked from RCS Discord",
-                              description=content,
-                              color=discord.Color.dark_red())
+        embed = nextcord.Embed(title="Members kicked from RCS Discord",
+                               description=content,
+                               color=nextcord.Color.dark_red())
         if ctx.channel.id in (settings['rcs_channels']['council'],
                               settings['rcs_channels']['council_spam'],
                               settings['rcs_channels']['mods']):
@@ -577,8 +577,8 @@ class CouncilCog(commands.Cog):
                 alt_names += f"{player.name}\n"
         else:
             alt_names = "No alts for this leader"
-        embed = discord.Embed(title=f"Leader Information for {clan.name}",
-                              color=color_pick(240, 240, 240))
+        embed = nextcord.Embed(title=f"Leader Information for {clan.name}",
+                               color=color_pick(240, 240, 240))
         embed.set_thumbnail(url=badge_url)
         embed.add_field(name="Leader name:",
                         value=f"<@{discord_id}>",
@@ -835,7 +835,7 @@ class CouncilCog(commands.Cog):
             await ctx.send_help(ctx.command)
 
     @warn.command(name="add")
-    async def warn_add(self, ctx, member: discord.Member = None, *, reason=None):
+    async def warn_add(self, ctx, member: nextcord.Member = None, *, reason=None):
         """Adds a warning for the specified user"""
         if not member:
             return await ctx.send("It would appear that you have not provided a valid Discord user. Please try again.")
@@ -901,7 +901,7 @@ class CouncilCog(commands.Cog):
         await ctx.message.add_reaction('\u2705')
 
     @warn.command(name="list")
-    async def warn_list(self, ctx, member: discord.Member = None):
+    async def warn_list(self, ctx, member: nextcord.Member = None):
         """Lists current warnings for the specified user"""
         if not member:
             return await ctx.send("It would appear that you have not provided a valid Discord user. Please try again.")
@@ -920,9 +920,9 @@ class CouncilCog(commands.Cog):
                         f"\n")
         # Remove extra line at the end of content
         content = content[:-2]
-        embed = discord.Embed(title=f"Warnings for {member.display_name}",
-                              description=content,
-                              color=discord.Color.dark_red())
+        embed = nextcord.Embed(title=f"Warnings for {member.display_name}",
+                               description=content,
+                               color=nextcord.Color.dark_red())
         embed.set_footer(text="To remove a warning, use ++warn remove ##")
         if ctx.channel.id in (settings['rcs_channels']['council'],
                               settings['rcs_channels']['council_spam'],
@@ -977,35 +977,6 @@ class CouncilCog(commands.Cog):
         self.bot.logger.debug(f"Message sent to {counter} RCS leaders.")
         await msg.edit(content=f"Message sent to {counter} RCS leaders.")
 
-    @dm.command(name="ayedj", aliases=["dj", "djs"])
-    async def dm_djs(self, ctx, *, message):
-        """Sends message as a DM to all RCS DJs
-
-        **Example:**
-        ++dm djs Here is a free DM to all music DJs
-
-        **Notes:**
-        It takes a minute to complete this command.
-        When the command is complete, it will let
-        you know how many people received a DM.
-        """
-        if not message:
-            return await ctx.send("I don't think the DJs will be impressed with a blank message!")
-        msg = await ctx.send("One moment while I spin the turntables...")
-        dj_role = ctx.guild.get_role(settings['rcs_roles']['djs'])
-        counter = 0
-        for member in dj_role.members:
-            try:
-                await member.send(message)
-                counter += 1
-            except:
-                await ctx.send(f"Something went wrong trying to send a message to Discord ID {row['discord_tag']}")
-                self.bot.logger.exception("DM send attempt")
-        # Send same message to TubaKid so he knows what's going on
-        member = ctx.guild.get_member(251150854571163648)
-        await member.send(f"**The following has been sent to all RCS DJs by {ctx.author}**\n\n{message}")
-        await msg.edit(content=f"Message sent to {counter} RCS DJs.")
-
     @commands.command(name="find", hidden=True)
     @is_leader_or_mod_or_council()
     async def find(self, ctx, *, arg: str = "help"):
@@ -1039,6 +1010,128 @@ class CouncilCog(commands.Cog):
         content = f"**{arg} Users**\nDiscord users with {arg} in their name.\n\n**Discord names:**\n"
         content += "\n".join(report)
         await ctx.send_text(ctx.channel, content)
+
+    @commands.group(name="link", invoke_without_command=True, hidden=True)
+    @is_leader_or_mod_or_council()
+    async def link(self, ctx, user: nextcord.User = None, player: PlayerConverter = None):
+        """Allows leaders, chat mods or council to link a Discord member to an in-game player tag
+
+        **Permissions:**
+        RCS Leaders
+        Chat Mods
+        Council
+
+        **Example:**
+        ++link @TubaKid #ABC1234
+        ++link 051150854571163648 #ABC1234
+
+        **Options:**
+        ++link list [clan name/tag]
+        ++link check [tag or Discord ID]
+        """
+        if ctx.invoked_subcommand is not None:
+            return
+
+        if not player:
+            self.bot.logger.error(f"{ctx.author} provided some bad info for the link command.")
+            return await ctx.send("I don't particularly care for that player. Wanna try again?")
+        if not user:
+            return await ctx.send("That's not a real Discord user. Try again.")
+        if player.clan.tag[1:] in helper.rcs_names_tags().values() or player.clan.name.lower().startswith("reddit"):
+            try:
+                # Add to Mike's Links API database
+                await self.bot.links.add_link(player.tag, user.id)
+                # Add member role to discord user
+                rcs_guild = self.bot.get_guild(settings['discord']['rcsguild_id'])
+                member = rcs_guild.get_member(user.id)
+                if not member:
+                    return await ctx.send(f"{user.display_name} is not a member of the RCS Discord Server "
+                                          f"so I couldn't add the Member role.")
+                member_role = rcs_guild.get_role(settings['rcs_roles']['members'])
+                await member.add_roles(member_role)
+                await ctx.confirm()
+            except:
+                self.bot.logger.exception("Something went wrong while adding a discord link")
+                await ctx.send("I'm sorry, but something has gone wrong. I notified the important people and they will "
+                               "look into it for you.")
+        else:
+            await ctx.send(f"I see that {player.name} is in {player.clan} which is not an RCS clan. Try again "
+                           f"when {player.name} is in an RCS clan.")
+
+    @link.command(name="check", hidden=True)
+    @is_leader_or_mod_or_council()
+    async def link_check(self, ctx, tag_or_id):
+        if tag_or_id.startswith("#"):
+            # player_tag provided
+            discord_id = await self.bot.links.get_link(tag_or_id)
+            player = await self.bot.coc.get_player(tag_or_id)
+            if discord_id:
+                content = f"{player.name} ({player.tag}) is linked to <@{discord_id}> ({discord_id})."
+            else:
+                content = f"No matching Discord ID found for {player.name} ({player.tag})."
+        else:
+            # assume we have a discord_id
+            tags = await self.bot.links.get_linked_players(tag_or_id)
+            if tags:
+                content = ""
+                for tag in tags:
+                    player = await self.bot.coc.get_player(tag)
+                    content += f"<@{tag_or_id}> ({tag_or_id}) is linked to {player.name} ({player.tag})\n"
+            else:
+                content = f"No matching tags found for {tag_or_id}."
+        return await ctx.send(content)
+
+    @link.command(name="list", hidden=True)
+    @is_leader_or_mod_or_council()
+    async def link_list(self, ctx, clan: ClanConverter = None):
+        """List linked players for the specified clan
+
+        **Permissions:**
+        RCS Leaders
+        Chat Mods
+        Council
+
+        **Example:**
+        ++link list Chi
+        ++link list #CVCJR89
+        ++link list Reddit Snow
+        """
+        async with ctx.typing():
+            if not clan:
+                return await ctx.send("You must provide an RCS clan name or tag.")
+            tags = [x.tag[1:] for x in clan.members]
+            links = await self.bot.links.get_links(*tags)
+            linked = not_linked = ""
+            for player_tag, discord_id in links:
+                player = await self.bot.coc.get_player(player_tag)
+                if discord_id:
+                    linked += f"<@{discord_id}> is linked to {player.name} ({player.tag})\n"
+                else:
+                    not_linked += f"{player.name} ({player.tag}) is not currently linked to a Discord account.\n"
+        if linked:
+            linked = f"**Linked members of {clan.name}**\n" + linked
+        if not_linked:
+            not_linked = f"**Members of {clan.name} who are not linked**\n" + not_linked
+        await ctx.send_text(ctx.channel, linked + not_linked)
+
+    @commands.command(name="unlink", hidden=True)
+    @is_leader_or_mod_or_council()
+    async def unlink(self, ctx, player: PlayerConverter = None):
+        """Unlink player tag from Discord
+
+        **Permissions:**
+        RCS Council
+        Chat Mods
+        Leaders
+
+        **Example:**
+        ++unlink #UV8QQ0RV
+        """
+        if not player:
+            self.bot.logger.error(f"{ctx.author} provided some bad info for the link command.")
+            return await ctx.send("I don't particularly care for that player. Wanna try again?")
+        await self.bot.links.delete_link(player.tag)
+        await ctx.confirm()
 
     @commands.group(name="role", hidden=True)
     @is_mod_or_council()
