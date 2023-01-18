@@ -191,6 +191,7 @@ class BgSheets(commands.Cog):
                                                                topic=topic,
                                                                category=category)
                 thread_name = f"{clan['name'].replace(' ', '-')}-notes"
+                self.bot.logger.info(f"Attempting to create thread - {thread_name}")
                 thread = await clan_channel.create_thread(thread_name)
                 coc_clan = await self.bot.coc.get_clan(clan['tag'])
                 cos_link = f"https://www.clashofstats.com/clans/{coc_clan.tag[1:]}"
