@@ -38,6 +38,7 @@ class Sql:
 
 async def update_push():
     """Task to pull API data for the push"""
+    print("Starting push update")
     with Sql(autocommit=True) as cursor:
         sql = "SELECT playerTag from rcspush_2023_1"
         cursor.execute(sql)
@@ -54,6 +55,7 @@ async def update_push():
                  "WHERE playerTag = ?")
         counter = 0
         try:
+            print("Collecting players")
             async for player in coc_client.get_players(player_tags):
                 print(f"{counter + 1} - {player.name} ({player.clan.tag})")
                 if player.clan:
