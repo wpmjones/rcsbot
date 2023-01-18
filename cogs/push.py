@@ -38,6 +38,7 @@ class Push(commands.Cog):
     @tasks.loop(minutes=12)
     async def update_push(self):
         """Task to pull API data for the push"""
+        await self.bot.wait_until_ready()
         now = datetime.utcnow()
         if self.start_time < now < self.end_time:
             self.bot.logger.info("Starting push update")
@@ -57,8 +58,10 @@ class Push(commands.Cog):
                          "WHERE playerTag = ?")
                 counter = 0
                 try:
+                    counter = 1
                     async for player in self.bot.coc.get_players(player_tags):
-                        print(f"{player.name} ({player.clan.tag})")
+                        print(f"{counter} - {player.name} ({player.clan.tag})")
+                        counter += 1
                         if player.clan:
                             cursor.execute(sql_1, player.trophies, player.town_hall, player.tag[1:])
                         if (player.town_hall < 14 and
