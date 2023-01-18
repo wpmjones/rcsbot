@@ -30,55 +30,55 @@ class Push(commands.Cog):
         self.title = "2023 Wonderful Winter Trophy Push"
         self.start_time = datetime(2023, 1, 18, 5, 0)
         self.end_time = datetime(2023, 1, 27, 2, 55)
-        self.update_push.start()
+        # self.update_push.start()
 
-    def cog_unload(self):
-        self.update_push.cancel()
+    # def cog_unload(self):
+    #     self.update_push.cancel()
 
-    @tasks.loop(minutes=12)
-    async def update_push(self):
-        """Task to pull API data for the push"""
-        await self.bot.wait_until_ready()
-        now = datetime.utcnow()
-        if self.start_time < now < self.end_time:
-            self.bot.logger.info("Starting push update")
-            with Sql(autocommit=True) as cursor:
-                sql = "SELECT playerTag from rcspush_2023_1"
-                cursor.execute(sql)
-                fetch = cursor.fetchall()
-                player_tags = []
-                for row in fetch:
-                    player_tags.append(row[0])
-                sql_1 = ("UPDATE rcspush_2023_1 "
-                         "SET currentTrophies = ?, currentThLevel = ? "
-                         "WHERE playerTag = ?")
-                sql_2 = "SELECT legendTrophies FROM rcspush_2023_1 WHERE playerTag = ?"
-                sql_3 = ("UPDATE rcspush_2023_1 "
-                         "SET legendTrophies = ? "
-                         "WHERE playerTag = ?")
-                counter = 0
-                try:
-                    # async for player in self.bot.coc.get_players(player_tags):
-                    for tag in player_tags:
-                        player = await self.bot.coc.get_player(tag)
-                        if player.clan:
-                            cursor.execute(sql_1, player.trophies, player.town_hall, player.tag[1:])
-                        if (player.town_hall < 14 and
-                                player.trophies >= 5000 and
-                                datetime.utcnow() > (self.end_time - timedelta(days=2))):
-                            cursor.execute(sql_2, player.tag[1:])
-                            row = cursor.fetchone()
-                            legend_trophies = row[0]
-                            if player.trophies > legend_trophies:
-                                cursor.execute(sql_3, player.trophies, player.tag[1:])
-                        counter += 1
-                except:
-                    self.bot.logger.exception(f"Failed on {player_tags[counter]}")
-            self.bot.logger.info("push update complete")
+    # @tasks.loop(minutes=12)
+    # async def update_push(self):
+    #     """Task to pull API data for the push"""
+    #     await self.bot.wait_until_ready()
+    #     now = datetime.utcnow()
+    #     if self.start_time < now < self.end_time:
+    #         self.bot.logger.info("Starting push update")
+    #         with Sql(autocommit=True) as cursor:
+    #             sql = "SELECT playerTag from rcspush_2023_1"
+    #             cursor.execute(sql)
+    #             fetch = cursor.fetchall()
+    #             player_tags = []
+    #             for row in fetch:
+    #                 player_tags.append(row[0])
+    #             sql_1 = ("UPDATE rcspush_2023_1 "
+    #                      "SET currentTrophies = ?, currentThLevel = ? "
+    #                      "WHERE playerTag = ?")
+    #             sql_2 = "SELECT legendTrophies FROM rcspush_2023_1 WHERE playerTag = ?"
+    #             sql_3 = ("UPDATE rcspush_2023_1 "
+    #                      "SET legendTrophies = ? "
+    #                      "WHERE playerTag = ?")
+    #             counter = 0
+    #             try:
+    #                 # async for player in self.bot.coc.get_players(player_tags):
+    #                 for tag in player_tags:
+    #                     player = await self.bot.coc.get_player(tag)
+    #                     if player.clan:
+    #                         cursor.execute(sql_1, player.trophies, player.town_hall, player.tag[1:])
+    #                     if (player.town_hall < 14 and
+    #                             player.trophies >= 5000 and
+    #                             datetime.utcnow() > (self.end_time - timedelta(days=2))):
+    #                         cursor.execute(sql_2, player.tag[1:])
+    #                         row = cursor.fetchone()
+    #                         legend_trophies = row[0]
+    #                         if player.trophies > legend_trophies:
+    #                             cursor.execute(sql_3, player.trophies, player.tag[1:])
+    #                     counter += 1
+    #             except:
+    #                 self.bot.logger.exception(f"Failed on {player_tags[counter]}")
+    #         self.bot.logger.info("push update complete")
 
-    @update_push.before_loop
-    async def before_update_push(self):
-        await self.bot.wait_until_ready()
+    # @update_push.before_loop
+    # async def before_update_push(self):
+    #     await self.bot.wait_until_ready()
 
     async def get_push_embed(self):
         delta = self.start_time - datetime.utcnow()
@@ -235,6 +235,24 @@ class Push(commands.Cog):
         pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, "Trophy Gains", 25),
                                       clear_buttons_after=True)
         await pages.start(interaction=interaction)
+
+    @push.subcommand(name="loss", description="Top 25 by trophies lost")
+    async def push_loss(self, interaction: nextcord.Interaction):
+        """Returns top 25 players based on number of trophies lost."""
+        if datetime.utcnow() < self.start_time:
+            embed = await self.get_push_embed()
+            return await interaction.response.send_message(embed=embed)
+        with Sql() as cursor:
+            cursor.execute("SELECT trophyGain, player FROM rcspush_vwLosses")
+            fetch = cursor.fetchall()
+        data = []
+        for row in fetch:
+            formatted = f"`{row[1].replace('`', ''):\u00A0<24} {row[0]:\u00A0>7}`"
+            data.append(formatted)
+        pages = menus.ButtonMenuPages(source=MainEmbedPageSource(data, "Trophy Losses", 25),
+                                      clear_buttons_after=True)
+        await pages.start(interaction=interaction)
+
 
     @push.subcommand(name="clan", description="Push score for specified clan")
     async def push_clan(self, interaction,
