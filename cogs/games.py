@@ -1,3 +1,4 @@
+import asyncio
 import math
 import re
 
@@ -93,6 +94,7 @@ class Games(commands.Cog):
     @tasks.loop(minutes=10)
     async def start_games(self):
         """Task to pull initial Games data for the new clan games"""
+        await asyncio.sleep(30)
         now = datetime.utcnow()
         conn = self.bot.pool
         games_id, start_time = await self.get_next_games()
@@ -123,6 +125,7 @@ class Games(commands.Cog):
     @tasks.loop(minutes=12)
     async def update_games(self):
         """Task to pull API data for clan games"""
+        await asyncio.sleep(30)
         conn = self.bot.pool
         games = await self.get_current_games()
         if games:
