@@ -349,23 +349,15 @@ class Tasks(commands.Cog):
         if len(task_id) == 7:
             task_id = task_id[:3] + task_id[4:]
         sheet = spreadsheet.worksheet("Verification")
-        results = sheet.get("A230:K")
-        row_num = 229
-        found = 0
-        for row in results:
-            row_num += 1
-            if row[9].lower() == task_id.lower():
-                task_row = row_num
-                clan_name = row[1]
-                leader = row[3]
-                if len(row) >= 11:
-                    cur_status_num = row[10]
-                else:
-                    cur_status_num = 0
-                found = 1
-        if found == 0:
+        cell = sheet.find(task_id)
+        if not cell:
             return await ctx.send(f"I could not find {task_id} in the Verification tab. Are you sure that's the "
                                   f"right ID?")
+        clan_name = sheet.cell(cell.row, cell.col - 8).value
+        leader = sheet.cell(cell.row, cell.col - 6).value
+        cur_status_num = sheet.cell(cell.row, cell.col + 1).value
+        if not cur_status_num:
+            cur_status_num = 0
         try:
             cur_status_text = veri_status[int(cur_status_num)]
         except ValueError:
@@ -404,7 +396,7 @@ class Tasks(commands.Cog):
                             new_status = 99
                 else:
                     new_status = prompt
-            url = f"{settings['google']['comm_log']}?call=verification&status={new_status}&row={task_row}"
+            url = f"{settings['google']['comm_log']}?call=verification&status={new_status}&row={cell.row}"
             # TODO ditch requests for aiohttp.clientsession or gspread - hmmm
             r = requests.get(url)
             if r.status_code == requests.codes.ok:
