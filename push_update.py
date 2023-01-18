@@ -5,8 +5,8 @@ import pyodbc
 from datetime import datetime, timedelta
 from config import settings
 
-coc_client = coc.login(settings['supercell']['user1'],
-                       settings['supercell']['pass1'],
+coc_client = coc.login(settings['supercell']['user'],
+                       settings['supercell']['pass'],
                        client=coc.EventsClient,
                        key_count=2,
                        key_names="galaxy",
