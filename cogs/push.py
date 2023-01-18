@@ -57,8 +57,8 @@ class Push(commands.Cog):
                          "WHERE playerTag = ?")
                 counter = 0
                 try:
-                    self.bot.logger.info("Push update - Collection players")
                     async for player in self.bot.coc.get_players(player_tags):
+                        print(f"{player.name} ({player.clan.tag})")
                         if player.clan:
                             cursor.execute(sql_1, player.trophies, player.town_hall, player.tag[1:])
                         if (player.town_hall < 14 and
