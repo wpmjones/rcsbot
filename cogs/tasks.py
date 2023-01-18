@@ -350,7 +350,7 @@ class Tasks(commands.Cog):
             task_id = task_id[:3] + task_id[4:]
         sheet = spreadsheet.worksheet("Verification")
         results = sheet.get("A230:K")
-        row_num = 1
+        row_num = 229
         found = 0
         for row in results:
             row_num += 1
@@ -405,7 +405,6 @@ class Tasks(commands.Cog):
                 else:
                     new_status = prompt
             url = f"{settings['google']['comm_log']}?call=verification&status={new_status}&row={task_row}"
-            self.bot.logger.debug(f"URL for changing verification status: {url}")
             # TODO ditch requests for aiohttp.clientsession or gspread - hmmm
             r = requests.get(url)
             if r.status_code == requests.codes.ok:
