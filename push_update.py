@@ -57,7 +57,7 @@ async def update_push():
         try:
             print("Collecting players")
             async for player in coc_client.get_players(player_tags):
-                print(f"{counter + 1} - {player.name} ({player.clan.tag})")
+                print(f"{counter + 1} - {player.name}")
                 if player.clan:
                     cursor.execute(sql_1, player.trophies, player.town_hall, player.tag[1:])
                 if (player.town_hall < 14 and
