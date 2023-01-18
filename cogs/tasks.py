@@ -344,8 +344,7 @@ class Tasks(commands.Cog):
         4 - is awaiting a decision by Council
         """
         if task_id[:1].lower() != "v":
-            await ctx.send("This command only works on Verification tasks.")
-            return
+            return await ctx.send("This command only works on Verification tasks.")
         # Fix for user providing Veri107 instead of Ver107
         if len(task_id) == 7:
             task_id = task_id[:3] + task_id[4:]
@@ -355,6 +354,7 @@ class Tasks(commands.Cog):
         found = 0
         for row in results:
             row_num += 1
+            self.bot.logger.info(f"Searching for {task_id} - compared to {row[9].lower()}")
             if row[9].lower() == task_id.lower():
                 task_row = row_num
                 clan_name = row[1]
