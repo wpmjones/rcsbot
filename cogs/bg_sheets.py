@@ -89,6 +89,7 @@ class BgSheets(commands.Cog):
 
     @tasks.loop(hours=1.0)
     async def fetch_changes(self):
+        await asyncio.sleep(30)
         conn = self.bot.pool
         sql_check = "SELECT reported FROM rcs_reports WHERE google_key = $1"
         sql_insert = "INSERT INTO rcs_reports (google_key) VALUES ($1)"
