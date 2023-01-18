@@ -76,9 +76,9 @@ class Push(commands.Cog):
     #                 self.bot.logger.exception(f"Failed on {player_tags[counter]}")
     #         self.bot.logger.info("push update complete")
 
-    @update_push.before_loop
-    async def before_update_push(self):
-        await self.bot.wait_until_ready()
+    # @update_push.before_loop
+    # async def before_update_push(self):
+    #     await self.bot.wait_until_ready()
 
     async def get_push_embed(self):
         delta = self.start_time - datetime.utcnow()
