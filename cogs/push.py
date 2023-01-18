@@ -59,10 +59,8 @@ class Push(commands.Cog):
     #             counter = 0
     #             try:
     #                 self.bot.logger.info("Collecting players")
-    #                 counter = 1
     #                 async for player in self.bot.coc.get_players(player_tags):
     #                     print(f"{counter} - {player.name} ({player.clan.tag})")
-    #                     counter += 1
     #                     if player.clan:
     #                         cursor.execute(sql_1, player.trophies, player.town_hall, player.tag[1:])
     #                     if (player.town_hall < 14 and
