@@ -27,10 +27,10 @@ if enviro == "LIVE":
     coc_pass = settings['supercell']['pass']
     guild_ids = bot_guilds
     initial_extensions = ["cogs.admin",
-                          "cogs.background",
-                          "cogs.bg_sheets",
+                          # "cogs.background",
+                          # "cogs.bg_sheets",
                           "cogs.council",
-                          "cogs.discordcheck",
+                          # "cogs.discordcheck",
                           "cogs.draft",
                           "cogs.eggs",
                           "cogs.games",
@@ -40,7 +40,7 @@ if enviro == "LIVE":
                           "cogs.plots",
                           "cogs.push",
                           "cogs.tasks",
-                          "cogs.verify",
+                          # "cogs.verify",
                           ]
 elif enviro == "home":
     token = settings['discord']['test_token']
