@@ -349,12 +349,11 @@ class Tasks(commands.Cog):
         if len(task_id) == 7:
             task_id = task_id[:3] + task_id[4:]
         sheet = spreadsheet.worksheet("Verification")
-        results = sheet.get("A2:K")
+        results = sheet.get("A230:K")
         row_num = 1
         found = 0
         for row in results:
             row_num += 1
-            self.bot.logger.info(f"Searching for {task_id} - compared to {row[9].lower()}")
             if row[9].lower() == task_id.lower():
                 task_row = row_num
                 clan_name = row[1]
