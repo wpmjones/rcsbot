@@ -58,6 +58,7 @@ class Push(commands.Cog):
                          "WHERE playerTag = ?")
                 counter = 0
                 try:
+                    self.bot.logger.info("Collecting players")
                     counter = 1
                     async for player in self.bot.coc.get_players(player_tags):
                         print(f"{counter} - {player.name} ({player.clan.tag})")
