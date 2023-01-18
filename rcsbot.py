@@ -27,29 +27,29 @@ if enviro == "LIVE":
     coc_pass = settings['supercell']['pass']
     guild_ids = bot_guilds
     initial_extensions = ["cogs.admin",
-                          # "cogs.background",
+                          "cogs.background",
                           # "cogs.bg_sheets",
                           "cogs.council",
-                          # "cogs.discordcheck",
+                          "cogs.discordcheck",
                           # "cogs.draft",
-                          # "cogs.eggs",
-                          # "cogs.games",
+                          "cogs.eggs",
+                          "cogs.games",
                           "cogs.general",
-                          # "cogs.new_season",
+                          "cogs.new_season",
                           "cogs.owner",
                           # "cogs.plots",
                           "cogs.push",
-                          # "cogs.tasks",
-                          # "cogs.verify",
+                          "cogs.tasks",
+                          "cogs.verify",
                           ]
 elif enviro == "home":
-    token = settings['discord']['rcsbot_token']
+    token = settings['discord']['test_token']
     prefix = ">"
     log_level = "DEBUG"
     coc_names = "ubuntu"
     coc_email = settings['supercell']['user2']
     coc_pass = settings['supercell']['pass2']
-    guild_ids = bot_guilds  # [settings['discord']['botlogguild_id']]
+    guild_ids = [settings['discord']['botlogguild_id']]
     initial_extensions = ["cogs.admin",
                           "cogs.council",
                           "cogs.general",
