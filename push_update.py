@@ -3,7 +3,10 @@ import coc
 import pyodbc
 
 from datetime import datetime, timedelta
+from loguru import logger
 from config import settings
+
+logger.add("push_update.log", retention="3 days")
 
 coc_client = coc.login(settings['supercell']['user'],
                        settings['supercell']['pass'],
@@ -70,8 +73,8 @@ async def update_push():
                         cursor.execute(sql_3, player.trophies, player.tag[1:])
                 counter += 1
         except:
-            print(f"Failed on {player_tags[counter]}")
-        print("push update complete")
+            logger.error(f"Failed on {player_tags[counter]}")
+        logger.info("Push update completed succesfully")
 
 if __name__ == "__main__":
     asyncio.get_event_loop().run_until_complete(update_push())
