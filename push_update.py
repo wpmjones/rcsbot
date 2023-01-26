@@ -59,6 +59,8 @@ async def update_push():
         counter = 0
         try:
             print("Collecting players")
+            logger.info(f"Comparing {datetime.utcnow()} and {end_time - timedelta(days=2)}")
+            logger.info(datetime.utcnow() > (end_time - timedelta(days=2)))
             async for player in coc_client.get_players(player_tags):
                 print(f"{counter + 1} - {player.name}")
                 if player.clan:
