@@ -27,6 +27,7 @@ if enviro == "LIVE":
     coc_pass = settings['supercell']['pass']
     guild_ids = bot_guilds
     initial_extensions = ["cogs.admin",
+                          "cogs.archive",
                           "cogs.background",
                           # "cogs.bg_sheets",
                           "cogs.council",
