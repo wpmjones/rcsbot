@@ -33,11 +33,13 @@ class Archive(commands.Cog):
     @nextcord.slash_command(name="archive", description="Archive current channel", guild_ids=GUILD_IDS)
     async def slash_archive(self, interaction: nextcord.Interaction):
         """Archives the current channel to an html file"""
+        self.bot.logger.info(f"Attempting archive on {interaction.channel.name} ({interaction.channel_id})")
         transcript = await chat_exporter.export(interaction.channel, bot=self.bot)
+        self.bot.logger.info(type(transcript))
         if transcript is None:
             return await interaction.response.send_message("Nothing to export")
-        self.bot.logger.info(type(transcript))
         filename = f"archive-{interaction.channel.name.replace(' ', '-')}.html"
+        self.bot.logger.info(filename)
         transcript_file = nextcord.File(io.BytesIO(transcript.encode()),
                                         filename=filename
                                         )
