@@ -34,12 +34,8 @@ class Archive(commands.Cog):
     async def slash_archive(self, interaction: nextcord.Interaction):
         """Archives the current channel to an html file"""
         self.bot.logger.info(f"Attempting archive on {interaction.channel.name} ({interaction.channel_id})")
-        try:
-            transcript = await chat_exporter.export(interaction.channel, bot=self.bot)
-        except:
-            self.bot.logger.exception("Export failed")
-            return
-        self.bot.logger.info(type(transcript))
+        await interaction.response.defer(ephemeral=False)
+        transcript = await chat_exporter.export(interaction.channel, bot=self.bot)
         if transcript is None:
             return await interaction.response.send_message("Nothing to export")
         filename = f"archive-{interaction.channel.name.replace(' ', '-')}.html"
@@ -53,7 +49,7 @@ class Archive(commands.Cog):
         file = open(os.path.join(directory, filename), "w")
         file.write(transcript)
         file.close()
-        await interaction.response.send_message(file=transcript_file)
+        await interaction.followup.send(file=transcript_file)
 
 
     @staticmethod
