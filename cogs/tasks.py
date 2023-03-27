@@ -172,11 +172,10 @@ class Tasks(commands.Cog):
         """Displays all incomplete RCS clan verification requests"""
         sheet = spreadsheet.worksheet("Verification")
         results = sheet.get_all_values()
+        results = results[-20:]
         embed = nextcord.Embed(title="RCS Council Verification Requests", color=nextcord.Color.dark_blue())
         for row in results:
-            if row[0] == "Timestamp":
-                continue
-            self.bot.logger.info(f"{row[0]} - {row[10]}")
+            self.bot.logger.info(row)
             if not row[10]:
                 status = "has not been addressed"
                 embed.add_field(name=f"Verification for {row[1]} {status}.\nTask ID: {row[9]}",
