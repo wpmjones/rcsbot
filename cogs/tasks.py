@@ -176,6 +176,7 @@ class Tasks(commands.Cog):
         for row in results:
             if row[0] == "Timestamp":
                 continue
+            print(row[10])
             if not row[10]:
                 status = "has not been addressed"
                 embed.add_field(name=f"Verification for {row[1]} {status}.\nTask ID: {row[9]}",
