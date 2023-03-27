@@ -176,14 +176,12 @@ class Tasks(commands.Cog):
         for row in results:
             if row[0] == "Timestamp":
                 continue
-            if len(row) < 11:
-                self.bot.logger.info(f"Less than 11: {row[1]} - {row[2]}")
+            if not row[10]:
                 status = "has not been addressed"
                 embed.add_field(name=f"Verification for {row[1]} {status}.\nTask ID: {row[9]}",
                                 value=f"Dated: {row[0]}\nLeader: {row[3]}",
                                 inline=True)
             elif row[10] in ("1", "2", "3", "4"):
-                self.bot.logger.info(f"Longer: {row}")
                 status = "has not been addressed"
                 if row[10] == "1": status = "is awaiting a scout"
                 if row[10] == "2": status = "is currently being scouted"
