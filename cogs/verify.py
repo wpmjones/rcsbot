@@ -29,6 +29,7 @@ LEADER_WELCOME = ("Hello and welcome to the server!\n\n"
                   "You may ask for more specific dates once we get closer.\n\nGood luck!")
 
 # Connect to Google Sheets using gspread
+# TODO switch to pygsheets
 gc = gspread.service_account(filename="service_account.json")
 comm_log_ss = gc.open_by_key(settings['google']['comm_log_id'])
 

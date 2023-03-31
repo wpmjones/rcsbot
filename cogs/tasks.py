@@ -1,5 +1,5 @@
 import nextcord
-import gspread
+import pygsheets
 import requests
 
 from nextcord.ext import commands
@@ -8,7 +8,7 @@ from cogs.utils.constants import veri_status
 from config import settings
 
 # Connect to Google Sheets using gspread
-gc = gspread.service_account(filename="service_account.json")
+gc = pygsheets.authorize(service_account_file="service_account.json")
 spreadsheet = gc.open_by_key(settings['google']['comm_log_id'])
 
 
@@ -45,12 +45,12 @@ class Tasks(commands.Cog):
             await ctx.send("This is a long list. I'm going to send it to your DM. To view items "
                            "in the Council Chat, please request them individually (`++tasks suggestions`).")
         # Suggestions
-        sheet = spreadsheet.worksheet("Suggestions")
-        results = sheet.get("A2:I")
+        sheet = spreadsheet.worksheet_by_title("Suggestions")
+        results = sheet.get_all_values()
         embed = nextcord.Embed(title="RCS Council Suggestions", color=nextcord.Color.blurple())
         flag = 0
         for row in results:
-            if len(row) < 9:
+            if not row[8]:
                 embed.add_field(name=f"Suggestion from {row[1]}\n{row[7]}",
                                 value=f"{row[3][:500]}\nDated {row[0]}",
                                 inline=False)
@@ -59,11 +59,11 @@ class Tasks(commands.Cog):
             flag = 1
             await ctx.author.send(embed=embed)
         # Council Nominations
-        sheet = spreadsheet.worksheet("Council")
-        results = sheet.get("A2:J")
+        sheet = spreadsheet.worksheet_by_title("Council")
+        results = sheet.get_all_values()
         embed = nextcord.Embed(title="RCS Council Nominations", color=nextcord.Color.dark_gold())
         for row in results:
-            if row[8] == "":
+            if not row[8]:
                 embed.add_field(name=f"Council Nomination for {row[3]}\n{row[9]}",
                                 value=f"Submitted by {row[1]}\nDated {row[0]}",
                                 inline=False)
@@ -72,11 +72,11 @@ class Tasks(commands.Cog):
             flag = 1
             await ctx.author.send(embed=embed)
         # Verification Requests
-        sheet = spreadsheet.worksheet("Verification")
-        results = sheet.get("A2:K")
+        sheet = spreadsheet.worksheet_by_title("Verification")
+        results = sheet.get_all_values()
         embed = nextcord.Embed(title="RCS Council Verification Requests", color=nextcord.Color.dark_blue())
         for row in results:
-            if len(row) < 11 or row[10] in ("1", "2", "3", "4"):
+            if not row[10] or row[10] in ("1", "2", "3", "4"):
                 status = "has not been addressed"
                 try:
                     if row[8] == "1": status = " is awaiting a scout"
@@ -93,11 +93,11 @@ class Tasks(commands.Cog):
             flag = 1
             await ctx.author.send(embed=embed)
         # Other Submissions
-        sheet = spreadsheet.worksheet("Other")
-        results = sheet.get("A2:I")
+        sheet = spreadsheet.worksheet_by_title("Other")
+        results = sheet.get_all_values()
         embed = nextcord.Embed(title="RCS Council Other Items", color=nextcord.Color.gold())
         for row in results:
-            if len(row) < 9:
+            if not row[8]:
                 if len(row[6]) > 1:
                     assigned_to = f"Assigned to: {self.guild.get_member(int(row[6])).display_name}"
                 else:
@@ -111,11 +111,11 @@ class Tasks(commands.Cog):
             flag = 1
             await ctx.author.send(embed=embed)
         # Tasks (Individual Action Items)
-        sheet = spreadsheet.worksheet("Tasks")
-        results = sheet.get("A2:I")
+        sheet = spreadsheet.worksheet_by_title("Tasks")
+        results = sheet.get_all_values()
         embed = nextcord.Embed(title="RCS Council Action Items", color=nextcord.Color.dark_magenta())
         for row in results:
-            if len(row) < 9:
+            if not row[8]:
                 if len(row[6]) > 1:
                     assigned_to = f"Assigned to: {self.guild.get_member(int(row[6])).display_name}"
                 else:
@@ -134,11 +134,11 @@ class Tasks(commands.Cog):
     @is_council()
     async def tasks_suggestions(self, ctx):
         """Displays all incomplete suggestion tasks"""
-        sheet = spreadsheet.worksheet("Suggestions")
-        results = sheet.get("A2:I")
+        sheet = spreadsheet.worksheet_by_title("Suggestions")
+        results = sheet.get_all_values()
         embed = nextcord.Embed(title="RCS Council Suggestions", color=nextcord.Color.blurple())
         for row in results:
-            if len(row) < 9:
+            if not row[8]:
                 embed.add_field(name=f"Suggestion from {row[1]}\n{row[7]}\nDated {row[0]}",
                                 value=row[3][:1023],
                                 inline=True)
@@ -152,11 +152,11 @@ class Tasks(commands.Cog):
     @is_council()
     async def tasks_council(self, ctx):
         """Displays all incomplete council nominations"""
-        sheet = spreadsheet.worksheet("Council")
-        results = sheet.get("A2:J")
+        sheet = spreadsheet.worksheet_by_title("Council")
+        results = sheet.get_all_values()
         embed = nextcord.Embed(title="RCS Council Nominations", color=nextcord.Color.dark_gold())
         for row in results:
-            if row[8] == "":
+            if not row[8]:
                 embed.add_field(name=f"Council Nomination for {row[3]}\n{row[9]}\nDated {row[0]}",
                                 value=f"Submitted by {row[1]}",
                                 inline=True)
@@ -170,12 +170,11 @@ class Tasks(commands.Cog):
     @is_council()
     async def tasks_verification(self, ctx):
         """Displays all incomplete RCS clan verification requests"""
-        sheet = spreadsheet.worksheet("Verification")
-        results = sheet.get_all_values()
+        sheet = spreadsheet.worksheet_by_title("Verification")
+        results = sheet.get_all_values(returnas="matrix")
         results = results[-20:]
         embed = nextcord.Embed(title="RCS Council Verification Requests", color=nextcord.Color.dark_blue())
         for row in results:
-            self.bot.logger.info(row)
             if not row[10]:
                 status = "has not been addressed"
                 embed.add_field(name=f"Verification for {row[1]} {status}.\nTask ID: {row[9]}",
@@ -200,11 +199,11 @@ class Tasks(commands.Cog):
     async def tasks_other(self, ctx):
         """Displays all incomplete tasks from the Other category"""
         try:
-            sheet = spreadsheet.worksheet("Other")
-            results = sheet.get("A2:I")
+            sheet = spreadsheet.worksheet_by_title("Other")
+            results = sheet.get_all_values()
             embed = nextcord.Embed(title="RCS Council Other Items", color=nextcord.Color.gold())
             for row in results:
-                if len(row) < 9:
+                if not row[8]:
                     if len(row[6]) > 1:
                         assigned_to = f"Assigned to: {self.guild.get_member(int(row[6])).display_name}"
                     else:
@@ -224,11 +223,11 @@ class Tasks(commands.Cog):
     @is_council()
     async def tasks_action(self, ctx):
         """Displays all incomplete Action Items"""
-        sheet = spreadsheet.worksheet("Tasks")
-        results = sheet.get("A2:I")
+        sheet = spreadsheet.worksheet_by_title("Tasks")
+        results = sheet.get_all_values()
         embed = nextcord.Embed(title="RCS Council Action Items", color=nextcord.Color.dark_magenta())
         for row in results:
-            if len(row) < 9:
+            if not row[8]:
                 if len(row[6]) > 1:
                     assigned_to = f"Assigned to: {self.guild.get_member(int(row[6])).display_name}"
                 else:
@@ -350,14 +349,15 @@ class Tasks(commands.Cog):
         # Fix for user providing Veri107 instead of Ver107
         if len(task_id) == 7:
             task_id = task_id[:3] + task_id[4:]
-        sheet = spreadsheet.worksheet("Verification")
-        cell = sheet.find(task_id)
-        if not cell:
+        sheet = spreadsheet.worksheet_by_title("Verification")
+        list_of_cells = sheet.find(task_id)
+        if not list_of_cells:
             return await ctx.send(f"I could not find {task_id} in the Verification tab. Are you sure that's the "
                                   f"right ID?")
-        clan_name = sheet.cell(cell.row, cell.col - 8).value
-        leader = sheet.cell(cell.row, cell.col - 6).value
-        cur_status_num = sheet.cell(cell.row, cell.col + 1).value
+        cell = list_of_cells[0]
+        clan_name = sheet.cell((cell.row, cell.col - 8)).value
+        leader = sheet.cell((cell.row, cell.col - 6)).value
+        cur_status_num = sheet.cell((cell.row, cell.col + 1)).value
         if not cur_status_num:
             cur_status_num = 0
         try:

@@ -18,7 +18,7 @@ if not creds or creds.invalid:
 service = build("docs", "v1", credentials=creds)
 drive_service = build("drive", "v3", credentials=creds)
 
-# Connect to Google Sheets using gspread
+# Connect to Google Sheets using gspread (change to pygsheets)
 gc = gspread.service_account(filename="service_account.json")
 comm_log_ss = gc.open_by_key(settings['google']['comm_log_id'])
 pre_ss = gc.open_by_key(settings['google']['pre_id'])
@@ -101,6 +101,7 @@ class BgSheets(commands.Cog):
             for change in response.get("changes"):
                 # check to see if this is a sheet or a doc
                 try:
+                    # TODO This should be changed to pygsheets at some point
                     is_sheet = gc.open_by_key(change.get("fileId"))
                 except gspread.exceptions.APIError:
                     # If we get here, it should be a Google Doc and we can do something with it
