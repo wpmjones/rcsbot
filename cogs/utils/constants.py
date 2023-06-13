@@ -158,6 +158,8 @@ league_badges = [
     "https://api-assets.clashofclans.com/badges/200/PFufY610p6gFjN4APhPDEVorwo6GNCH1fNZIJWZAQpE.png",
     "https://api-assets.clashofclans.com/badges/200/N19EZL7hcyZo-tRnAluKmAqIEnROKpOGBmUnDMQnWBA.png",
     "https://api-assets.clashofclans.com/badges/200/icJkBmeQismWViaDJ1OnPhA8latlyo4XF92IvO3Ln28.png",
+    "https://api-assets.clashofclans.com/badges/200/hVc36Y6B8OqwVANLjbZZOEhO5hv38XBwvuwL5ATsRBw.png",
+    "https://api-assets.clashofclans.com/badges/200/o11u_NQsJ6hmeIpBxhAScPcM1mOZbttQfO6Pzx4BYls.png",
 ]
 
 bot_guilds = [960030308575633469, 313906240063537153, 302020751916007425, 275562065861541888, 294509480719286273,
