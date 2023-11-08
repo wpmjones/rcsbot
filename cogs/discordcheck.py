@@ -127,6 +127,7 @@ class DiscordCheck(commands.Cog):
             if member_role in member.roles and check_name in member.display_name.lower():
                 report_list.add(f"{member.display_name} ({member.id})")
         if report_list:
+            self.bot.logger.info(f"Report list is {len(report_list)} characters long")
             await self.send_embed(botdev_channel, "Testing", report_list)
         else:
             await self.send_embed(botdev_channel, "Testing", "Nothing Found")
