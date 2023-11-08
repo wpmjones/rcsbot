@@ -123,14 +123,19 @@ class DiscordCheck(commands.Cog):
         member_role = self.guild.get_role(settings['rcs_roles']['members'])
         check_name = "pirates"
         report_list = set()
+        counter = 0
         for member in self.guild.members:
+            counter += 1
             if member_role in member.roles and check_name in member.display_name.lower():
                 report_list.add(f"{member.display_name} ({member.id})")
         if report_list:
-            self.bot.logger.info(f"Report list is {len(report_list)} characters long")
-            await self.send_embed(botdev_channel, "Testing", report_list)
+            content = ""
+            for entry in report_list:
+                content += f"\u2800\u2800{entry}\n"
+            self.bot.logger.info(f"Report list is {len(content)} characters long")
+            await self.send_embed(botdev_channel, counter, content)
         else:
-            await self.send_embed(botdev_channel, "Testing", "Nothing Found")
+            await self.send_embed(botdev_channel, counter, "Nothing Found")
 
     @tasks.loop(hours=1)
     async def discord_check(self):
