@@ -116,6 +116,21 @@ class DiscordCheck(commands.Cog):
     async def before_leader_notes(self):
         await self.bot.wait_until_ready()
 
+    @commands.command(name="danger1", hidden=True)
+    @commands.is_owner()
+    async def danger_check(self):
+        botdev_channel = self.guild.get_channel(settings['rcs_channels']['bot_dev'])
+        member_role = self.guild.get_role(settings['rcs_roles']['members'])
+        check_name = "pirates"
+        report_list = set()
+        for member in self.guild.members:
+            if member_role in member.roles and check_name in member.display_name.lower():
+                report_list.add(f"{member.display_name} ({member.id})")
+        if report_list:
+            await self.send_embed(botdev_channel, "Testing", report_list)
+        else:
+            await self.send_embed(botdev_channel, "Testing", "Nothing Found")
+
     @tasks.loop(hours=1)
     async def discord_check(self):
         """Check members and notify clan leaders to confirm they are still in the clan"""
