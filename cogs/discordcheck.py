@@ -118,7 +118,7 @@ class DiscordCheck(commands.Cog):
 
     @commands.command(name="danger1", hidden=True)
     @commands.is_owner()
-    async def danger_check(self):
+    async def danger_check(self, ctx):
         botdev_channel = self.guild.get_channel(settings['rcs_channels']['bot_dev'])
         member_role = self.guild.get_role(settings['rcs_roles']['members'])
         check_name = "pirates"
