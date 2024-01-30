@@ -40,7 +40,7 @@ class TopTenSource(menus.ListPageSource):
         super().__init__(data, per_page=10)
 
     async def format_page(self, menu, entries):
-        th_level = -1 * (menu.current_page - 15)
+        th_level = -1 * (menu.current_page - 16)
         embed = nextcord.Embed(title=f"Top Ten for TH{th_level}", description="\n".join(entries))
         embed.set_footer(text=f"Page {menu.current_page + 1}/{self.get_max_pages()}")
         return embed
